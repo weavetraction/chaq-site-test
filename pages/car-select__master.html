@@ -241,7 +241,7 @@
                 if(USE_VM){
                     var v=vmRows(type);
                     popBody.innerHTML=v.html;
-                    popApply.textContent=(type==='trim'?'등급 ':'')+v.total+'대 전체 보기';
+                    popApply.textContent=(type==='trim'?'등급 ':'')+(true?'':v.total+'대 ')+'전체 보기';   // 견적조회: 재고 수 개념 없음 → 숫자 없이
                     pop.classList.add('is-open'); pop.setAttribute('aria-hidden','false');
                     document.body.style.overflow='hidden'; popBody.scrollTop=0;
                     return;
@@ -258,7 +258,7 @@
                     });
                 });
                 popBody.innerHTML=html;
-                popApply.textContent=d.total+'대 전체 보기';
+                popApply.textContent=(true?'':d.total+'대 ')+'전체 보기';
                 pop.classList.add('is-open'); pop.setAttribute('aria-hidden','false');
                 document.body.style.overflow='hidden'; popBody.scrollTop=0;
             }

@@ -2749,3 +2749,5 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_trimsel .dts_chip small { margin-top: 2px; color: #9aa0a6; font-size: 11.5px; font-weight: 400; }
 .local-car-detail .detail_trimsel .dts_chip.on { border-color: var(--detail-green, #18a85c); color: var(--detail-green, #18a85c); background: #f2fbf6; }
 .local-car-detail .detail_trimsel .dts_chip.on small { color: var(--detail-green, #18a85c); }
+/* v193: 견적조회(및 견적 기준 차량선택)는 재고 수 개념이 없어 선택 팝업의 차량 수 숨김 — 재고특가·빠른인도는 유지 */
+.local-special-list.view-estimate .fpop_row .bcount { display: none; }
