@@ -281,8 +281,11 @@
             if (!d) return;                              // 없는 trimId → 기존 흐름(견적 레코드) 유지
             window.CHAQ_DETAIL_VM_MODE = true;
             // STEP 8: 이 trimId 에 연결된 견적 중 대표 1건 (목록에서 온 경우 해당 종류 우선) → 견적 데이터 우선 합성
-            var fromKind = (location.search.match(/[?&]from=(stock|fast|estimate)/)||[])[1] || 'estimate';
-            var pk = VM.pickQuote ? VM.pickQuote(trimId, fromKind) : null;
+            var fromExplicit = (location.search.match(/[?&]from=(stock|fast|estimate)/)||[])[1];
+            var fromKind = fromExplicit || 'estimate';
+            // 목록(재고특가·빠른인도·견적조회)에서 온 경우 그 목록의 견적만 사용 — 목록에서 '별도문의'였던 차량은 상세도 '별도문의'
+            var onlyKind = null; if (fromExplicit) { onlyKind = {}; onlyKind[fromExplicit] = (window.CHAQ||{})[fromExplicit] || []; }
+            var pk = VM.pickQuote ? VM.pickQuote(trimId, fromKind, onlyKind || undefined) : null;
             var qv = pk ? VM.quoteView(pk.rec) : null;
             var useVM = !qv || qv.vmUsable;               // 연식 차이 2년 이상이면 VM 옵션·색상·기본품목 노출 안 함 (1년 이내는 기준 연식 표기)
             var vmYearTag = (qv && !qv.sameYear && qv.vmUsable) ? (" ("+qv.vmModelYear+"년형 공식 가격표 기준)") : "";
@@ -362,14 +365,14 @@
             var quotes = pk ? [pk.rec] : [];
             var set=function(sel,v){ var e=document.querySelector(sel); if(e) e.innerHTML=v; };
             if(!quotes.length){
-                set('.detail_monthly strong','견적 준비 중');
-                set('.confirm-monthly strong','견적 준비 중');
+                set('.detail_monthly strong','별도문의');
+                set('.confirm-monthly strong','별도문의');
                 // 차량가: 견적이 없으면 차량 데이터의 트림 기본가(listPrice, 파일 기준 · 견적 데이터가 들어오면 견적 우선)
                 var lp = VM.getListPrice ? VM.getListPrice(trimId) : null;
                 set('#pBase', lp ? won(lp.price)+'원' : '차량가 문의'); set('#pOpt', lp ? '0원' : '—'); set('#pDisc', lp ? '0원' : '—'); set('#pTotal', lp ? won(lp.price)+'원' : '—'); set('#pAcq','—');
                 var hm=document.querySelector('.detail_monthly strong'); if(hm) hm.style.color='#8a8f96';
                 var cm=document.querySelector('.confirm-monthly strong'); if(cm) cm.style.color='#8a8f96';
-                document.querySelectorAll('.detail_conds .filter_chip').forEach(function(ch){ ch.addEventListener('click', function(){ setTimeout(function(){ set('.detail_monthly strong','견적 준비 중'); set('.confirm-monthly strong','견적 준비 중'); },0); }); });
+                document.querySelectorAll('.detail_conds .filter_chip').forEach(function(ch){ ch.addEventListener('click', function(){ setTimeout(function(){ set('.detail_monthly strong','별도문의'); set('.confirm-monthly strong','별도문의'); },0); }); });
             } else {
                 // Quote 존재 시: vehiclePrice·cost·resid 는 기존 계산 로직 재사용을 위해 레코드를 window 에 노출 (STEP 8 에서 연결)
                 window.CHAQ_DETAIL_QUOTES = VM.getQuotes(trimId).map(function(x){ return x.rec; });
@@ -511,7 +514,7 @@
                 var m=monthly(c), rv=resid(c);
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
-                if(m==null && VMQ){ if(hm){ hm.innerHTML="견적 준비 중"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="견적 준비 중"; cm.style.color="#8a8f96"; } }   // 연결 견적에 월납입금 없음
+                if(m==null && VMQ){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 연결 견적에 월납입금 없음
                 var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
                 var set=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
                 set('pBase', base!=null?won(base)+'원':'차량가 문의');
@@ -542,6 +545,55 @@
                 setChip('plan','init', function(v,t){ var p=t.indexOf('보증')>-1?'b':(t.indexOf('선납')>-1?'s':'0'); return p===v; }); // 0/b/s
             })();
             recompute();
+        })();
+    </script>
+    <!-- 세부 등급 선택: 목록의 '등급'은 큰 항목(연료·엔진·인승·구동 묶음)만 → 같은 묶음의 세부 트림을 여기서 고름 (data/trim-groups.js) -->
+    <script src="data/trim-groups.js"></script>
+    <script>
+        (function () {
+            try {
+                var VM = window.CHAQ_VM, TG = window.CHAQ_TRIM_GROUPS, D = window.CHAQ || {}; if (!VM || !TG) return;
+                var q = location.search, tm = (q.match(/[?&]trimId=([^&]+)/)||[])[1];
+                var fromP = (q.match(/[?&]from=(stock|fast|estimate)/)||[])[1] || null;
+                var rec = null, tid = null;
+                if (window.CHAQ_DETAIL_VM_MODE && tm) tid = decodeURIComponent(tm);
+                else {
+                    var all = (D.stock||[]).concat(D.fast||[], D.estimate||[]), idm = (q.match(/[?&]id=([a-z0-9]+)/i)||[])[1];
+                    rec = window.CHAQ_DETAIL_QUOTE || (idm ? all.filter(function(r){ return r.id===idm; })[0] : null) || (D.stock&&D.stock[0]) || all[0];
+                    tid = rec && rec.trimId;
+                }
+                if (window.CHAQ_DETAIL_VM_MODE && !window.CHAQ_DETAIL_QUOTE) (function(){   // 견적 없는 차량('별도문의')도 목록에서 고른 조건(term/plan/dist) 칩 유지
+                    function setChip(param, group, match){ var m=q.match(new RegExp('[?&]'+param+'=([^&]+)')); if(!m) return; var v=decodeURIComponent(m[1]), chips=document.querySelectorAll('.detail_conds .filter_chip[data-group="'+group+'"]'), t=null;
+                        [].forEach.call(chips, function(ch){ if(match(v, ch.textContent)) t=ch; }); if(t){ [].forEach.call(chips, function(ch){ ch.classList.remove('on'); }); t.classList.add('on'); } }
+                    setChip('term','term', function(v,t){ return t.replace(/[^0-9]/g,'')===v; });
+                    setChip('dist','dist', function(v,t){ return (v==='3')===(t.indexOf('3만')>-1); });
+                    setChip('plan','init', function(v,t){ var p=t.indexOf('보증')>-1?'b':(t.indexOf('선납')>-1?'s':'0'); return p===v; });
+                })();
+                var g = tid ? TG.groupOfTrim(tid) : null; if (!g) return;
+                var kind = fromP || (rec ? (String(rec.id)[0]==='f' ? 'fast' : String(rec.id)[0]==='e' ? 'estimate' : 'stock') : null);
+                var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+                var man = function(n){ return n ? (Math.round(n/10000)).toLocaleString('ko-KR')+'만원' : ''; };
+                var box = document.createElement('div'); box.className = 'detail_trimsel';
+                box.innerHTML = '<p class="dts_head">세부 등급<small>'+esc(g.label)+'</small></p><div class="dts_row" role="radiogroup" aria-label="세부 등급">' +
+                    g.trims.map(function (t) { var lp = VM.getListPrice ? VM.getListPrice(t.id) : null, on = t.id === tid;
+                        return '<button type="button" class="dts_chip'+(on?' on':'')+'" role="radio" aria-checked="'+on+'" data-trim="'+esc(t.id)+'">'+esc(TG.shortName(t))+(lp&&lp.price?'<small>'+man(lp.price)+'</small>':'')+'</button>'; }).join('') + '</div>';
+                var anchor = document.querySelector('.detail_card .detail_year'); if (!anchor) return;
+                anchor.parentNode.insertBefore(box, anchor.nextSibling);
+                function cond() {
+                    function on(gr){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+gr+'"].on'); return b?b.textContent:''; }
+                    var it = on('init');
+                    return '&term='+((on('term').match(/[0-9]+/)||['60'])[0])+'&plan='+(it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'))+'&dist='+(on('dist').indexOf('3만')>-1?'3':'2');
+                }
+                box.addEventListener('click', function (e) {
+                    var b = e.target.closest ? e.target.closest('.dts_chip') : null; if (!b) return;
+                    var nt = b.getAttribute('data-trim'); if (nt === tid) return;
+                    // 같은 목록(재고특가·빠른인도·견적조회)에 이 트림 견적이 있으면 그 견적으로, 없으면 차량 데이터 상세(월 납입금 '별도문의')
+                    var qs = kind ? VM.getQuotes(nt).filter(function(x){ return x.kind===kind; }) : [];
+                    var hit = null; if (qs.length) { var only = {}; only[kind] = D[kind] || []; var pk = VM.pickQuote(nt, kind, only); hit = pk && pk.rec; }
+                    location.href = hit ? ('car-detail.html?id='+encodeURIComponent(hit.id)+(kind!=='stock'?'&from='+kind:'')+cond())
+                                        : ('car-detail.html?trimId='+encodeURIComponent(nt)+(kind?'&from='+kind:'')+cond());
+                });
+            } catch (e) { if (window.console) console.warn('trim select', e); }
         })();
     </script>
     <!-- 이 차량 이용 후기 (하단 슬라이드 위젯) — 후기 데이터(reviews.js) ↔ 현재 차량(trimId·모델·계열) 연동. 연결 후기가 없으면 표시 안 함 -->

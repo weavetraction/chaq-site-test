@@ -2733,3 +2733,19 @@ html.chaq-detail-loading .local-car-detail::after{
 }
 @keyframes chaqSpin{ to{ transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce){ html.chaq-detail-loading .local-car-detail::after{ animation-duration: 2s; } }
+
+/* v192: 차량 모델 선택 — 견적 없는 차량(0대)도 노출 · 등급 묶음 · 비용 '별도문의' · 상세 '세부 등급' */
+.local-special-list .fpop_row .bname small.bsub { display: block; margin-top: 2px; color: #a3a8ae; font-size: 12px; font-weight: 400; }
+.local-special-list .fpop_row { padding-top: 8px; padding-bottom: 8px; }
+.local-special-list .fpop_row.is-zero .bcount { color: #b8bdc3; }
+.local-special-list .fpop_empty { margin: 36px 8px; color: #9aa0a6; font-size: 14px; line-height: 1.6; text-align: center; }
+.local-special-list .stock-copy strong.is-inquiry { color: #5c6169; }
+.local-special-list .est_card .est_monthly b.is-inquiry { color: #5c6169; }
+.local-car-detail .detail_trimsel { margin-top: 14px; }
+.local-car-detail .detail_trimsel .dts_head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; color: #232733; font-size: 14px; font-weight: 700; }
+.local-car-detail .detail_trimsel .dts_head small { overflow: hidden; color: #8a8f96; font-size: 12px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_row { display: flex; flex-wrap: wrap; gap: 8px; }
+.local-car-detail .detail_trimsel .dts_chip { display: inline-flex; flex-direction: column; align-items: flex-start; min-height: 40px; padding: 8px 14px; border: 1px solid #e3e6ea; border-radius: 12px; background: #fff; color: #5c6169; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+.local-car-detail .detail_trimsel .dts_chip small { margin-top: 2px; color: #9aa0a6; font-size: 11.5px; font-weight: 400; }
+.local-car-detail .detail_trimsel .dts_chip.on { border-color: var(--detail-green, #18a85c); color: var(--detail-green, #18a85c); background: #f2fbf6; }
+.local-car-detail .detail_trimsel .dts_chip.on small { color: var(--detail-green, #18a85c); }

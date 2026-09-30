@@ -102,6 +102,7 @@
     <script src="data/quotes.js"></script>
     <script src="data/vehicle-master.js"></script>
     <script src="data/vehicle-master-helper.js"></script>
+    <script src="data/trim-groups.js"></script>
     <script>
         (function () {
             var DATA = window.CHAQ || {stock:[],fast:[],estimate:[]};
@@ -148,8 +149,48 @@
                 return null;
             }
 
-            var F = {brand:null, model:null, trim:null};
-            function matches(r){ return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model)&&(!F.trim||r.trim===F.trim); }
+            var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / 차량 데이터 모드: brandId, modelId, 등급 묶음 key · all = '전체 보기'
+            // ★ 차량 모델 선택 = 차량 데이터(Vehicle Master) 기준: 견적이 없는 차량도 모두 선택 가능, 숫자 = 이 목록의 견적 차량 수(0대 가능)
+            //   등급 = 큰 항목(연료·엔진·인승·구동 묶음, data/trim-groups.js). 세부 트림은 차량 상세에서 선택
+            var VM = window.CHAQ_VM, TG = window.CHAQ_TRIM_GROUPS;
+            var USE_VM = !!(VM && TG && VM.getBrands && VM.getBrands().length);
+            var LABEL = {brand:null, model:null, trim:null};
+            var VMK = {};   // 견적 id → { bid, mid, gk }
+            if (USE_VM) (function(){
+                var byName = {};
+                records.forEach(function(r){
+                    var d = r.trimId ? VM.describe(r.trimId) : null; if (!d) return;
+                    var g = TG.groupOfTrim(r.trimId);
+                    VMK[r.id] = { bid: d.brand.id, mid: d.model.id, gk: g ? g.key : null };
+                    var nk = r.brand+'|'+r.model; byName[nk] = byName[nk] || {}; byName[nk][d.model.id] = (byName[nk][d.model.id]||0)+1;
+                });
+                records.forEach(function(r){   // 차량 데이터와 트림 연결이 안 된 견적: 같은 이름의 연결 견적이 가리키는 모델로 (등급 묶음은 없음)
+                    if (VMK[r.id]) return; var m = byName[r.brand+'|'+r.model]; if (!m) return;
+                    var mid = Object.keys(m).sort(function(a,b){ return m[b]-m[a]; })[0], md = VM.getModel(mid);
+                    if (md) VMK[r.id] = { bid: md.brandId, mid: mid, gk: null };
+                });
+            })();
+            function matches(r){
+                if (USE_VM) { var k = VMK[r.id]; if (!F.brand) return true; if (!k || k.bid!==F.brand) return false; if (F.model && k.mid!==F.model) return false; if (F.trim && k.gk!==F.trim) return false; return true; }
+                return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model)&&(!F.trim||r.trim===F.trim);
+            }
+            var zeroToggle = document.querySelector('#filterPop .fpop_toggle input');
+            if (zeroToggle && USE_VM) zeroToggle.checked = false;   // 기본: 견적 없는 차량(0대)까지 모두 노출 → 켜면 0대 제외
+            function hideZero(){ return !!(zeroToggle && zeroToggle.checked); }
+            // 견적 없는 차량 카드용: 모델·등급 묶음의 대표 트림
+            function groupRep(g){ return g && g.trims && g.trims[0] ? g.trims[0].id : null; }
+            function modelRep(mid){ var gs = TG.groups(mid); return gs.length ? { g: gs[0], tid: groupRep(gs[0]) } : null; }
+            function vmCount(pred){ var n=0; records.forEach(function(r){ var k=VMK[r.id]; if(k && pred(k)) n++; }); return n; }
+            function vmImg(tid){ try { return (tid && VM.resolveImageUrl(tid,[PH],true)) || PH; } catch(e){ return PH; } }
+            function escT(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            function inquiryCard(tid, title, sub, c){   // 견적 데이터가 없는 차량: 비용칸 '별도문의'
+                return '<a class="stock-card is-inquiry" href="car-detail.html?trimId='+encodeURIComponent(tid)+'&from='+page+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
+                    '<img src="'+escT(vmImg(tid))+'" alt="'+escT(title)+'" onerror="this.onerror=null;this.src=\''+PH+'\'">'+
+                    '<span class="stock-copy"><small>'+escT(title)+'</small>'+
+                    '<strong class="is-inquiry">월 별도문의</strong>'+
+                    '<b><span class="opt-tag">'+escT(sub)+'</span></b></span>'+
+                    '<span class="stock-cta">상세보기</span></a>';
+            }
 
             var sortSel = document.getElementById('selSort');
             function sortList(arr, c) {
@@ -175,11 +216,27 @@
                 if (isEstimate) {
                     listEl.hidden = true; noEl.hidden=true;
                     function guide(msg){ estEl.hidden=false; estEl.classList.add('est-empty'); estEl.removeAttribute('href'); estEl.innerHTML='<span class="est_guide">'+msg+'</span>'; }
-                    if (!F.brand) { guide('차량 브랜드를 선택해주세요'); return; }
-                    if (!F.model) { guide('차량 모델을 선택해주세요'); return; }
-                    if (!F.trim)  { guide('차량 등급을 선택해주세요'); return; }
+                    if (!F.brand && !F.all) { guide('차량 브랜드를 선택해주세요'); return; }
+                    if (!F.model && !F.all) { guide('차량 모델을 선택해주세요'); return; }
+                    if (!F.trim && !F.all)  { guide('차량 등급을 선택해주세요'); return; }
                     var best=null, bestM=Infinity;
                     arr.forEach(function(r){ var m=monthly(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    if (!best && USE_VM && F.model) {   // 견적 데이터가 없는 차량 → 월 납입금 '별도문의'
+                        var eg = F.trim ? TG.groupByKey(F.model, F.trim) : null, er = eg ? { g: eg, tid: groupRep(eg) } : modelRep(F.model);
+                        var ed = er && er.tid ? VM.describe(er.tid) : null;
+                        if (ed) {
+                            estEl.classList.remove('est-empty'); estEl.hidden=false;
+                            estEl.setAttribute('href','car-detail.html?trimId='+encodeURIComponent(er.tid)+'&from=estimate&term='+c.term+'&plan='+c.plan+'&dist='+c.dist);
+                            estEl.innerHTML =
+                                '<span class="est_type">장기렌트</span>'+
+                                '<div class="est_visual"><img src="'+escT(vmImg(er.tid))+'" alt=""></div>'+
+                                '<strong class="est_name">'+escT(ed.fullName)+'</strong>'+
+                                '<span class="est_year">'+escT(F.trim ? er.g.label : '전체 등급')+'</span>'+
+                                '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b class="is-inquiry">별도문의</b></div>'+
+                                '<span class="est_tag">상담 시 금융사/렌트사 견적 안내</span></div>';
+                            return;
+                        }
+                    }
                     if (!best) { guide('조건에 맞는 차량이 없습니다'); return; }
                     estEl.classList.remove('est-empty'); estEl.hidden=false;
                     estEl.setAttribute('href','car-detail.html?id='+best.id+'&from=estimate&term='+c.term+'&plan='+c.plan+'&dist='+c.dist);
@@ -196,7 +253,14 @@
                 estEl.hidden=true;
                 sortList(arr, c);
                 if (countEl) countEl.textContent = arr.length;
-                if (!arr.length){ listEl.innerHTML=''; listEl.hidden=true; noEl.hidden=false; return; }
+                // 견적(재고) 없는 차량도 노출: 브랜드/모델/등급을 고른 경우, 이 목록에 0대인 모델·등급 묶음을 '별도문의' 카드로 뒤에 붙임 ('0대 제외'를 켜면 숨김)
+                var extra='';
+                if (USE_VM && F.brand && !hideZero()) {
+                    if (F.trim) { var tg=TG.groupByKey(F.model, F.trim); if (tg && !arr.length) extra += inquiryCard(groupRep(tg), LABEL.brand+' '+LABEL.model, tg.label, c); }
+                    else if (F.model) { TG.groups(F.model).forEach(function(g){ if (!vmCount(function(k){ return k.mid===F.model && k.gk===g.key; })) extra += inquiryCard(groupRep(g), LABEL.brand+' '+LABEL.model, g.label, c); }); }
+                    else { VM.getModels(F.brand).forEach(function(m){ var mr=modelRep(m.id); if (mr && !vmCount(function(k){ return k.mid===m.id; })) extra += inquiryCard(mr.tid, LABEL.brand+' '+m.nameKo, '전체 등급', c); }); }
+                }
+                if (!arr.length && !extra){ listEl.innerHTML=''; listEl.hidden=true; noEl.hidden=false; return; }
                 noEl.hidden=true;
                 var html='';
                 arr.forEach(function(r){
@@ -211,7 +275,7 @@
                         '<span class="stock-cta">상세견적</span></a>';
                 });
                 listEl.hidden=false;
-                listEl.innerHTML=html;
+                listEl.innerHTML=html+extra;
             }
 
             document.querySelectorAll('.filter_group .filter_row .filter_chip').forEach(function (btn) {
@@ -248,9 +312,40 @@
                     if(locked(t)) sel.classList.add('is-disabled'); else sel.classList.remove('is-disabled');
                 });
             }
+            // ── 차량 데이터 기준 선택 목록 (브랜드 → 모델 → 등급 묶음). 숫자 = 이 목록의 견적 차량 수
+            function vmRows(type){
+                var rows=[], total=0, secs=null;
+                if(type==='brand'){
+                    total=records.length;
+                    VM.getBrands().forEach(function(b){ var has=VM.getModels(b.id).some(function(m){ return TG.groups(m.id).length; }); if(!has) return; rows.push({id:b.id, name:b.nameKo, n:vmCount(function(k){ return k.bid===b.id; }), sec:b.domesticImport==='IMPORT'?'수입':'국산'}); });
+                    secs=['국산','수입'];
+                } else if(type==='model'){
+                    total=vmCount(function(k){ return k.bid===F.brand; });
+                    VM.getModels(F.brand).forEach(function(m){ if(!TG.groups(m.id).length) return; rows.push({id:m.id, name:m.nameKo, n:vmCount(function(k){ return k.mid===m.id; })}); });
+                } else {
+                    total=vmCount(function(k){ return k.mid===F.model; });
+                    TG.groups(F.model).forEach(function(g){ rows.push({id:g.key, name:g.label, n:vmCount(function(k){ return k.mid===F.model && k.gk===g.key; }), sub:g.trims.length>1?('세부 등급 '+g.trims.length+'개'):TG.shortName(g.trims[0])}); });
+                }
+                if(type!=='trim') rows=rows.map(function(x,i){ x.i=i; return x; }).sort(function(a,b){ return (b.n-a.n)||(a.i-b.i); });   // 견적 많은 순 (등급은 연식·연료 순서 유지)
+                if(hideZero()) rows=rows.filter(function(x){ return x.n>0; });
+                var html='';
+                function row(x){ return '<button type="button" class="fpop_row'+(x.n?'':' is-zero')+'" data-name="'+escT(x.id)+'" data-label="'+escT(x.name)+'"><span class="bname">'+escT(x.name)+(x.sub?'<small class="bsub">'+escT(x.sub)+'</small>':'')+'</span><span class="bcount">'+x.n+'</span></button>'; }
+                if(secs) secs.forEach(function(sname){ var rs=rows.filter(function(x){ return x.sec===sname; }); if(!rs.length) return; html+='<p class="fpop_sec">'+sname+'</p>'+rs.map(row).join(''); });
+                else html=rows.map(row).join('');
+                if(!rows.length) html='<p class="fpop_empty">'+(hideZero()?'견적 차량이 없습니다. \'0대 제외\'를 끄면 전체 차량을 볼 수 있어요.':'선택할 수 있는 차량이 없습니다.')+'</p>';
+                return {html:html,total:total};
+            }
             function openPop(type){
                 if(locked(type)) return;
                 currentFilter=type;
+                if(USE_VM){
+                    var v=vmRows(type);
+                    popBody.innerHTML=v.html;
+                    popApply.textContent=(type==='trim'?'등급 ':'')+v.total+'대 전체 보기';
+                    pop.classList.add('is-open'); pop.setAttribute('aria-hidden','false');
+                    document.body.style.overflow='hidden'; popBody.scrollTop=0;
+                    return;
+                }
                 var d=optionList(type);
                 var groups={'국산':[],'수입':[],'':[]};
                 d.names.forEach(function(n){ (groups[d.gu[n]]!==undefined?groups[d.gu[n]]:groups['']).push(n); });
@@ -272,12 +367,23 @@
                 btn.addEventListener('click', function(){ openPop(btn.getAttribute('data-filter')); });
             });
             document.querySelector('.fpop_close').addEventListener('click', closePop);
-            popApply.addEventListener('click', function(){ closePop(); render(); });
+            popApply.addEventListener('click', function(){   // 전체 보기: 이 단계(와 하위 단계) 선택을 풀고 해당 범위 전체를 보여줌
+                if(currentFilter){
+                    F[currentFilter]=null; LABEL[currentFilter]=null;
+                    if(currentFilter==='brand'){ F.model=null; F.trim=null; }
+                    if(currentFilter==='model'){ F.trim=null; }
+                    F.all=true;
+                    syncSelects(); updateFilterLock(); updateCondLock();
+                }
+                closePop(); render();
+            });
+            if(zeroToggle) zeroToggle.addEventListener('change', function(){ if(pop.classList.contains('is-open') && currentFilter){ openPop(currentFilter); } render(); });
             pop.addEventListener('click', function(e){ if(e.target===pop) closePop(); });
             popBody.addEventListener('click', function(e){
                 var row=e.target.closest?e.target.closest('.fpop_row'):null; if(!row) return;
                 var name=row.getAttribute('data-name');
-                F[currentFilter]=name;
+                F[currentFilter]=name; F.all=false;
+                LABEL[currentFilter]=row.getAttribute('data-label')||name;
                 if(currentFilter==='brand'){ F.model=null; F.trim=null; }
                 if(currentFilter==='model'){ F.trim=null; }
                 var pickedTrim=(currentFilter==='trim');
@@ -305,14 +411,15 @@
                     var sel=document.querySelector('.filter_select[data-filter="'+t+'"]');
                     if(!sel) return;
                     var txt=sel.querySelector('.fs_text');
-                    if(F[t]){ if(txt)txt.textContent=F[t]; sel.classList.add('is-selected'); }
+                    var shown = USE_VM ? (LABEL[t]||F[t]) : F[t];
+                    if(F[t]){ if(txt)txt.textContent=shown; sel.classList.add('is-selected'); }
                     else { if(txt)txt.textContent=placeholderText(t); sel.classList.remove('is-selected'); }
                 });
             }
             var condWrap=document.querySelector('.cond_wrap');
-            function updateCondLock(){ if(condWrap) condWrap.classList.toggle('is-locked', !F.trim); }
+            function updateCondLock(){ if(condWrap) condWrap.classList.toggle('is-locked', !F.trim && !F.all); }
             function clearFrom(type){
-                F[type]=null;
+                F[type]=null; LABEL[type]=null; F.all=false;
                 if(type==='brand'){ F.model=null; F.trim=null; }
                 if(type==='model'){ F.trim=null; }
                 syncSelects(); updateFilterLock(); updateCondLock(); render();
