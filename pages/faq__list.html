@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="theme-color" content="#20a65a">
+  <title>자주 묻는 질문 · 차큐</title>
+  <link rel="preload" href="../font/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    @font-face{font-family:Pretendard;font-weight:45 920;font-style:normal;font-display:swap;src:url("../font/PretendardVariable.woff2") format("woff2-variations")}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0}
+    body{font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;background:#f4f4f4;color:#1c1f23;-webkit-font-smoothing:antialiased}
+    .faq-shell{max-width:480px;margin:0 auto;min-height:100vh;background:#fff;padding-bottom:40px}
+
+    /* 헤더 */
+    .faq-header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;height:56px;padding:0 16px;background:#fff;border-bottom:1px solid #eee}
+    .faq-header .back{width:26px;height:26px;border:0;background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323272b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M15 5l-7 7 7 7'/></svg>") no-repeat center/24px;font-size:0;cursor:pointer;flex:none}
+    .faq-header h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.3px}
+
+    /* 인트로 */
+    .faq-intro{padding:22px 20px 6px}
+    .faq-intro h2{margin:0 0 6px;font-size:22px;font-weight:800;letter-spacing:-.6px}
+    .faq-intro p{margin:0;font-size:13.5px;color:#8a8f96;line-height:1.5}
+
+    /* 유형 필터 */
+    .faq-filter{position:sticky;top:56px;z-index:15;display:flex;gap:8px;overflow-x:auto;padding:14px 16px;background:#fff;scrollbar-width:none}
+    .faq-filter::-webkit-scrollbar{display:none}
+    .faq-filter button{flex:none;padding:9px 15px;border:0;border-radius:999px;background:#f6f7f9;color:#8a8f96;font-size:13.5px;font-weight:600;font-family:inherit;white-space:nowrap;cursor:pointer;transition:.15s}
+    .faq-filter button:hover{background:#eef0f2;color:#18a85c}
+    .faq-filter button.is-on{background:#eef0f2;color:#18a85c;font-weight:700}
+
+    /* 유형 섹션 */
+    .faq-cat-block{padding:8px 16px 4px}
+    .faq-cat-block > h3{display:none}
+
+    /* 아코디언 */
+    details.faq-item{margin-bottom:12px;border-radius:14px;background:#f5f5f5}
+    details.faq-item > summary{list-style:none;display:flex;align-items:flex-start;gap:10px;padding:16px 16px;cursor:pointer}
+    details.faq-item > summary::-webkit-details-marker{display:none}
+    .faq-q-badge{display:none}
+    .faq-q{flex:1;min-width:0;font-size:16px;font-weight:630;line-height:1.45;color:#22262b}
+    .faq-chev{flex:none;width:12px;height:12px;margin-top:5px;border-right:2px solid #b3b9c0;border-bottom:2px solid #b3b9c0;transform:rotate(45deg);transition:transform .2s}
+    details.faq-item[open] .faq-chev{transform:rotate(-135deg);margin-top:9px}
+    .faq-a{padding:0 16px 16px 16px;font-size:13.5px;line-height:1.72;color:#4c5258}
+    .faq-a p{margin:0 0 9px}
+    .faq-a p:last-child{margin-bottom:0}
+    .faq-a strong{color:#22262b;font-weight:700}
+    /* 용어 정의 */
+    .faq-terms{margin:2px 0 9px;padding:12px 14px;border-radius:12px;background:#f6f7f8}
+    .faq-terms dt{font-size:13.5px;font-weight:700;color:#18a85c}
+    .faq-terms dd{margin:2px 0 10px;color:#4c5258}
+    .faq-terms dd:last-child{margin-bottom:0}
+    /* 불릿 */
+    .faq-bullets{margin:2px 0 9px;padding-left:2px;list-style:none}
+    .faq-bullets li{position:relative;padding-left:14px;margin:4px 0}
+    .faq-bullets li::before{content:"";position:absolute;left:2px;top:9px;width:4px;height:4px;border-radius:50%;background:#18a85c}
+    /* 반납/인수 등 라벨 블록 */
+    .faq-sub{margin:2px 0 9px;padding:11px 13px;border-radius:12px;background:#f6f7f8}
+    .faq-sub b{display:block;margin-bottom:2px;color:#18a85c;font-weight:700}
+    .faq-sub + .faq-sub{margin-top:-3px}
+    /* 참고(※) */
+    .faq-note{margin-top:9px;padding-top:9px;border-top:1px dashed #e2e5e8;font-size:12px;color:#9aa0a6;line-height:1.6}
+
+    .faq-empty{display:none;padding:48px 16px;text-align:center;color:#9aa0a6;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="faq-shell">
+    <header class="faq-header">
+      <button type="button" class="back" aria-label="뒤로 가기" onclick="history.back()">뒤로</button>
+      <h1>자주 묻는 질문</h1>
+    </header>
+
+    <div class="faq-intro">
+      <h2>무엇이 궁금하세요?</h2>
+      <p>유형을 선택해 필요한 질문을 빠르게 확인하세요.</p>
+    </div>
+
+    <nav class="faq-filter" id="faqFilter" aria-label="질문 유형"></nav>
+
+    <main id="faqList"></main>
+  </div>
+
+  <script src="data/faq.js"></script>
+  <script>
+    (function(){
+      // FAQ 데이터(faq.js)에서 카테고리 탭 + 질문 섹션 렌더링 (전체·메인 공용 단일 소스)
+      var F = window.CHAQ_FAQ || {cats:[], items:[]};
+      (function renderFaq(){
+        var nav = document.getElementById("faqFilter");
+        var main = document.getElementById("faqList");
+        if(!nav || !main || !F.cats.length) return;
+        nav.innerHTML = F.cats.map(function(c,i){
+          return '<button type="button"'+(i===0?' class="is-on"':'')+' data-cat="'+i+'">'+c+'</button>';
+        }).join("");
+        var byCat = {};
+        F.items.forEach(function(it){ (byCat[it.c]=byCat[it.c]||[]).push(it); });
+        main.innerHTML = F.cats.map(function(c,i){
+          var list = (byCat[i]||[]).map(function(it){
+            return '<details class="faq-item"><summary><span class="faq-q-badge">Q</span><span class="faq-q">'+it.q+'</span><i class="faq-chev"></i></summary><div class="faq-a">'+it.a+'</div></details>';
+          }).join("");
+          return '<section class="faq-cat-block" data-cat="'+i+'"><h3>'+c+'</h3>'+list+'</section>';
+        }).join("") + '<p class="faq-empty" id="faqEmpty">해당 유형의 질문이 없습니다.</p>';
+      })();
+
+      var filter = document.getElementById('faqFilter');
+      var blocks = [].slice.call(document.querySelectorAll('.faq-cat-block'));
+      function apply(cat){
+        blocks.forEach(function(sec){
+          sec.style.display = (sec.getAttribute('data-cat')===cat) ? '' : 'none';
+        });
+      }
+      filter.addEventListener('click', function(e){
+        var btn = e.target.closest('button[data-cat]');
+        if(!btn) return;
+        [].forEach.call(filter.querySelectorAll('button'), function(b){ b.classList.toggle('is-on', b===btn); });
+        apply(btn.getAttribute('data-cat'));
+        // 유형 전환 시 상단으로
+        window.scrollTo({top:0, behavior:'auto'});
+      });
+      // 초기 표시: 활성 탭(첫 유형)만
+      var on = filter.querySelector('button.is-on');
+      if(on) apply(on.getAttribute('data-cat'));
+
+      // 아코디언: 한 번에 하나만 펼침 (다른 질문을 열면 기존 열린 질문은 접힘)
+      var items = [].slice.call(document.querySelectorAll('details.faq-item'));
+      items.forEach(function(d){
+        d.addEventListener('toggle', function(){
+          if(!d.open) return;
+          items.forEach(function(o){ if(o!==d && o.open){ o.open = false; } });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

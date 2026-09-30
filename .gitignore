@@ -1,0 +1,6 @@
+# 작업 백업·임시 파일 (사이트에 필요 없음)
+*.bak*
+*.tmp
+*.csv
+shot_tags.mjs
+.DS_Store

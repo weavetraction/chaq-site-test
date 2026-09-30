@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 이용 후기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white review-page">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="if(history.length>1){history.back();}else{location.href='../index.html';}">뒤로</button>
+            <h1>이용 후기</h1>
+        </header>
+
+        <main>
+            <div class="rv_intro">
+                <h2>차큐 이용 후기</h2>
+                <p>실제 차큐로 출고하신 고객님들의 생생한 후기예요.</p>
+            </div>
+            <div class="rv_list" id="reviewList"></div>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+
+    <!-- 이미지 확대 라이트박스 -->
+    <div class="rv_lightbox" id="rvLightbox" aria-hidden="true">
+        <button type="button" class="rv_lb_close" aria-label="닫기">&times;</button>
+        <img src="" alt="후기 사진 확대">
+    </div>
+
+    <script src="data/reviews.js"></script>
+    <script src="data/review-link.js"></script>
+    <script>
+        // 차량별 후기 (?model=<familyKey>, 차량 상세 하단 후기 위젯의 '전체보기'): 차량 데이터가 필요할 때만 불러온 뒤 그린다
+        function rvLoad(srcs, done){ if(!srcs.length) return done(); var sc=document.createElement('script'); sc.src=srcs[0]; sc.onload=sc.onerror=function(){ rvLoad(srcs.slice(1), done); }; document.body.appendChild(sc); }
+        var RV_MODEL = (location.search.match(/[?&]model=([^&#]+)/)||[])[1];
+        if (RV_MODEL && !window.CHAQ_VM) rvLoad(['data/vehicle-master.js','data/vehicle-master-helper.js'], rvBoot); else rvBoot();
+        function rvBoot(){
+            var list = (window.CHAQ_REVIEWS || []);
+            var wrap = document.getElementById('reviewList');
+            if (RV_MODEL && window.CHAQ_REVIEW_LINK) {
+                var fam = decodeURIComponent(RV_MODEL), VMm = window.CHAQ_VM && window.CHAQ_VM.getModel(fam);
+                var hit = window.CHAQ_REVIEW_LINK.reviewsFor({ familyKey: fam }).map(function(x){ return x.review; });
+                var bar = document.createElement('div'); bar.className = 'rv_filter';
+                var nm = (VMm && VMm.nameKo) || '이 차량';
+                bar.innerHTML = hit.length ? '<span><strong>'+String(nm).replace(/</g,'&lt;')+'</strong> 후기 '+hit.length+'건</span><a href="review__list.html">전체 후기 보기</a>'
+                                           : '<span>'+String(nm).replace(/</g,'&lt;')+' 후기가 아직 없어 전체 후기를 보여드려요</span>';
+                wrap.parentNode.insertBefore(bar, wrap);
+                if (hit.length) list = hit;
+            }
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            function stars(n){ return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5-n); }
+
+            wrap.innerHTML = list.map(function(r){
+                var photos = (r.photos||[]).slice(0, 4).map(function(u){  // 후기 이미지 최대 4개
+                    return '<button type="button" class="rv_photo" data-src="'+esc(u)+'"><img src="'+esc(u)+'" alt="'+esc(r.car)+' 후기 사진" loading="lazy"></button>';
+                }).join('');
+                return '<article class="rv_card" id="rv-'+r.id+'">'+
+                    '<div class="rv_top">'+
+                        '<span class="rv_avatar">'+esc(r.name.charAt(0))+'</span>'+
+                        '<span class="rv_meta"><strong class="rv_name">'+esc(r.name)+'</strong>'+
+                        '<span class="rv_stars">'+stars(r.stars)+'</span></span>'+
+                    '</div>'+
+                    '<div class="rv_carbox"><strong>'+esc(r.car)+'</strong><em>'+esc(r.trim)+'</em></div>'+
+                    '<p class="rv_text">'+esc(r.text)+'</p>'+
+                    (photos ? '<div class="rv_photos">'+photos+'</div>' : '')+
+                '</article>';
+            }).join('');
+
+            // 이미지 확대(라이트박스)
+            var lb = document.getElementById('rvLightbox');
+            var lbImg = lb.querySelector('img');
+            function openLb(src){ lbImg.src = src; lb.classList.add('is-open'); lb.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+            function closeLb(){ lb.classList.remove('is-open'); lb.setAttribute('aria-hidden','true'); document.body.style.overflow=''; lbImg.src=''; }
+            wrap.addEventListener('click', function(e){
+                var btn = e.target.closest ? e.target.closest('.rv_photo') : null;
+                if(!btn) return;
+                openLb(btn.getAttribute('data-src'));
+            });
+            lb.addEventListener('click', function(){ closeLb(); });
+            lb.querySelector('.rv_lb_close').addEventListener('click', function(e){ e.stopPropagation(); closeLb(); });
+            document.addEventListener('keydown', function(e){ if(e.key==='Escape' && lb.classList.contains('is-open')) closeLb(); });
+
+            // 클릭한 리뷰를 맨 위로 스크롤 (?id=N)
+            var m = location.search.match(/[?&]id=(\d+)/);
+            if(m){
+                var target = document.getElementById('rv-'+m[1]);
+                if(target){
+                    // sticky 헤더(56px) 아래에 카드 상단이 오도록
+                    requestAnimationFrame(function(){
+                        var headerH = 56;
+                        var top = target.getBoundingClientRect().top + window.scrollY - headerH - 10;
+                        window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+                        target.classList.add('is-focus');
+                        setTimeout(function(){ target.classList.remove('is-focus'); }, 1600);
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

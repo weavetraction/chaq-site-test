@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 마이페이지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white mypage">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="location.href='../index.html'">뒤로</button>
+            <h1>마이페이지</h1>
+        </header>
+
+        <main>
+            <!-- 프로필 -->
+            <section class="mp_profile" id="mpProfile"></section>
+
+            <!-- 진행 현황 (심사/주문 상태 · CRM+차량 연동) -->
+            <section class="mp_sec">
+                <div class="mp_sec_head"><h2>진행 현황</h2></div>
+                <div class="mp_status_tiles" id="mpStatusTiles"></div>
+                <div class="mp_orders" id="mpOrders"></div>
+            </section>
+
+            <!-- 내가 저장한 견적 -->
+            <section class="mp_sec">
+                <div class="mp_sec_head"><h2>내가 저장한 견적</h2><span class="mp_count" id="mpSavedCount"></span></div>
+                <p class="mp_note">'확인하기'를 눌러 현재기준 견적을 다시 확인해주세요.</p>
+                <div class="mp_saved" id="mpSaved"></div>
+            </section>
+
+            <!-- 최근 본 견적 -->
+            <section class="mp_sec">
+                <div class="mp_sec_head"><h2>최근 본 견적</h2></div>
+                <div class="mp_recent_scroll" id="mpRecent"></div>
+            </section>
+
+            <!-- 차큐에 문의하기 (메인페이지 문의 카드) -->
+            <section class="mp_sec">
+                <div class="mp_sec_head"><h2>차큐에 문의하기</h2></div>
+                <div class="guide-grid">
+                    <button type="button" data-pending-link data-action="inquiry"><strong>이미 이용 중이신가요?</strong><span>사고·보험 처리,<br>반납/위약금 등</span><b>무엇이든 물어보세요 ›</b></button>
+                    <button type="button" data-pending-link data-action="inquiry"><strong>계약 고민 중이신가요?</strong><span>최저가 비교, 숨은 조건,<br>즉시 출고 차량 조회 등</span><b>출고 고민 상담 ›</b></button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button class="on" type="button"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+
+    <script src="data/quotes.js"></script>
+    <script src="data/vehicle-master.js"></script>
+    <script src="data/vehicle-master-helper.js"></script>
+    <script src="data/mypage.js"></script>
+    <script>
+        (function(){
+            var C = window.CHAQ || {stock:[],fast:[],estimate:[]};
+            var M = window.CHAQ_MYPAGE || {};
+            var PH = "../assets/icons/car-placeholder.svg";
+            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true)) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            var ALL = (C.stock||[]).concat(C.fast||[], C.estimate||[]);
+            function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            function car(id){ for(var i=0;i<ALL.length;i++){ if(ALL[i].id===id) return ALL[i]; } return null; }
+            function won(n){ return (n||0).toLocaleString('ko-KR'); }
+            function monthly(r,c){ try{ var t=r.cost[c.dist][c.term]; return (t[c.plan]!=null)?t[c.plan]:t['0']; }catch(e){ return null; } }
+            function planLabel(p){ return p==='b'?'보증금':(p==='s'?'선납금':'초기비용 0원'); }
+            function condText(c){ return c.term+'개월 · '+planLabel(c.plan)+' · '+c.dist+'만km'; }
+            function detailHref(id,c){ return 'car-detail.html?id='+id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist; }
+
+            // 프로필 — 이름 + 설정(톱니바퀴)만 노출
+            var pf = M.profile||{};
+            document.getElementById('mpProfile').innerHTML =
+                '<span class="mp_pinfo"><strong>'+esc(pf.name)+'님</strong></span>'+
+                '<button type="button" class="mp_setting" aria-label="개인정보 설정" onclick="location.href=\'settings.html\'"></button>';
+
+            // 진행 현황 — 상태 타일
+            var STAGES = ['심사중','심사승인','약정','주문중','출고완료'];
+            var TILE = ['심사중','심사승인','약정','주문중'];
+            var orders = M.orders||[];
+            var counts = {}; TILE.forEach(function(s){ counts[s]=0; });
+            orders.forEach(function(o){ if(counts[o.status]!=null) counts[o.status]++; });
+            document.getElementById('mpStatusTiles').innerHTML = TILE.map(function(s){
+                return '<div class="mp_tile"><b>'+counts[s]+'</b><span>'+s+'</span></div>';
+            }).join('');
+
+            // 진행 현황 — 주문 카드 + 단계 스테퍼 + 담당 매니저
+            var MGR_PH = "../assets/icons/manager-avatar.svg";
+            document.getElementById('mpOrders').innerHTML = orders.map(function(o){
+                var r=car(o.id); var name=r?(r.brand+' '+r.model):'차량'; var yearLine=r?(r.year||''):''; var trimLine=r?(r.trim||''):'';
+                var m=r?monthly(r,o):null;
+                var cur=STAGES.indexOf(o.status); if(cur<0) cur=0;
+                var steps=STAGES.map(function(st,i){
+                    var cls = i<cur ? 'done' : (i===cur ? 'active' : '');
+                    return '<span class="mp_step '+cls+'"><i></i><em>'+st+'</em></span>';
+                }).join('');
+                var mgr=o.mgr||{};
+                var mgrHtml = '<div class="mp_mgr">'+
+                    '<img class="mp_mgr_photo" src="'+(mgr.photo||MGR_PH)+'" alt="">'+
+                    '<div class="mp_mgr_info"><strong>'+esc(mgr.name||'-')+'</strong><em>'+esc(mgr.title||'')+'</em></div>'+
+                    '<button type="button" class="mp_mgr_chat" data-pending-link data-action="inquiry" aria-label="채팅 문의"></button>'+
+                '</div>';
+                return '<div class="mp_order">'+
+                    '<a class="mp_order_top" href="'+detailHref(o.id,o)+'">'+
+                        '<img class="mp_ocar" src="'+carImg(r)+'" alt="">'+
+                        '<div class="mp_oinfo">'+
+                        '<strong>'+esc(name)+'</strong>'+
+                        '<span class="mp_oyear">'+esc(yearLine)+'</span>'+
+                        '<span class="mp_otrim">'+esc(trimLine)+'</span>'+
+                        (m!=null?'<b>월 '+won(m)+'원</b>':'')+
+                        (m!=null?'<span class="mp_quote_btn" role="button" data-action="quote-view">견적서 확인하기</span>':'')+'</div>'+
+                        '<span class="mp_odate">'+esc(o.date)+' 신청</span>'+
+                    '</a>'+
+                    '<div class="mp_stepper">'+steps+'</div>'+
+                    mgrHtml+
+                '</div>';
+            }).join('') || '<p class="mp_empty">진행 중인 건이 없습니다.</p>';
+
+            // 내가 저장한 견적
+            var saved = M.savedQuotes||[];
+            document.getElementById('mpSavedCount').textContent = saved.length+'건';
+            document.getElementById('mpSaved').innerHTML = saved.map(function(q){
+                var r=car(q.id); if(!r) return '';
+                var m=(q.price!=null?q.price:monthly(r,q)); // 저장 당시 월비용(스냅샷) — 실시간 차량데이터 미연동
+                return '<a class="mp_qcard" href="'+detailHref(q.id,q)+'">'+
+                    '<img src="'+carImg(r)+'" alt="">'+
+                    '<span class="mp_qinfo"><small>'+esc(r.brand+' '+r.model)+'</small>'+
+                    '<strong>월 '+won(m)+'원</strong>'+
+                    '<span class="mp_qcond">'+esc(condText(q))+'</span></span>'+
+                    '<span class="mp_qcta">확인하기</span></a>';
+            }).join('') || '<p class="mp_empty">저장한 견적이 없습니다.</p>';
+
+            // 최근 본 견적 (가로 스크롤)
+            var recent = (M.recentQuotes||[]);
+            document.getElementById('mpRecent').innerHTML = recent.map(function(id){
+                var r=car(id); if(!r) return '';
+                var m=monthly(r,{term:'60',plan:'0',dist:'2'});
+                return '<a class="mp_recent" href="'+detailHref(id,{term:'60',plan:'0',dist:'2'})+'">'+
+                    '<img src="'+carImg(r)+'" alt="">'+
+                    '<small>'+esc(r.brand+' '+r.model)+'</small>'+
+                    '<strong>월 '+won(m)+'원</strong></a>';
+            }).join('') || '<p class="mp_empty">최근 본 견적이 없습니다.</p>';
+
+            // 상담/설정 등 준비중 링크
+            document.querySelectorAll('[data-pending-link]').forEach(function(el){
+                el.addEventListener('click', function(e){ e.preventDefault(); alert('상담 링크는 최종 URL 전달 후 연결됩니다.'); });
+            });
+            // 견적서 확인하기 (카드 링크로 전파 방지)
+            document.querySelectorAll('.mp_quote_btn').forEach(function(el){
+                el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); alert('견적서는 최종 연동 후 제공됩니다.'); });
+            });
+        })();
+    </script>
+</body>
+</html>

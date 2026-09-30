@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 아티클</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="location.href='../index.html'">뒤로</button>
+            <h1>아티클</h1>
+        </header>
+
+        <main>
+            <div class="art_intro">
+                <h2>신차 장기렌트 이야기</h2>
+                <p>계약 전에 알아두면 좋은 정보를 차큐가 정리했어요.</p>
+            </div>
+            <div class="thumb_list" id="articleList"></div>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button class="on" type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+
+    <script src="data/content.js"></script>
+    <script>
+        (function(){
+            var list = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.articles) || [];
+            var wrap = document.getElementById('articleList');
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            wrap.innerHTML = list.map(function(a){
+                return '<a class="thumb_card" href="posting__detail.html?id='+encodeURIComponent(a.id)+'">'+
+                    '<span class="tc_thumb"><img src="'+a.img+'" alt="" loading="lazy"></span>'+
+                    '<span class="tc_body">'+
+                        '<span class="tc_cat">'+esc(a.cat)+'</span>'+
+                        '<strong class="tc_title">'+esc(a.title)+'</strong>'+
+                        '<span class="tc_desc">'+esc(a.lead)+'</span>'+
+                        '<span class="tc_date">'+esc(a.date)+'</span>'+
+                    '</span></a>';
+            }).join('');
+        })();
+    </script>
+</body>
+</html>

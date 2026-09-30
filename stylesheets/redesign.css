@@ -1,0 +1,456 @@
+@font-face{font-family:"Pretendard";font-weight:45 920;font-style:normal;font-display:swap;src:url("../font/PretendardVariable.woff2") format("woff2-variations")}
+:root{--green:#20a65a;--dark-green:#218c4f;--soft-green:#effbf3;--page:#f2f4f7;--line:#e7e9ec;--text:#16181b;--muted:#8a9098;--shadow:0 5px 18px rgba(36,46,56,.06)}
+*{box-sizing:border-box}
+html{background:#f4f4f4;scroll-behavior:smooth}
+body{margin:0;color:var(--text);background:#f4f4f4;font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+img{display:block;max-width:100%}
+.app-shell{position:relative;width:100%;max-width:480px;min-height:100vh;margin:0 auto;padding-bottom:78px;background:#fff}
+main{background:#fff}
+.content-pad{padding-right:20px;padding-left:20px}
+.section-space{padding-top:28px;padding-bottom:28px}
+.top-promo{position:relative;display:flex;min-height:34.5px;align-items:center;justify-content:center;padding:6px 36px 6px 14px;color:#fff;background:#3f965c;font-size:11px;text-align:center}
+.top-promo button{position:absolute;right:10px;width:24px;height:24px;border:0;color:#fff;background:transparent;font-size:16px;cursor:pointer}
+.main-header{display:flex;height:55px;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid #eceff0}
+.brand{display:flex;width:58px;height:24px;align-items:center;overflow:hidden}
+.brand img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:left center}
+.coupon-button{width:82px;height:31px;padding:0;border:0;background:transparent;cursor:pointer}
+.coupon-button img{width:100%;height:100%;object-fit:contain}
+.hero{position:relative;overflow:hidden;background:#fff}
+.hero-track{position:relative;aspect-ratio:10/5.7;background:#278f4e}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .45s ease}
+.hero-slide.is-active{opacity:1;z-index:1}
+.hero-slide img{width:100%;height:100%;object-fit:cover}
+.hero-count{position:absolute;right:15px;bottom:10px;z-index:2;padding:3px 8px;border-radius:12px;color:#fff;background:rgba(0,0,0,.48);font-size:11px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 10px;padding:33px 20px 20px;background:#fff}
+.quick-grid a{display:flex;min-width:0;align-items:center;flex-direction:column;gap:8px;color:#484d54;font-size:11px;text-align:center}
+.quick-grid img{width:31.5px;height:31.5px;object-fit:contain}
+.finder-wrap{padding-top:28px;padding-bottom:12px}
+.finder-card{position:relative;display:flex;min-height:92px;overflow:hidden;align-items:center;border:1px solid #e2e2e2;border-radius:12px;background:#f4f4f4;box-shadow:none}
+.finder-copy{position:relative;z-index:4;display:flex;width:66%;padding:15px 0 15px 16px;flex-direction:column;transform:translateX(3%)}
+.finder-copy small{color:#8e949b;font-size:11px}
+.finder-copy strong{margin-top:2.94px;font-size:18px;font-weight:660;letter-spacing:-.8px}
+.finder-copy b{margin-top:8.64px;color:#6f757b;font-size:11px;font-weight:600}
+.logo-chip-slider{position:absolute;top:0;right:0;width:42%;height:100%;overflow:hidden;transform:translateX(-7%)}
+.logo-chip-window{position:absolute;inset:0}
+.logo-chip-window::before,.logo-chip-window::after{position:absolute;top:0;bottom:0;width:33.6%;z-index:5;content:"";pointer-events:none}
+.logo-chip-window::before{left:0;background:linear-gradient(90deg,#f4f4f4 0%,rgba(244,244,244,.88) 34%,rgba(244,244,244,0) 100%)}
+.logo-chip-window::after{right:0;background:linear-gradient(90deg,rgba(244,244,244,0) 0%,rgba(244,244,244,.88) 66%,#f4f4f4 100%)}
+.logo-chip-card{position:absolute;top:50%;left:58%;width:53.5px;height:53.5px;opacity:0;transform:translate(-50%,-50%) scale(.72);filter:blur(.2px);transition:opacity .4s ease,transform .4s cubic-bezier(.22,.61,.36,1);z-index:1}
+.logo-chip-card img{width:100%;height:100%;object-fit:contain}
+.logo-chip-card.is-active{opacity:1;transform:translate(-50%,-50%) scale(1);filter:drop-shadow(0 8px 16px rgba(0,0,0,.07));z-index:6}
+.logo-chip-card.is-prev{opacity:.24;transform:translate(-135%,-50%) scale(.7);z-index:2}
+.logo-chip-card.is-next{opacity:.38;transform:translate(35%,-50%) scale(.7);z-index:2}
+.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.6px}
+.delivery-section h2{display:flex;align-items:center;gap:6px}
+.delivery-section h2 img{width:19px;height:19px;object-fit:contain}
+.delivery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.delivery-grid a{display:flex;min-height:111px;padding:17px 15px;border:1px solid #e2e2e2;border-radius:12px;flex-direction:column;background:#f4f4f4}
+.delivery-grid small{color:#6f8576;font-size:11px}
+.delivery-grid strong{margin-top:3px;color:#23a45c;font-size:16px}
+.delivery-grid b{margin-top:auto;color:#18a358;font-size:22px;line-height:1}
+.stock-section{border:0;background:#fff}
+.section-heading p{margin:3px 0 0;color:#8e949b;font-size:11px}
+.price-filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 14px}
+.price-filters button{height:34px;border:1px solid #e2e2e2;border-radius:6px;color:#656b72;background:#fff;font-size:11px;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
+.price-filters button.is-active{border-color:var(--green);color:#fff;background:var(--green);font-weight:700;box-shadow:0 3px 7px rgba(32,71,47,.1)}
+.stock-panel{padding:9px 16px 16px;border-radius:14px;background:#f4f4f4}
+.stock-list{display:grid;gap:0}
+.stock-card{position:relative;display:grid;min-height:96px;padding:14.4px 0;grid-template-columns:105px 1fr auto;grid-template-rows:1fr;background:transparent}
+.stock-card[hidden]{display:none!important}
+.stock-number{grid-column:1/3;color:#878d94;font-size:11px}
+.stock-badge{display:none}
+.stock-card>img{align-self:center;width:98px;height:70px;object-fit:contain;transform:scale(1.18)}
+.stock-copy{display:flex;min-width:0;justify-content:center;flex-direction:column;padding-left:9px}
+.stock-copy small{overflow:hidden;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.stock-copy strong{margin-top:4px;font-size:18px;font-weight:800;letter-spacing:-.7px;white-space:nowrap}
+.stock-copy b{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;margin-top:5px;color:#666d74;font-size:11px;font-weight:500;white-space:nowrap}
+.opt-tag{padding:2.375px 5px;border-radius:5px;background:#e3e3e3;color:#8b8b8b;font-size:11px;font-weight:400;line-height:1;white-space:nowrap}
+.opt-tag em{font-style:normal;font-weight:400}
+.stock-cta{align-self:center;margin-left:8px;margin-right:8px;padding:6px 10px;border:1px solid #e2e2e2;border-radius:7px;background:transparent;color:#20a65a;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;transform:translateX(10%)}
+.more-button{display:flex;width:100%;height:43px;align-items:center;justify-content:center;margin-top:14px;border:1px solid #e2e2e2;border-radius:7px;color:#72777d;background:#fff;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
+.more-button span{margin-left:4px}
+.discount-card{margin-top:15px;padding:5px 16px 16px;border-radius:13px;background:#f4f4f4}
+.discount-live-tag{display:inline-block;margin-bottom:8px;padding:4px 9px;border-radius:6px;background:#e3e3e3;color:#8b8b8b;font-size:11px;font-weight:600;line-height:1}
+.discount-card a:not(.more-button){display:flex;min-height:64px;align-items:center;justify-content:space-between;border-top:.5px solid #f2f2f2}
+.discount-card a:not(.more-button):first-of-type{border-top:0}
+.discount-card span{display:flex;align-items:center;gap:10px}
+.discount-card .brand-text{display:flex;flex-direction:column;font-style:normal}
+.discount-card small{color:#81878e;font-size:11px}
+.discount-card b{margin-top:3px;font-size:13px}
+.discount-card .brand-logo{width:28px;height:28px;padding:5px;border-radius:50%;background:#fff;object-fit:contain;box-sizing:border-box;flex:none}
+.discount-card strong{color:#777e84;font-size:11px;font-weight:500}
+.discount-card em{margin-left:5px;color:#36ab68;font-size:16px;font-style:normal;font-weight:800}
+.cash-banner-wrap{padding-top:10px;padding-bottom:22px}
+.cash-banner{display:flex;min-height:107px;align-items:center;justify-content:space-between;padding:18px 20px;border-radius:12px;color:#fff;background:linear-gradient(112deg,#3c9a5d,#217d45)}
+.cash-banner span{display:flex;flex-direction:column}
+.cash-banner small{font-size:11px}
+.cash-banner strong{margin-top:3px;font-size:22px;font-weight:800;letter-spacing:-.7px}
+.cash-banner b{margin-top:15px;color:rgba(255,255,255,.7);font-size:11px;font-weight:500}
+.cash-banner img{width:68px;height:68px;object-fit:contain;filter:brightness(0) invert(1)}
+.review-section,.faq-section,.guide-section{background:#fff}
+.review-scroll{display:grid;grid-auto-columns:calc(100%/2.1);grid-auto-flow:column;gap:10px;overflow-x:auto;margin:15px -20px 0;padding:0 20px 5px;scrollbar-width:none}
+.review-scroll::-webkit-scrollbar{display:none}
+.review-scroll article{display:flex;aspect-ratio:4/5;padding:18px 16px;border-radius:12px;flex-direction:column;background:#f4f4f4}
+.review-scroll article small{color:#74a384;font-size:11px}
+.stars{margin-top:8px;color:#f5c84b;font-size:13px;letter-spacing:1px}
+.review-scroll p{margin:12px 0;color:#4c5258;font-size:11px;line-height:1.65}
+.review-scroll b{margin-top:auto;color:#55a871;font-size:11px}
+.faq-section{border-top:0}
+.faq-list{display:grid;gap:12px;margin-top:15px}
+.faq-list details{border:0;border-radius:14px;background:#f4f4f4}
+.faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;list-style:none;cursor:pointer}
+.faq-list summary::-webkit-details-marker{display:none}
+.faq-head{display:flex;min-width:0;flex-direction:column;gap:9px}
+.faq-cat{align-self:flex-start;padding:4px 10px;border-radius:7px;background:#e3e3e3;color:#8b8b8b;font-size:13px}
+.faq-q{color:#1c1f22;font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.35}
+.faq-arrow{flex:none;width:11px;height:11px;margin-top:-4px;border-right:2px solid #9aa0a6;border-bottom:2px solid #9aa0a6;transform:rotate(45deg);transition:transform .2s}
+.faq-list details[open] .faq-arrow{margin-top:4px;transform:rotate(-135deg)}
+.faq-list p{margin:0;padding:2px 18px 20px;color:#5c6167;font-size:13px;line-height:1.7}
+.guide-section{padding-bottom:35px;border-top:0}
+.guide-section>p{margin:3px 0 15px;color:#8b9198;font-size:11px}
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.guide-grid button{display:flex;min-height:122px;overflow:hidden;padding:0;border:0;border-radius:11px;flex-direction:column;color:#191b1e;background:#f4f4f4;text-align:left;cursor:pointer}
+.guide-grid button strong{width:100%;padding:13px 12px;background:#dedfe2;font-size:13px}
+.guide-grid button span{padding:12px 12px 0;color:#8d9298;font-size:11px;line-height:1.5}
+.guide-grid button b{margin-top:auto;padding:0 12px 13px;font-size:11px}
+.company-footer{min-height:120px;padding-top:25px;color:#8a9097;background:#f4f4f4;font-size:11px}
+.company-footer img{width:58px;height:20px;object-fit:contain;object-position:left center}
+.company-footer details{margin-top:10px}
+.company-footer summary{cursor:pointer}
+.bottom-nav{position:fixed;bottom:0;left:50%;z-index:50;display:grid;width:100%;max-width:480px;height:72px;transform:translateX(-50%);grid-template-columns:repeat(5,1fr);border-top:1px solid #e6e9ec;background:rgba(255,255,255,.97);box-shadow:0 -3px 15px rgba(24,35,45,.04)}
+.bottom-nav a,.bottom-nav button{position:relative;display:flex;min-width:0;align-items:center;justify-content:center;gap:4px;border:0;color:#b7bcc2;background:transparent;flex-direction:column;font-size:10px;cursor:pointer}
+.bottom-nav .is-active,.bottom-nav a:hover,.bottom-nav button:hover{color:#239e5a;font-weight:700}
+.bottom-nav .gnb-icon-pair{position:relative;display:block;width:24px;height:24px}
+.bottom-nav .gnb-icon-pair img{position:absolute;inset:0;width:24px;height:24px;object-fit:contain;transition:opacity .16s ease}
+.bottom-nav .gnb-icon-color{opacity:0}
+.bottom-nav a:hover .gnb-icon-default,.bottom-nav .is-active .gnb-icon-default{opacity:0}
+.bottom-nav a:hover .gnb-icon-color,.bottom-nav .is-active .gnb-icon-color{opacity:1}
+.bottom-nav>button>i{position:relative;display:block;width:24px;height:22px;font-style:normal}
+.bottom-nav>button>i::before{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cecece;content:"•••";font-size:18px;font-weight:800;letter-spacing:2px}
+.bottom-nav>button:hover>i::before{color:#239e5a}
+.bottom-nav em{position:absolute;top:-16px;left:50%;min-width:82px;padding:5px 7px;transform:translateX(-50%);border-radius:12px;color:#fff;background:#2f9e5c;font-size:11px;font-style:normal;font-weight:700;text-align:center;line-height:1.15;animation:gnbBadgeFloat 2.4s ease-in-out infinite}
+.bottom-nav em::after{content:"";position:absolute;top:100%;left:50%;margin-top:-1px;transform:translateX(-50%);border:6px solid transparent;border-top-color:#2f9e5c;border-bottom:0}
+@keyframes gnbBadgeFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+.full-menu{position:fixed;inset:0;z-index:100;visibility:hidden;overflow:hidden;overscroll-behavior:none;background:#fff;opacity:0;transition:opacity .2s ease,visibility .2s}
+.full-menu.is-open{visibility:visible;opacity:1}
+.full-menu-inner{position:relative;width:100%;max-width:480px;height:100vh;height:100dvh;margin:0 auto;padding:0 28px 20px;overflow:hidden;background:#fff}
+.menu-header{display:flex;height:58px;align-items:center;gap:20px;margin:0 -28px calc(16px + 5vh);padding:0 20px;border-bottom:1px solid #eee;background:#fff}
+.menu-header .menu-back{width:24px;height:24px;border:0;background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2323272b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M15 5l-7 7 7 7'/></svg>") no-repeat center/24px 24px;font-size:0;cursor:pointer}
+.menu-header h2{margin:0;font-size:16px;font-weight:500;letter-spacing:normal}
+.menu-guides{margin-bottom:18px;transform:translateY(-10%)}
+/* 메뉴 전체보기 문의카드 = 메인 'ChaQ Guide' 문의카드 동일 스타일 */
+.menu-guides button{min-height:122px}
+.menu-guides button strong{padding:13px 12px;position:relative;background:transparent;transform:translateX(2%)}
+.menu-guides button strong::before{content:"";position:absolute;inset:0;transform:translateX(-2%);background:#dedfe2;z-index:-1}
+.menu-guides button span{padding:12px 12px 0;line-height:1.5;transform:translateX(2%)}
+.menu-guides button b{padding:0 12px 13px;transform:translateX(2%)}
+.menu-links{display:grid}
+.menu-links a{display:grid;min-height:66.56px;align-items:center;grid-template-columns:72px 1fr;border-bottom:.5px solid #f4f4f4}
+.menu-links img{width:32.5px;height:32.5px;margin-left:14px;object-fit:contain}
+.menu-links span{display:flex;flex-direction:column}
+.menu-links strong{font-size:17px;font-weight:630}
+.menu-links small{margin-top:3px;color:#8b9198;font-size:12px}
+.menu-cash{margin-top:38px}
+.toast{position:fixed;left:50%;bottom:92px;z-index:120;visibility:hidden;padding:11px 16px;transform:translate(-50%,12px);border-radius:22px;color:#fff;background:rgba(23,27,31,.9);font-size:11px;opacity:0;transition:.2s;white-space:nowrap}
+.toast.is-show{visibility:visible;transform:translate(-50%,0);opacity:1}
+@media(min-width:700px){
+  html,body{height:100%;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center}
+  .app-shell{height:calc(100vh - 44px);min-height:0;margin:22px auto;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;border-radius:18px;scrollbar-width:none}
+  .app-shell::-webkit-scrollbar{display:none}
+  .bottom-nav{bottom:22px;border-radius:0 0 18px 18px}
+  .full-menu-inner{box-shadow:0 0 24px rgba(20,30,40,.12)}
+}
+@media(max-width:360px){.content-pad{padding-right:16px;padding-left:16px}.stock-card{grid-template-columns:88px 1fr auto}.stock-card>img{width:84px}.stock-copy strong{font-size:16px}.finder-copy strong{font-size:16px}.cash-banner strong{font-size:18px}.menu-intro p{font-size:18px}.menu-intro h2{font-size:28px}}
+
+/* v31: 로고칩 좌/우 그라데이션 오른쪽 10% 이동 + 메뉴 팝업 헤더 좌우여백 본문과 통일(28px) */
+.logo-chip-window::before{left:10%}
+.logo-chip-window::after{right:-10%}
+.menu-header{padding-left:28px;padding-right:28px}
+
+/* v36: 섹션 구분 둥근 박스 전체 더 밝은 회색으로 통일 (#f4f4f4 -> #f5f5f5) */
+.finder-card,.delivery-grid a,.stock-panel,.discount-card,.review-scroll article,.faq-list details,.guide-grid button{background:#f5f5f5}
+.logo-chip-window::before{background:linear-gradient(90deg,#f5f5f5 0%,rgba(245,245,245,.88) 34%,rgba(245,245,245,0) 100%)}
+.logo-chip-window::after{background:linear-gradient(90deg,rgba(245,245,245,0) 0%,rgba(245,245,245,.88) 66%,#f5f5f5 100%)}
+
+/* v37: 태그 배경 전체 더 밝은 회색으로 통일 (#e3e3e3 -> #ececec) */
+.opt-tag,.discount-live-tag,.faq-cat{background:#ececec}
+
+/* v43: 로고칩 인라인 SVG 채우기 */
+.logo-chip-card svg{width:100%;height:100%;display:block;object-fit:contain}
+
+/* v44: 고객후기 카드 내 리뷰사진·차량명·트림 미니 흰색 카드 (후기내용과 이름 사이) */
+.review-scroll .review-mini{display:flex;align-items:center;gap:9px;margin-top:auto;margin-bottom:8px;padding:7px 9px;border-radius:9px;background:#fff;border:1px solid #e2e2e2}
+.review-scroll .review-mini img{width:40px;height:40px;border-radius:7px;object-fit:cover;background:#f2f2f2;flex:none}
+.review-scroll .review-mini .rm-info{display:flex;flex-direction:column;min-width:0}
+.review-scroll .review-mini .rm-info strong{font-size:12px;font-weight:700;color:#2a2e33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.review-scroll .review-mini .rm-info em{margin-top:1px;color:#8a8f96;font-size:10.5px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.review-scroll .review-mini+b{margin-top:0}
+
+/* v47: 고객후기 미니 흰색 카드 위치 약 10% 아래로 */
+.review-scroll .review-mini{transform:translateY(10%)}
+
+/* v55: 모든 페이지 공통 사업자 정보 푸터 */
+.chaq-biz-footer{padding:24px 20px 28px;background:#fff;border-top:1px solid #f0f0f0;color:#9aa0a6;font-size:11px;line-height:1.9;text-align:left}
+.chaq-biz-footer .cf-logo{width:60px;margin-bottom:10px;opacity:.55;filter:grayscale(1)}
+.chaq-biz-footer .cf-info{margin:0}
+.chaq-biz-footer .cf-links{margin:10px 0 0}
+.chaq-biz-footer .cf-links a{color:#7b8087;text-decoration:none}
+.chaq-biz-footer .cf-links span{margin:0 7px;color:#d5d8dc}
+/* car-detail: 고정 CTA바 위로 여백 확보 */
+.local-car-detail .detail_card:last-of-type{margin-bottom:18px}
+.local-car-detail .chaq-biz-footer{margin-bottom:104px}
+
+
+/* v62: 메인 8개 바로가기 메뉴 글자 1.5px 확대 (11 -> 12.5px) */
+.quick-grid a{font-size:12.5px}
+
+/* v63: 메인 지정 문구 12.5px 통일 */
+.finder-copy small,
+.finder-copy b,
+.delivery-grid small,
+.section-heading p,
+.discount-card small,
+.cash-banner small,
+.cash-banner b,
+.review-scroll article small,
+.review-scroll p,
+.faq-list p,
+.guide-section>p,
+.guide-grid button span,
+.guide-grid button b{font-size:12.5px}
+
+/* v64: '기다림 없는 신차 장기렌트' 섹션 제목 1.5px 확대 (18 -> 19.5px) */
+.delivery-section h2{font-size:19.5px}
+
+/* v65: 섹션 제목·재고특가 월비용·수입차 할인율 → 21px 통일 */
+.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{font-size:21px}
+.stock-copy strong{font-size:21px}
+.discount-card em{font-size:21px}
+/* 차큐가 찾아드릴게요·빠른인도/즉시출고 차량·수입차 프로모션명·FAQ 질문 → 18px 통일 */
+.finder-copy strong,.delivery-grid strong,.discount-card b,.faq-q{font-size:18px}
+/* 차큐가 찾아드릴게요 카드: 두 문장 굵기 스왑 */
+.finder-copy small{font-weight:600}
+.finder-copy b{font-weight:400}
+
+/* v66: 수입차 프로모션명 16px 복귀 + '상세견적' 제외 버튼 폰트 +1.5px */
+.discount-card b{font-size:16px}
+.more-button{font-size:14.5px}
+.price-filters button{font-size:12.5px}
+
+/* ===== v67 ===== */
+/* 1) 8개 메뉴 ↔ 차큐가 찾아드릴게요 간격 +10% (48→52.8px), 그 아래 delivery와의 간격도 동일하게 */
+.finder-wrap{padding-top:32.8px;padding-bottom:24.8px}
+
+/* 2) 재고특가 서브타이틀 ↔ 월비용 버튼 간격 +20% (16→19.2px) + 모든 섹션 제목/서브타이틀 ↔ 위젯 간격 통일 */
+.price-filters{margin-top:19.2px}
+.delivery-grid{margin-top:19.2px}
+.discount-card{margin-top:19.2px}
+.review-scroll{margin-top:19.2px}
+.faq-list{margin-top:19.2px}
+.guide-section>p{margin-bottom:19.2px}
+
+/* 3) 재고특가 차량 카드간 높이 간격 +20% (14.4→17.28px) */
+.stock-card{padding-top:17.28px;padding-bottom:17.28px}
+
+/* 4) 수입차 할인 '최대 N%' 정렬 — '최대'·'%' 세로 고정, 숫자 가운데, '%' 16px */
+.discount-card strong{display:grid;grid-template-columns:auto 44px auto;align-items:baseline;column-gap:1px}
+.discount-card .dc-max{margin-right:4px;color:#777e84;font-size:11px;font-weight:500}
+.discount-card .dc-num{text-align:center;color:#36ab68;font-size:21px;font-weight:800}
+.discount-card .dc-pct{color:#36ab68;font-size:16px;font-weight:800}
+
+/* 5) 가이드 카드 제목 16px */
+.guide-grid button strong{font-size:16px}
+
+/* 6) 가이드 카드 CTA(무엇이든 물어보세요 등) ↔ 위 문장 간격 30px */
+.guide-grid button{min-height:122px}
+.guide-grid button b{margin-top:20px;font-size:14px}
+
+/* 7) '기다림 없는 신차 장기렌트' 옆 초록 아이콘 +20% (19→22.8px) */
+.delivery-section h2 img{width:22.8px;height:22.8px}
+
+/* ===== v69 ===== */
+/* 수입차 할인 브랜드 로고: 원 → 둥근 사각형, 로고 15% 더 크게 (padding 5→3.7px) */
+.discount-card .brand-logo{border-radius:9px;padding:4.1px}
+
+/* ===== v70 ===== */
+/* 브랜드 로고 흰색 둥근 사각형 +10% (28→30.8px), 브랜드 할인 카드 높이 간격 +20% (64→76.8px) */
+.discount-card .brand-logo{width:30.8px;height:30.8px}
+.discount-card a:not(.more-button){min-height:76.8px}
+
+/* ===== v71 ===== */
+/* 상단 채널추가쿠폰 아이콘 +20% (82x31 → 98.4x37.2) */
+.coupon-button{width:98.4px;height:37.2px}
+/* 이용후기 본문 · FAQ 답변 본문 → 14px 통일 */
+.review-scroll p,.faq-list p{font-size:14px}
+
+/* ===== v72 ===== */
+
+/* 이용 후기 카드: 본문 길이와 무관하게 높이 고정, 본문은 넘치면 말줄임(...) */
+.review-scroll article{overflow:hidden}
+.review-scroll p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== v74 ===== */
+/* 이용 후기 카드 1개씩 보이게 (가로 폭 꽉 채움 + 스냅), 높이는 고정 유지 */
+.review-scroll{grid-auto-columns:calc(100% - 40px);scroll-snap-type:x mandatory}
+.review-scroll article{aspect-ratio:auto;height:622px;scroll-snap-align:center}
+
+/* ===== v76 ===== */
+/* 후기 본문 전체 노출(말줄임 해제) */
+.review-scroll p{display:block;-webkit-line-clamp:none;overflow:visible;text-overflow:clip}
+/* 후기 사진 최대 5장 겹쳐 노출 */
+.review-scroll .review-mini{flex-wrap:nowrap}
+.review-scroll .rm-photos{display:flex;flex:none;align-items:center}
+.review-scroll .rm-photos img{width:38px;height:38px;border-radius:9px;border:2px solid #fff;object-fit:cover;background:#f2f2f2;margin-left:-13px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.review-scroll .rm-photos img:first-child{margin-left:0}
+
+/* ===== v77 ===== */
+/* 후기 카드 높이 고정(v95:400→240px, v96:240→288px 20%↑), 본문은 넘치면 '..'로 마무리(JS 처리) */
+.review-scroll article{height:288px;overflow:hidden}
+.review-scroll p{flex:1 1 0;min-height:0;margin:12px 0 0;overflow:hidden;display:block;-webkit-line-clamp:none;text-overflow:clip}
+.review-scroll .review-mini{margin-top:12px}
+/* 하단 흰색 카드 내 사진 그림자 제거 */
+.review-scroll .rm-photos img{box-shadow:none}
+
+/* ===== v78 ===== */
+/* 고객명 + 흰색 차량정보 카드(차량명·트림) 폰트 14px 통일 */
+.review-scroll article small{font-size:14px}
+.review-scroll .review-mini .rm-info strong{font-size:14px}
+.review-scroll .review-mini .rm-info em{font-size:14px}
+/* 별점 크기 2배 (13→26px) */
+.stars{font-size:26px}
+
+/* ===== v79 ===== */
+/* 빠른인도/즉시출고 카드 우측 하단 메뉴 아이콘 */
+.delivery-grid a{position:relative}
+.delivery-grid .dg-icon{position:absolute;right:14px;bottom:14px;width:30px;height:30px;object-fit:contain}
+
+/* ===== v80 ===== */
+/* 빠른인도 카드(첫 번째)의 아이콘만 15% 확대 (30→34.5px) */
+.delivery-grid a:first-child .dg-icon{width:34.5px;height:34.5px}
+
+/* ===== v82 ===== */
+/* 상단 프로모 배너 문구 13px */
+.top-promo{font-size:13px}
+
+/* ===== v83 ===== */
+/* GNB 라벨 폰트 = 메인 8개 메뉴와 동일(12.5px) */
+.bottom-nav span{font-size:12.5px}
+/* 빠른인도/즉시출고 카드 대수 30px 아래로 (카드 높이 +30) */
+.delivery-grid a{min-height:141px}
+/* FAQ 화살표를 질문 문장과 수평 정렬 */
+.faq-list summary{flex-direction:column;align-items:stretch;gap:9px}
+.faq-qrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* ===== v84 ===== */
+/* 빠른인도 카드 아이콘: 크기 10% 축소(39.7→35.73px) + 위로 10%(25%→15%) */
+.delivery-grid a:first-child .dg-icon{width:35.73px;height:35.73px;transform:translateY(15%)}
+/* 2개 카드 대수만 위로 150%(100%+50%) 이동 */
+.delivery-grid b{transform:translateY(-150%)}
+
+/* ===== v85: 메인 폰트 위계 재정의 (크기·굵기만 조정 / 레이아웃·색·간격·동작은 그대로) ===== */
+
+/* 22px — 별점만 400, 나머지 700 */
+.stars{font-size:22px;font-weight:400}
+.cash-banner strong{font-size:22px;font-weight:700}
+.delivery-grid b{font-size:22px;font-weight:700}
+.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{font-size:22px;font-weight:700}
+.stock-copy strong{font-size:22px;font-weight:700}
+.discount-card .dc-num{font-size:22px;font-weight:700}
+
+/* 18px / 700 */
+.finder-copy strong{font-size:18px;font-weight:700}
+.delivery-grid strong{font-size:18px;font-weight:700}
+.faq-q{font-size:18px;font-weight:700}
+.menu-links strong{font-size:18px;font-weight:700}
+
+/* 16px / 700 */
+.discount-card b{font-size:16px;font-weight:700}
+.guide-grid button strong{font-size:16px;font-weight:700}
+.discount-card .dc-pct{font-size:16px;font-weight:700}
+
+/* 14px / 400 */
+.more-button{font-size:14px;font-weight:400}
+.review-scroll p{font-size:14px;font-weight:400}
+.review-scroll article small{font-size:14px;font-weight:400}
+.review-scroll .review-mini .rm-info strong{font-size:14px;font-weight:400}
+.review-scroll .review-mini .rm-info em{font-size:14px;font-weight:400}
+.faq-list p{font-size:14px;font-weight:400}
+.guide-grid button b{font-size:14px;font-weight:400}
+
+/* 13px / 400 — 상세견적 CTA만 500 */
+.top-promo{font-size:13px}
+.quick-grid a{font-size:13px;font-weight:400}
+.bottom-nav span{font-size:13px}
+.finder-copy small{font-size:13px;font-weight:400}
+.finder-copy b{font-size:13px;font-weight:400}
+.section-heading p{font-size:13px;font-weight:400}
+.price-filters button{font-size:13px;font-weight:400}
+.discount-card small{font-size:13px;font-weight:400}
+.cash-banner small{font-size:13px;font-weight:400}
+.cash-banner b{font-size:13px;font-weight:400}
+.guide-section>p{font-size:13px;font-weight:400}
+.guide-grid button span{font-size:13px;font-weight:400}
+.stock-copy small{font-size:13px;font-weight:400}
+.faq-cat{font-size:13px;font-weight:400}
+.stock-cta{font-size:13px;font-weight:500}
+.menu-links small{font-size:13px;font-weight:400}
+
+/* 11px tier: 기존 유지 (opt-tag 400 · 실시간태그 600 · '최대' 500 · GNB 배지 700 · 사업자정보 400) */
+
+/* ===== v86: 재고특가 차량명 14px/400 (그 외 유지) ===== */
+.stock-copy small{font-size:14px;font-weight:400}
+
+/* ===== v87: ChaQ Guide 섹션 문의카드 2개 텍스트(헤더 제목·설명·CTA) 오른쪽 2% 이동 — 헤더 회색바는 원위치(full-width) 유지 / 전체메뉴 팝업 카드는 제외 ===== */
+.guide-section .guide-grid button strong,
+.guide-section .guide-grid button span,
+.guide-section .guide-grid button b{transform:translateX(2%)}
+/* 회색 헤더바 원위치 고정: strong 배경 제거 후, 이동을 상쇄한 가상요소로 원래 full-width 배경 재현 */
+.guide-section .guide-grid button strong{position:relative;background:transparent}
+.guide-section .guide-grid button strong::before{content:"";position:absolute;inset:0;transform:translateX(-2%);background:#dedfe2;z-index:-1}
+
+/* ===== v86: 재고특가 월비용 필터를 계약조건 필터 위젯과 폰트·여백 동일하게 (라벨 '월 이용료' + 선택 하이라이트 셀) ===== */
+.price-filters{display:flex;align-items:stretch;gap:16px;padding:8px 6px 8px 16px;border-radius:16px;background:#f4f5f6;min-height:66px;box-shadow:none}
+.price-filters .pf-label{flex:0 0 auto;align-self:center;width:auto;font-size:16px;font-weight:600;color:#2b2f34;white-space:nowrap}
+.price-filters .pf-options{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;align-items:stretch}
+.price-filters button{justify-self:stretch;align-self:stretch;display:flex;align-items:center;justify-content:center;text-align:center;height:auto;min-height:0;padding:4px;border:0;border-radius:12px;background:transparent;box-shadow:none;color:#9aa0a6;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.price-filters button.is-active{color:#18a85c;font-weight:700;background:#e7e8ea;border:0;box-shadow:none}
+
+/* ===== v88: 재고특가 차량 이미지 로딩 지연·서버오류·데이터 누락 시 공백 대신 플레이스홀더 아이콘 ===== */
+/* 로딩 중(아직 이미지 안 뜸): 아이콘을 배경으로 표시 → 로드 성공 시 img-loading 제거되어 실제 이미지만 남음 */
+.stock-card>img.img-loading{background:#eef0f2 url("../assets/icons/car-placeholder.svg") center/48% no-repeat}
+/* 로드 실패(서버오류·누락): src를 아이콘으로 교체 + 회색 배경 */
+.stock-card>img.img-ph{background:#eef0f2}
+/* 플레이스홀더 상태에서는 확대(scale 1.18)를 끔 → 불투명 회색 박스가 칸을 넘어 텍스트를 덮는 문제 방지 (실제 이미지의 확대는 유지) */
+.stock-card>img.img-loading,.stock-card>img.img-ph{transform:none}
+
+/* 현금지원 이미지 슬라이드 배너 — 기존 cash-banner와 동일 크기(min-height 107px, radius 12px) */
+.cash-banner.cash-slider{position:relative;display:block;min-height:107px;padding:0;overflow:hidden;border-radius:12px;background:#eef0f2}
+.cash-slider .cs-track{position:absolute;inset:0}
+.cash-slider .cs-slide{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
+.cash-slider .cs-slide.is-active{opacity:1;z-index:1}
+.cash-slider .cs-slide img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;filter:none;max-width:none}
+.cash-slider .cs-dots{position:absolute;right:12px;bottom:9px;z-index:2;display:flex;gap:5px}
+.cash-slider .cs-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);transition:background .3s}
+.cash-slider .cs-dots i.is-on{background:#fff}
+
+/* 빠른인도 섹션: 차량 종류 4버튼 필터 (재고특가 3버튼 레이아웃 → 4열, 폰트 축소) */
+.fast-stock-section .price-filters .pf-options{grid-template-columns:repeat(4,1fr);gap:2px}
+.fast-stock-section .price-filters button{font-size:12.5px;padding:4px 2px}
+
+/* 차량 이미지 자동 태그 오버레이 (메인페이지 재고특가·빠른인도 섹션) */
+#stockList .stock-card, .fast-stock-section .stock-card{overflow:visible}
+/* 재고특가: 세일태그 — 차량 이미지 좌측상단에 겹치게 */
+#stockList .stock-card::before{
+  content:"";position:absolute;z-index:3;pointer-events:none;
+  left:-3px;top:2px;width:42px;height:42px;
+  background:url("../assets/icons/tag-sale.svg") no-repeat center/contain;
+}
+/* 빠른인도: 차량인도태그 — 차량 이미지 우측하단에 겹치게 */
+.fast-stock-section .stock-card::before{
+  content:"";position:absolute;z-index:3;pointer-events:none;
+  left:60px;bottom:8px;width:53px;height:53px;
+  background:url("../assets/icons/tag-delivery.svg") no-repeat center/contain;
+}

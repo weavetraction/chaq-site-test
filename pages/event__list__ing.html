@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 이벤트</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="location.href='../index.html'">뒤로</button>
+            <h1>이벤트</h1>
+        </header>
+
+        <nav class="sub_tabs">
+            <a class="on" href="event__list__ing.html">진행중인 이벤트</a>
+            <a href="event__list__end.html">종료된 이벤트</a>
+        </nav>
+
+        <main>
+            <div class="event_list" id="eventList"></div>
+            <div class="sub_empty" id="eventEmpty" hidden>
+                <span class="empty_ico">🎁</span>
+                <p>진행 중인 이벤트가 없습니다</p>
+            </div>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button class="on" type="button"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+
+    <script src="data/content.js"></script>
+    <script>
+        (function(){
+            var STATUS = 'ing';
+            var all = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.events) || [];
+            var list = all.filter(function(e){ return e.status===STATUS; });
+            var wrap = document.getElementById('eventList');
+            var empty = document.getElementById('eventEmpty');
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            if(!list.length){ wrap.hidden=true; empty.hidden=false; return; }
+            wrap.innerHTML = list.map(function(e){
+                return '<a class="event_card" href="event__detail.html?id='+encodeURIComponent(e.id)+'">'+
+                    '<span class="ev_thumb"><img src="'+e.img+'" alt="" loading="lazy">'+
+                        '<span class="ev_badge'+(e.status==='end'?' is-end':'')+'">'+esc(e.badge)+'</span></span>'+
+                    '<span class="ev_body">'+
+                        '<strong class="ev_title">'+esc(e.title)+'</strong>'+
+                        '<span class="ev_period">'+esc(e.period)+'</span>'+
+                    '</span></a>';
+            }).join('');
+        })();
+    </script>
+</body>
+</html>

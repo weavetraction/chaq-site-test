@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 재고특가</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-special-list">
+    <div class="special_shell">
+        <header class="special_header">
+            <button type="button" aria-label="뒤로 가기" onclick="history.back()">‹</button>
+            <h1>특가차량</h1>
+        </header>
+
+        <main>
+            <section class="filter_panel">
+                <h2>차량 모델</h2>
+                <div class="model_selects">
+                    <button type="button" class="filter_select" data-filter="brand" aria-label="브랜드"><span class="fs_text">브랜드 선택</span><span class="fs_clear" role="button" aria-label="브랜드 선택 해제"></span></button>
+                    <button type="button" class="filter_select" data-filter="model" aria-label="모델"><span class="fs_text">모델 선택</span><span class="fs_clear" role="button" aria-label="모델 선택 해제"></span></button>
+                    <button type="button" class="filter_select" data-filter="trim" aria-label="등급"><span class="fs_text">등급 선택</span><span class="fs_clear" role="button" aria-label="등급 선택 해제"></span></button>
+                </div>
+                <h2>계약 조건</h2>
+                <div class="cond_wrap is-locked">
+                    <div class="filter_group">
+                        <span class="filter_sub">계약 기간</span>
+                        <div class="filter_row">
+                            <button class="filter_chip" type="button">36개월</button>
+                            <button class="filter_chip" type="button">48개월</button>
+                            <button class="filter_chip on" type="button">60개월</button>
+                        </div>
+                    </div>
+                    <div class="filter_group">
+                        <span class="filter_sub">초기 비용</span>
+                        <div class="filter_row">
+                            <button class="filter_chip on" type="button">0원</button>
+                            <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">보증금<i class="tag_info" data-info="deposit" role="button" tabindex="0" aria-label="보증금 설명"></i></em><b class="chip_num">30%</b></span></button>
+                            <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">선납금<i class="tag_info" data-info="prepay" role="button" tabindex="0" aria-label="선납금 설명"></i></em><b class="chip_num">30%</b></span></button>
+                        </div>
+                    </div>
+                    <div class="filter_group">
+                        <span class="filter_sub">주행 거리</span>
+                        <div class="filter_row">
+                            <button class="filter_chip on" type="button">2만 km</button>
+                            <button class="filter_chip" type="button">3만 km</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="special_results">
+                <div class="result_header">
+                    <p>검색결과 <strong>165</strong></p>
+                    <select id="selSort" aria-label="정렬">
+                        <option value="default">추천순</option>
+                        <option value="MonthlyPriceAsc">월납입금 낮은순</option>
+                        <option value="MonthlyPriceDesc">월납입금 높은순</option>
+                        <option value="carPriceAsc">차량가 낮은순</option>
+                        <option value="carPriceDesc">차량가 높은순</option>
+                    </select>
+                </div>
+
+                <a class="est_card" id="estCard" href="#" hidden></a>
+
+                <div class="special_stock_panel">
+                <div class="special_cards" id="stockList"></div>
+                </div>
+                <p class="no_result" id="noResult" hidden style="padding:40px 16px;text-align:center;color:#9aa0a6;font-size:14px">조건에 맞는 차량이 없습니다</p>
+            </section>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="special_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button class="on" type="button"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button type="button" onclick="location.href='../index.html#menu'">•••<span>전체메뉴</span></button>
+        </footer>
+
+        <div class="fpop" id="filterPop" aria-hidden="true">
+            <div class="fpop_sheet">
+                <div class="fpop_head">
+                    <button type="button" class="fpop_close" aria-label="닫기">&times;</button>
+                    <label class="fpop_toggle"><span>0대 제외</span><input type="checkbox" checked><i></i></label>
+                </div>
+                <div class="fpop_body" id="fpopBody"></div>
+                <div class="fpop_foot"><button type="button" class="fpop_apply" id="fpopApply">전체 보기</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data/quotes.js"></script>
+    <script src="data/vehicle-master.js"></script>
+    <script src="data/vehicle-master-helper.js"></script>
+    <script>
+        (function () {
+            var DATA = window.CHAQ || {stock:[],fast:[],estimate:[]};
+            var fromMatch = location.search.match(/[?&]from=([a-z]+)/);
+            var from = fromMatch ? fromMatch[1] : '';
+            var page = from === 'estimate' ? 'estimate' : (from === 'fast' ? 'fast' : 'stock');
+            var isEstimate = page === 'estimate';
+            var records = DATA[page] || [];
+
+            var titles = { estimate: '견적조회', fast: '빠른인도', stock: '특가차량' };
+            document.querySelector('.special_header h1').textContent = titles[page];
+            if (isEstimate) document.body.classList.add('view-estimate');
+
+            var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
+            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true)) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+
+            var won = function (n) { return (n||0).toLocaleString('ko-KR'); };
+            function animateNum(el, to, em){
+                if(!el) return;
+                var from=parseInt((el.textContent||'').replace(/[^0-9]/g,''))||0;
+                if(to==null){ el.innerHTML=em?'—<em>원</em>':'—'; return; }
+                var dur=480, t0=performance.now();
+                function set(v){ el.innerHTML = won(v)+(em?'<em>원</em>':'원'); }
+                if(from===to){ set(to); return; }
+                function frame(t){ var p=Math.min(1,(t-t0)/dur); var e=1-Math.pow(1-p,3); set(Math.round(from+(to-from)*e)); if(p<1) requestAnimationFrame(frame); }
+                requestAnimationFrame(frame);
+            }
+
+            function cond() {
+                var groups = document.querySelectorAll('.filter_panel .filter_group');
+                function onText(g){ var b=g.querySelector('.filter_chip.on'); return b?b.textContent:''; }
+                var term = (onText(groups[0]).match(/[0-9]+/)||['60'])[0];
+                var initTxt = onText(groups[1]);
+                var plan = initTxt.indexOf('보증')>-1 ? 'b' : (initTxt.indexOf('선납')>-1 ? 's' : '0');
+                var dist = onText(groups[2]).indexOf('3만')>-1 ? '3' : '2';
+                return {term:term, plan:plan, dist:dist};
+            }
+            function monthly(rec, c) {
+                var d = rec.cost && rec.cost[c.dist]; if (!d) return null;
+                var t = d[c.term]; if (!t) { for (var k in d){ t=d[k]; break; } }
+                if (!t) return null;
+                if (t[c.plan]!=null) return t[c.plan];
+                for (var p in t) return t[p];
+                return null;
+            }
+
+            var F = {brand:null, model:null, trim:null};
+            function matches(r){ return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model)&&(!F.trim||r.trim===F.trim); }
+
+            var sortSel = document.getElementById('selSort');
+            function sortList(arr, c) {
+                var v = sortSel ? sortSel.value : 'default';
+                var byCar = v.indexOf('carPrice')===0;
+                var desc = v.endsWith('Desc');
+                arr.sort(function(a,b){
+                    var av = byCar ? (a.base||0) : (monthly(a,c)||0);
+                    var bv = byCar ? (b.base||0) : (monthly(b,c)||0);
+                    return desc ? bv-av : av-bv;
+                });
+                return arr;
+            }
+
+            var listEl = document.getElementById('stockList');
+            var estEl = document.getElementById('estCard');
+            var noEl = document.getElementById('noResult');
+            var countEl = document.querySelector('.result_header p strong');
+
+            function render() {
+                var c = cond();
+                var arr = records.filter(matches);
+                if (isEstimate) {
+                    listEl.hidden = true; noEl.hidden=true;
+                    function guide(msg){ estEl.hidden=false; estEl.classList.add('est-empty'); estEl.removeAttribute('href'); estEl.innerHTML='<span class="est_guide">'+msg+'</span>'; }
+                    if (!F.brand) { guide('차량 브랜드를 선택해주세요'); return; }
+                    if (!F.model) { guide('차량 모델을 선택해주세요'); return; }
+                    if (!F.trim)  { guide('차량 등급을 선택해주세요'); return; }
+                    var best=null, bestM=Infinity;
+                    arr.forEach(function(r){ var m=monthly(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    if (!best) { guide('조건에 맞는 차량이 없습니다'); return; }
+                    estEl.classList.remove('est-empty'); estEl.hidden=false;
+                    estEl.setAttribute('href','car-detail.html?id='+best.id+'&from=estimate&term='+c.term+'&plan='+c.plan+'&dist='+c.dist);
+                    estEl.innerHTML =
+                        '<span class="est_type">장기렌트</span>'+
+                        '<div class="est_visual"><img src="'+carImg(best)+'" alt=""></div>'+
+                        '<strong class="est_name">'+best.brand+' '+best.model+'</strong>'+
+                        '<span class="est_year">'+best.year+(best.trim?(' · '+best.trim):'')+'</span>'+
+                        '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b>0<em>원</em></b></div>'+
+                        '<span class="est_tag">금융사/렌트사 실시간 최저가</span></div>';
+                    animateNum(estEl.querySelector('.est_monthly b'), bestM, true);
+                    return;
+                }
+                estEl.hidden=true;
+                sortList(arr, c);
+                if (countEl) countEl.textContent = arr.length;
+                if (!arr.length){ listEl.innerHTML=''; listEl.hidden=true; noEl.hidden=false; return; }
+                noEl.hidden=true;
+                var html='';
+                arr.forEach(function(r){
+                    var m=monthly(r,c);
+                    html += '<a class="stock-card" href="car-detail.html?id='+r.id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
+                        '<span class="stock-badge">특가</span>'+
+                        '<img src="'+carImg(r)+'" alt="'+r.brand+' '+r.model+'">'+
+                        '<span class="stock-copy"><small>'+r.brand+' '+r.model+'</small>'+
+                        '<strong>월 '+won(m)+'원</strong>'+
+                        '<b><span class="opt-tag">옵션 <em>'+(r.opts?r.opts.length:0)+'</em>개</span>'+
+                        '</b></span>'+
+                        '<span class="stock-cta">상세견적</span></a>';
+                });
+                listEl.hidden=false;
+                listEl.innerHTML=html;
+            }
+
+            document.querySelectorAll('.filter_group .filter_row .filter_chip').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    Array.prototype.forEach.call(btn.parentNode.children, function (i){ i.classList.remove('on'); });
+                    btn.classList.add('on');
+                    render();
+                });
+            });
+            if (sortSel) sortSel.addEventListener('change', render);
+
+            var pop=document.getElementById('filterPop');
+            var popBody=document.getElementById('fpopBody');
+            var popApply=document.getElementById('fpopApply');
+            var currentFilter=null;
+            function esc(x){return String(x).replace(/"/g,'&quot;');}
+            function optionList(type){
+                var base = records.filter(function(r){
+                    if (type==='brand') return true;
+                    if (type==='model') return !F.brand||r.brand===F.brand;
+                    return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model);
+                });
+                var field = type==='brand'?'brand':(type==='model'?'model':'trim');
+                var counts={}, gu={};
+                base.forEach(function(r){ var k=r[field]; if(!k) return; counts[k]=(counts[k]||0)+1; gu[k]=r.gu||''; });
+                var names=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];});
+                return {names:names,counts:counts,gu:gu,total:base.length};
+            }
+            function locked(type){ return (type==='model'&&!F.brand) || (type==='trim'&&!F.model); }
+            function updateFilterLock(){
+                ['brand','model','trim'].forEach(function(t){
+                    var sel=document.querySelector('.filter_select[data-filter="'+t+'"]');
+                    if(!sel) return;
+                    if(locked(t)) sel.classList.add('is-disabled'); else sel.classList.remove('is-disabled');
+                });
+            }
+            function openPop(type){
+                if(locked(type)) return;
+                currentFilter=type;
+                var d=optionList(type);
+                var groups={'국산':[],'수입':[],'':[]};
+                d.names.forEach(function(n){ (groups[d.gu[n]]!==undefined?groups[d.gu[n]]:groups['']).push(n); });
+                var html='';
+                ['국산','수입',''].forEach(function(g){
+                    if(!groups[g].length) return;
+                    if(g) html+='<p class="fpop_sec">'+g+'</p>';
+                    groups[g].forEach(function(n){
+                        html+='<button type="button" class="fpop_row" data-name="'+esc(n)+'"><span class="bname">'+n+'</span><span class="bcount">'+d.counts[n]+'</span></button>';
+                    });
+                });
+                popBody.innerHTML=html;
+                popApply.textContent=d.total+'대 전체 보기';
+                pop.classList.add('is-open'); pop.setAttribute('aria-hidden','false');
+                document.body.style.overflow='hidden'; popBody.scrollTop=0;
+            }
+            function closePop(){ pop.classList.remove('is-open'); pop.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+            document.querySelectorAll('.filter_select[data-filter]').forEach(function(btn){
+                btn.addEventListener('click', function(){ openPop(btn.getAttribute('data-filter')); });
+            });
+            document.querySelector('.fpop_close').addEventListener('click', closePop);
+            popApply.addEventListener('click', function(){ closePop(); render(); });
+            pop.addEventListener('click', function(e){ if(e.target===pop) closePop(); });
+            popBody.addEventListener('click', function(e){
+                var row=e.target.closest?e.target.closest('.fpop_row'):null; if(!row) return;
+                var name=row.getAttribute('data-name');
+                F[currentFilter]=name;
+                if(currentFilter==='brand'){ F.model=null; F.trim=null; }
+                if(currentFilter==='model'){ F.trim=null; }
+                var pickedTrim=(currentFilter==='trim');
+                syncSelects();
+                updateFilterLock(); updateCondLock(); closePop(); render();
+                // 등급 선택 완료 시 자동 스크롤
+                if(pickedTrim && F.trim){
+                    setTimeout(function(){
+                        var vh = window.innerHeight;
+                        // '차량 모델' 섹션 높이만큼만 내려와 그 섹션이 화면 밖으로 넘어가고 '계약 조건'이 상단에 오게 (견적조회·재고특가·빠른인도 동일)
+                        // → 차량 모델 셀렉트의 하단을 뷰포트 상단에 맞춤
+                        var ms = document.querySelector('.model_selects');
+                        var anchor = ms || document.querySelector('.result_header') || listEl;
+                        if(!anchor) return;
+                        var top = window.scrollY + anchor.getBoundingClientRect().bottom;
+                        var maxTop = Math.max(0, document.documentElement.scrollHeight - vh);
+                        window.scrollTo({ top: Math.min(Math.max(0, top), maxTop), behavior: 'smooth' });
+                    }, 60);
+                }
+            });
+
+            function placeholderText(t){ return {brand:'브랜드 선택',model:'모델 선택',trim:'등급 선택'}[t]; }
+            function syncSelects(){
+                ['brand','model','trim'].forEach(function(t){
+                    var sel=document.querySelector('.filter_select[data-filter="'+t+'"]');
+                    if(!sel) return;
+                    var txt=sel.querySelector('.fs_text');
+                    if(F[t]){ if(txt)txt.textContent=F[t]; sel.classList.add('is-selected'); }
+                    else { if(txt)txt.textContent=placeholderText(t); sel.classList.remove('is-selected'); }
+                });
+            }
+            var condWrap=document.querySelector('.cond_wrap');
+            function updateCondLock(){ if(condWrap) condWrap.classList.toggle('is-locked', !F.trim); }
+            function clearFrom(type){
+                F[type]=null;
+                if(type==='brand'){ F.model=null; F.trim=null; }
+                if(type==='model'){ F.trim=null; }
+                syncSelects(); updateFilterLock(); updateCondLock(); render();
+            }
+            document.querySelectorAll('.filter_select .fs_clear').forEach(function(x){
+                x.addEventListener('click', function(e){ e.stopPropagation(); var sel=x.closest('.filter_select'); if(sel) clearFrom(sel.getAttribute('data-filter')); });
+            });
+
+            // 보증금/선납금 태그 ⓘ 설명 말풍선
+            var TIPTEXT={
+                deposit:'차량가의 일부를 보증금으로 예치하고 계약 만기에 그대로 돌려받는 방식입니다. 보증금이 클수록 월 납입금이 낮아집니다.',
+                prepay:'월 납입금의 일부를 계약 시 미리 납부하는 방식입니다. 선납금은 돌려받지 않지만 월 납입금이 더 크게 낮아집니다.'
+            };
+            var condTip=document.createElement('div'); condTip.className='cond_tip'; document.body.appendChild(condTip); condTip._for=null;
+            function hideTip(){ condTip.style.display='none'; condTip._for=null; }
+            function showTip(ic){
+                condTip.textContent=TIPTEXT[ic.getAttribute('data-info')]||'';
+                condTip.style.left='-9999px'; condTip.style.top='0'; condTip.style.display='block';
+                var r=ic.getBoundingClientRect(), tw=condTip.offsetWidth;
+                var cx=r.left+r.width/2, left=cx-tw/2;
+                left=Math.max(10, Math.min(left, window.innerWidth-tw-10));
+                condTip.style.left=left+'px'; condTip.style.top=(r.bottom+9)+'px';
+                condTip.style.setProperty('--tail',(cx-left)+'px'); condTip._for=ic;
+            }
+            document.querySelectorAll('.cond_wrap .tag_info').forEach(function(ic){
+                ic.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); if(condTip.style.display==='block'&&condTip._for===ic) hideTip(); else showTip(ic); });
+            });
+            document.addEventListener('click', function(e){ if(!(e.target.closest&&e.target.closest('.tag_info'))) hideTip(); });
+            window.addEventListener('scroll', hideTip, true);
+            window.addEventListener('resize', hideTip);
+
+            syncSelects(); updateFilterLock(); updateCondLock(); render();
+        })();
+    </script>
+</body>
+</html>

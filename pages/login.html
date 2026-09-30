@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 마이페이지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="location.href='../index.html'">뒤로</button>
+            <h1>마이페이지</h1>
+        </header>
+
+        <main>
+            <div class="login_hero">
+                <img class="login_logo" src="../assets/icons/logo.svg" alt="chaQ">
+                <h2>장기렌트의 <em>모든 혜택</em><br>놓치지 말고 받아가세요</h2>
+                <p>1초 만에 로그인하고 내 조건 최저가를 확인하세요</p>
+                <button type="button" class="kakao_button" data-pending-link data-action="login">카카오로 시작하기</button>
+
+                <div class="login_or"><span>또는</span></div>
+
+                <div class="login_phone">
+                    <input type="tel" class="login_phone_input" id="joinPhone" placeholder="휴대폰 번호 입력" inputmode="numeric" maxlength="13" autocomplete="off">
+                    <button type="button" class="login_phone_btn" id="joinPhoneBtn" data-action="signup-phone">휴대폰 번호로 가입하기</button>
+                    <p class="login_phone_msg" id="joinPhoneMsg" hidden></p>
+                </div>
+
+                <button type="button" class="browse_link" onclick="location.href='../index.html'">우선 둘러볼게요</button>
+            </div>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button class="on" type="button"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+    <script>
+        document.querySelectorAll('[data-pending-link]').forEach(function (el) {
+            el.addEventListener('click', function () { alert('로그인 링크는 최종 URL 전달 후 연결됩니다.'); });
+        });
+
+        // 휴대폰 번호로 가입
+        (function () {
+            var input = document.getElementById('joinPhone');
+            var btn = document.getElementById('joinPhoneBtn');
+            var msg = document.getElementById('joinPhoneMsg');
+            if (!input || !btn) return;
+            function fmtPhone(v) {
+                v = v.replace(/\D/g, '').slice(0, 11);
+                if (v.length < 4) return v;
+                if (v.length < 8) return v.slice(0, 3) + '-' + v.slice(3);
+                return v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7);
+            }
+            input.addEventListener('input', function () { this.value = fmtPhone(this.value); });
+            btn.addEventListener('click', function () {
+                var v = input.value.replace(/\D/g, '');
+                if (v.length < 10) {
+                    msg.textContent = '휴대폰 번호를 정확히 입력해주세요.';
+                    msg.classList.add('is-err'); msg.hidden = false; return;
+                }
+                msg.textContent = '인증번호를 발송했습니다. 인증 완료 후 가입됩니다. (인증 연동 예정)';
+                msg.classList.remove('is-err'); msg.hidden = false;
+            });
+        })();
+    </script>
+</body>
+</html>

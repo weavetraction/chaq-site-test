@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>차큐 아티클</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="history.back()">뒤로</button>
+            <h1>아티클</h1>
+        </header>
+
+        <main>
+            <article class="detail_view" id="articleView"></article>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+
+        <footer class="sub_footer">
+            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
+            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
+            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
+            <button class="on" type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
+        </footer>
+    </div>
+
+    <script src="data/content.js"></script>
+    <script>
+        (function(){
+            var list = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.articles) || [];
+            var m = location.search.match(/[?&]id=([^&]+)/);
+            var id = m ? decodeURIComponent(m[1]) : '';
+            var a = list.filter(function(x){ return x.id===id; })[0] || list[0];
+            var view = document.getElementById('articleView');
+            if(!a){ view.innerHTML='<p class="detail_empty">아티클을 찾을 수 없습니다.</p>'; return; }
+            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+            document.title = '차큐 아티클 · ' + a.title;
+            var sections = a.body.map(function(b){
+                return '<section class="dv_sec"><h3>'+esc(b.h)+'</h3><p>'+esc(b.p)+'</p></section>';
+            }).join('');
+            view.innerHTML =
+                '<div class="dv_hero"><img src="'+a.img+'" alt=""></div>'+
+                '<div class="dv_head">'+
+                    '<span class="dv_cat">'+esc(a.cat)+'</span>'+
+                    '<h2 class="dv_title">'+esc(a.title)+'</h2>'+
+                    '<span class="dv_date">'+esc(a.date)+'</span>'+
+                '</div>'+
+                '<p class="dv_lead">'+esc(a.lead)+'</p>'+
+                sections+
+                '<a class="dv_cta" href="special-price-car__list.html?from=estimate">내 조건으로 견적 비교하기</a>';
+        })();
+    </script>
+</body>
+</html>
