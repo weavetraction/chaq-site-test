@@ -42,17 +42,23 @@
     var kind = cur ? kindOf(cur) : ((location.search.match(/[?&]from=(fast|estimate)/) || [])[1] || "stock");
     var pool = allRecs().filter(function (x) { return x[0] === kind; })[0][1];
     var curM = cur ? monthlyLoose(cur, c) : null, curFam = cur ? familyOf(cur) : null;
-    var best = {};
-    pool.forEach(function (r) {
-      if (cur && r.id === cur.id) return;
-      if (r.rem === 0) return;
-      if (!r.trimId || !vmName(r)) return;             // 차량 데이터(Vehicle Master)와 연결된 견적만 — 차명·계열·이미지 일관
-      var m = monthlyExact(r, c); if (m == null) return;
-      var fam = familyOf(r); if (fam === curFam) return;
-      var key = fam, score = curM == null ? m : Math.abs(m - curM);
-      if (!best[key] || score < best[key].score) best[key] = { r: r, m: m, score: score };
-    });
-    var list = Object.keys(best).map(function (k) { return best[k]; });
+    function collect(val) {
+      var best = {};
+      pool.forEach(function (r) {
+        if (cur && r.id === cur.id) return;
+        if (r.rem === 0) return;
+        if (!r.trimId || !vmName(r)) return;             // 차량 데이터(Vehicle Master)와 연결된 견적만 — 차명·계열·이미지 일관
+        var m = val(r, c); if (m == null) return;
+        var fam = familyOf(r); if (fam === curFam) return;
+        var key = fam, score = curM == null ? m : Math.abs(m - curM);
+        if (!best[key] || score < best[key].score) best[key] = { r: r, m: m, score: score };
+      });
+      return Object.keys(best).map(function (k) { return best[k]; });
+    }
+    // 정확히 같은 조건 금액 우선. 이 목록(예: 견적조회)에 그 조건 금액이 아예 없으면(견적조회 데이터엔 보증금 30% 금액 없음)
+    // 상세 페이지가 보여주는 값과 같은 규칙(monthlyLoose)으로 대체 — 섹션이 사라지지 않게
+    var list = collect(monthlyExact);
+    if (!list.length) list = collect(monthlyLoose);
     var band = curM == null ? null : Math.floor(curM / 100000) * 10, label, rows;
     if (band != null) {
       rows = list.filter(function (x) { return Math.floor(x.m / 100000) * 10 === band; });
