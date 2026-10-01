@@ -183,6 +183,7 @@
             function vmCount(pred){ var n=0; records.forEach(function(r){ var k=VMK[r.id]; if(k && pred(k)) n++; }); return n; }
             function vmImg(tid){ try { return (tid && VM.resolveImageUrl(tid,[PH],true)) || PH; } catch(e){ return PH; } }
             function escT(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            function carName(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명 (차량 데이터 연결 시)
             function trimTag(r){   // 재고특가·빠른인도 카드: 옵션 태그 옆 세부 등급 태그 (차량 데이터 트림명, 묶음에 나온 구동·인승 표기 제외)
                 var t = USE_VM && r.trimId ? VM.getTrim(r.trimId) : null; if (!t) return '';
                 TG.groupOfTrim(r.trimId); return '<span class="opt-tag trim-tag">'+escT(TG.shortName(t))+'</span>';
@@ -247,8 +248,8 @@
                     estEl.innerHTML =
                         '<span class="est_type">장기렌트</span>'+
                         '<div class="est_visual"><img src="'+carImg(best)+'" alt=""></div>'+
-                        '<strong class="est_name">'+best.brand+' '+best.model+'</strong>'+
-                        '<span class="est_year">'+best.year+(best.trim?(' · '+best.trim):'')+'</span>'+
+                        '<strong class="est_name">'+escT(carName(best))+'</strong>'+
+                        '<span class="est_year">'+escT((USE_VM && best.trimId && TG.specLine(best.trimId, best)) || (best.year+(best.trim?(' · '+best.trim):'')))+'</span>'+
                         '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b>0<em>원</em></b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
                         '<span class="est_tag">금융사/렌트사 실시간 최저가</span></div>';
                     animateNum(estEl.querySelector('.est_monthly b'), bestM, true);
@@ -271,8 +272,8 @@
                     var m=monthly(r,c);
                     html += '<a class="stock-card" href="car-detail.html?id='+r.id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
                         '<span class="stock-badge">특가</span>'+
-                        '<img src="'+carImg(r)+'" alt="'+r.brand+' '+r.model+'">'+
-                        '<span class="stock-copy"><small>'+r.brand+' '+r.model+'</small>'+
+                        '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'">'+
+                        '<span class="stock-copy"><small>'+escT(carName(r))+'</small>'+
                         '<strong>월 '+won(m)+'원</strong>'+
                         '<b><span class="opt-tag">옵션 <em>'+(r.opts?r.opts.length:0)+'</em>개</span>'+trimTag(r)+
                         '</b></span>'+

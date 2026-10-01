@@ -7,7 +7,7 @@
 (function (root) {
   "use strict";
   var CHANNELS = ["GENERAL", "RENTAL"];   // 장기렌트 화면 노출 판매채널 (차종 선택 화면과 동일)
-  var SEAT_MULTI = /\s*\(?\s*\d+(?:\/\d+)+\s*인승\s*\)?/;   // '(7/9인승)', '(9/11인승)'
+  var SEAT_MULTI = /\s*·?\s*\(?\s*\d+(?:\/\d+)+\s*인승\s*\)?/;   // '(7/9인승)', '(9/11인승)'
   var cache = {}, byTrim = {};
   function VM() { return root.CHAQ_VM || null; }
 
@@ -18,17 +18,21 @@
     var out = [];
     vm.getLineups(modelId, { salesChannels: CHANNELS }).forEach(function (l) {
       var ts = vm.getTrims(l.id, { salesChannels: CHANNELS }); if (!ts.length) return;
-      var base = vm.lineupLabel(l), seats = {}; ts.forEach(function (t) { if (t.seatCount) seats[t.seatCount] = 1; });
-      var multiSeat = Object.keys(seats).length > 1;   // 같은 라인업에 5/6/7인승 등이 섞이면 인승으로 나눔
-      var drives = {}; ts.forEach(function (t) { if (t.drivetrain) drives[t.drivetrain] = 1; });
+      var base = vm.lineupLabel(l), seats = {}; ts.forEach(function (t) { seats[t.seatCount || 0] = 1; });
+      var multiSeat = Object.keys(seats).length > 1;   // 같은 라인업에 5/6/7인승(또는 인승 미표기)이 섞이면 인승으로 나눔
+      var drives = {}; ts.forEach(function (t) { drives[t.drivetrain || ""] = 1; });
       var splitDrive = Object.keys(drives).length > 1;
+      // (v196 명칭 정리) 트림명에서 구동·인승을 뺐으므로 묶음 이름이 알려줌: 구동은 알 수 있으면 항상, 인승은 라인업 이름에 없고 5인승이 아닐 때
+      var allDrive = !splitDrive && ts[0].drivetrain ? ts[0].drivetrain : null;
+      var allSeat = !multiSeat && ts[0].seatCount && ts[0].seatCount !== 5 && !/인승/.test(base) ? ts[0].seatCount : null;
       var map = {}, order = [];
       ts.forEach(function (t) {
-        var seat = multiSeat && t.seatCount ? t.seatCount : null, drive = splitDrive ? (t.drivetrain || null) : null;
+        var seat = multiSeat && t.seatCount ? t.seatCount : (allSeat || null), drive = splitDrive ? (t.drivetrain || null) : allDrive;
         var key = l.id + "|" + (seat || "") + "|" + (drive || "");
         if (!map[key]) {
           var label = multiSeat && seat ? base.replace(SEAT_MULTI, "").trim() : base;   // '(7/9인승)' 표기는 빼고 '· 9인승'으로
-          map[key] = { key: key, label: [label, seat ? seat + "인승" : null, drive].filter(Boolean).join(" · "), lineup: l, trims: [], seat: seat, drive: drive };
+          var dl = drive && t.driveLabel && ts.every(function (x) { return (x.drivetrain || null) !== drive || x.driveLabel === t.driveLabel; }) ? t.driveLabel : drive;   // 테슬라 RWD 등 표기
+          map[key] = { key: key, label: [label, seat ? seat + "인승" : null, dl].filter(Boolean).join(" · "), lineup: l, trims: [], seat: seat, drive: drive, driveName: dl !== drive ? dl : null };
           order.push(key);
         }
         map[key].trims.push(t);
@@ -60,8 +64,15 @@
     if (g && g.drive) [g.drive, g.driveName].forEach(function (dv) { if (dv) s = s.replace(new RegExp("\\s*\\b" + dv.replace(/[-]/g, "\\-") + "\\b", "i"), ""); });
     if (g && g.seat) s = s.replace(new RegExp("\\s*\\(?\\s*" + g.seat + "\\s*인승\\s*\\)?"), "");
     s = s.replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim();
-    return s || "기본";   // 트림명이 구동뿐인 경우(예: G80 '2WD') → 기본
+    return s || "기본형";   // 트림명이 구동뿐인 경우 → 기본형
+  }
+  /** 카탈로그 한 줄: 'YYYY년형 · 라인업 · 인승 · 구동 · 세부 등급' (rec = 견적이면 견적 연식 우선) */
+  function specLine(trimId, rec, withTrim) {
+    var vm = VM(), t = vm && vm.getTrim(trimId), g = groupOfTrim(trimId); if (!t || !g) return null;
+    var yr = rec && String(rec.year || "").match(/(20\d{2})/); var ly = g.lineup && g.lineup.modelYear;
+    var lab = g.label.replace(/^\d{4}년형\s*/, "");
+    return [(yr ? yr[1] : ly) ? (yr ? yr[1] : ly) + "년형" : null, lab, withTrim === false ? null : shortName(t)].filter(Boolean).join(" · ");
   }
 
-  root.CHAQ_TRIM_GROUPS = { CHANNELS: CHANNELS, groups: groups, groupOfTrim: groupOfTrim, groupByKey: groupByKey, shortName: shortName };
+  root.CHAQ_TRIM_GROUPS = { CHANNELS: CHANNELS, groups: groups, groupOfTrim: groupOfTrim, groupByKey: groupByKey, shortName: shortName, specLine: specLine };
 })(typeof window !== "undefined" ? window : globalThis);

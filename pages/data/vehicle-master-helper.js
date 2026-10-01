@@ -132,16 +132,27 @@
   /** 동일 트림명이 같은 모델의 다른 라인업에도 있으면 "shortLabel · 트림명", 아니면 트림명 */
   function trimLabel(trimId) {
     var t = getTrim(trimId); if (!t) return ""; var l = getLineup(t.lineupId); if (!l) return t.name;
-    var dup = getTrimsByModel(l.modelId, { includeInactive: true }).some(function (x) { return x.name === t.name && x.lineupId !== t.lineupId; });
-    return dup ? (lineupLabel(l) + " · " + t.name) : t.name;
+    var same = getTrimsByModel(l.modelId, { includeInactive: true }).filter(function (x) { return x.name === t.name && x.id !== t.id; });
+    if (!same.length) return t.name;
+    // 같은 이름이 있으면 구분값을 앞에: 라인업 · 인승 · 구동 (final-1.3: 트림명에는 구동·인승을 쓰지 않음)
+    var lb = lineupLabel(l), parts = [];
+    if (same.some(function (x) { return x.lineupId !== t.lineupId; })) parts.push(lb);
+    if (t.seatCount && same.some(function (x) { return x.seatCount !== t.seatCount; }) && lb.indexOf(t.seatCount + "인승") < 0) parts.push(t.seatCount + "인승");
+    if (same.some(function (x) { return (x.drivetrain || "") !== (t.drivetrain || ""); }) && t.drivetrain) parts.push(t.driveLabel || t.drivetrain);
+    if (!parts.length) parts.push(lb);
+    return parts.concat([t.name]).join(" · ");
   }
+  /** 브랜드 + 모델 (모델명이 브랜드명으로 시작하면 한 번만: '폴스타 폴스타 2' → '폴스타 2') */
+  function carFullName(b, m) { var bn = (b && b.nameKo) || "", mn = (m && m.nameKo) || ""; return mn.indexOf(bn + " ") === 0 || mn === bn ? mn : [bn, mn].filter(Boolean).join(" "); }
+  /** 견적 레코드의 화면용 차명: 차량 데이터와 연결돼 있으면 카탈로그 차명, 아니면 견적의 브랜드·모델 */
+  function carName(rec) { var d = rec && rec.trimId ? describe(rec.trimId) : null; return d ? d.fullName : ((rec && rec.brand) || "") + " " + ((rec && rec.model) || ""); }
   function describe(trimId) {
     var t = getTrim(trimId); if (!t) return null;
     var l = getLineup(t.lineupId) || {}, m = getModel(l.modelId) || {}, b = getBrand(m.brandId) || {};
     return { trim: t, lineup: l, model: m, brand: b, brandName: b.nameKo || "", modelName: m.nameKo || "", lineupName: l.displayName || "", lineupLabel: lineupLabel(l), trimName: t.name || "",
       fuelType: l.fuelType || null, fuelLabel: FUEL_LABEL_KO[l.fuelType] || "", modelYear: l.modelYear || null, generationName: l.generationName || null, generationCode: l.generationCode || null,
       salesChannel: l.salesChannel || "GENERAL", drivetrain: t.drivetrain || null, seatCount: t.seatCount || null,
-      fullName: [b.nameKo, m.nameKo].filter(Boolean).join(" "), trimLabel: trimLabel(trimId) };
+      fullName: carFullName(b, m), trimLabel: trimLabel(trimId) };
   }
 
   // ---------------------------------------------------------------- 옵션 / 색상
@@ -317,11 +328,11 @@
   }
 
   var VM = {
-    ENUMS: ENUMS, FUEL_LABEL_KO: FUEL_LABEL_KO, CHANNEL_LABEL_KO: CHANNEL_LABEL_KO, SCHEMA_VERSION: "final-1.2",
+    ENUMS: ENUMS, FUEL_LABEL_KO: FUEL_LABEL_KO, CHANNEL_LABEL_KO: CHANNEL_LABEL_KO, SCHEMA_VERSION: "final-1.3",
     load: load, raw: function () { return D; }, meta: function () { return D.meta; },
     getBrands: getBrands, getBrand: getBrand, getModels: getModels, getModel: getModel, getModelsByFamily: getModelsByFamily,
     getLineups: getLineups, getLineup: getLineup, lineupLabel: lineupLabel,
-    getTrims: getTrims, getTrim: getTrim, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
+    carName: carName, getTrims: getTrims, getTrim: getTrim, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
