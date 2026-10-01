@@ -619,7 +619,7 @@
                 var name = t ? TG.shortName(t) : (rec && rec.trim) || '';
                 var price = priceOf(t, rec), sc = stdCount(t), selectable = !isStock && g && g.trims.length > 1;
                 var box = document.createElement('div'); box.className = 'detail_trimsel' + (isStock ? ' is-fixed' : '');
-                box.innerHTML = '<p class="dts_head">세부 등급</p>' +   // 연식·라인업·인승·구동은 바로 위 줄(detail_year)에 있으므로 반복하지 않음
+                box.innerHTML = '' +   // '세부 등급' 제목 없이 한 줄만 (연식·라인업·인승·구동은 바로 위 줄 detail_year)
                     '<div class="dts_bar'+(selectable?' is-select':'')+'"'+(selectable?' role="button" tabindex="0" aria-label="다른 세부 등급 선택"':'')+'>' +
                       '<strong class="dts_name">'+esc(name)+'</strong>' +
                       (price ? '<span class="dts_price">'+man(price)+'</span>' : '') +
@@ -690,6 +690,15 @@
                     }
                 }
             } catch (e) { if (window.console) console.warn('trim select', e); }
+        })();
+        // 재고특가·빠른인도 상세: 색상·포함사항을 '세부 등급'·'같은 차량 다른 재고'와 같은 둥근 사각형 위젯으로 (좌측 제목 · 우측 태그)
+        (function () {
+            if (document.body.classList.contains('estimate-detail')) return;   // 견적조회 상세는 기존 그대로
+            [['.detail_card .detail_colors', '색상'], ['.detail_card .detail_includes', '포함사항']].forEach(function (x) {
+                var el = document.querySelector(x[0]); if (!el || el.querySelector('.dw_title')) return;
+                var t = document.createElement('strong'); t.className = 'dw_title'; t.textContent = x[1];
+                el.insertBefore(t, el.firstChild); el.classList.add('detail_widget');
+            });
         })();
     </script>
     <!-- 이 차량 이용 후기 (하단 슬라이드 위젯) — 후기 데이터(reviews.js) ↔ 현재 차량(trimId·모델·계열) 연동. 연결 후기가 없으면 표시 안 함 -->

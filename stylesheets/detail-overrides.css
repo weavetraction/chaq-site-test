@@ -2790,3 +2790,8 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_trimsel .dts_name { flex: 0 1 auto; }
 .local-car-detail .detail_trimsel .dts_std { margin-left: auto; }
 .local-car-detail .detail_trimsel .dts_std + .dts_go { margin-left: 0; }
+/* v197: 재고특가·빠른인도 상세 — 색상·포함사항 위젯 (세부 등급 줄·같은 차량 다른 재고와 같은 둥근 사각형, 좌측 제목 · 우측 태그) */
+.local-car-detail .detail_tags.detail_widget { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; min-height: 46px; margin-top: 8px; padding: 8px 12px 8px 14px; border: 1px solid #e3e6ea; border-radius: 12px; background: #fff; }
+.local-car-detail .detail_tags.detail_widget .dw_title { margin-right: auto; padding-right: 8px; color: #232733; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.local-car-detail .detail_includes.detail_widget .include-label { display: none; }   /* 제목 '포함사항'과 중복 */
+.local-car-detail .detail_trimsel { margin-top: 12px; }
