@@ -11,13 +11,13 @@
 | # | 항목 | 넣는 곳 | 비고 |
 |---|---|---|---|
 | 1 | **AWS 계정** (가입 완료 ✔, 루트 MFA 켜기) | `infra/lib/config.ts` `account` | 계정 ID 는 CloudShell 1단계 출력으로 전달 |
-| 2 | **chaq.kr 도메인** 관리 권한 (가비아 등) | Route 53 호스팅 영역 생성 → 등록업체 네임서버를 Route 53 NS 4개로 변경 → `hostedZoneId` | 메일(MX) 레코드가 있으면 Route 53 에 먼저 옮겨 적기 |
+| 2 | **chaq.co.kr 도메인** 관리 권한 (가비아 등) | Route 53 호스팅 영역 생성 → 등록업체 네임서버를 Route 53 NS 4개로 변경 → `hostedZoneId` | 메일(MX) 레코드가 있으면 Route 53 에 먼저 옮겨 적기 |
 | 3 | **장애 알림 메일** | `config.ts` `alarmEmails` | 배포 후 받은 확인 메일에서 Confirm |
 | 4 | **관리자 접속 IP** (사무실 고정 IP, 선택) | `config.ts` `adminAllowCidrs` | 비우면 로그인만으로 접속 |
 | 5 | **GA4 속성** (측정 ID `G-…`, Measurement Protocol API 비밀) | 측정 ID → `config.ts` `ga4MeasurementId` · GTM / API 비밀 → Secrets Manager `GA4_API_SECRET` | 데이터 보관 14개월로 변경, Google Ads 연결 |
 | 6 | **GTM 컨테이너** (`GTM-…`) | GitHub environment 변수 `GTM_ID` | 태그 설정: `docs/analytics-events.md` §4 |
 | 7 | **Google Ads** 계정 (전환 ID·라벨) | GTM | 자동 태깅(gclid) 켜기 |
-| 8 | **Meta 비즈니스** (픽셀 ID, 전환 API 토큰, 도메인 인증) | 픽셀 ID → `config.ts` `metaPixelId` · GTM / 토큰 → Secrets Manager `META_CAPI_TOKEN` | 이벤트 관리자에서 chaq.kr 도메인 인증 |
+| 8 | **Meta 비즈니스** (픽셀 ID, 전환 API 토큰, 도메인 인증) | 픽셀 ID → `config.ts` `metaPixelId` · GTM / 토큰 → Secrets Manager `META_CAPI_TOKEN` | 이벤트 관리자에서 chaq.co.kr 도메인 인증 |
 | 9 | **네이버 검색광고·GFA** (공통 스크립트 계정 ID) | GTM | 전환 '신청' 등록 |
 | 10 | **카카오모먼트** (픽셀 ID) | GTM | |
 | 11 | **채널톡** 플러그인 키, 상담원 계정, 운영시간·자동응답 | GitHub environment 변수 `CHANNEL_PLUGIN_KEY` | 채널톡 → 마케팅 연동은 2단계 |
@@ -71,7 +71,7 @@
   - Required reviewers에 대표를 지정합니다(배포 승인).
   - Variables에 다음을 넣습니다.
     - `AWS_DEPLOY_ROLE_ARN`
-    - `SITE_API_BASE` = `https://chaq.kr`
+    - `SITE_API_BASE` = `https://chaq.co.kr`
     - `CHANNEL_PLUGIN_KEY`
     - `GTM_ID`
 - **Secrets and variables → Actions → Repository variables:** `AUTO_DEPLOY_ENV` = `prod`로 설정합니다. main에 올라가면 승인한 뒤 운영에 반영됩니다.
@@ -84,7 +84,7 @@
 
 ```bash
 cd infra && bash scripts/ecs-run.sh prod node dist/scripts/seed-from-site.js
-bash scripts/ecs-run.sh prod node dist/scripts/create-admin.js admin@chaq.kr '임시비밀번호' 관리자
+bash scripts/ecs-run.sh prod node dist/scripts/create-admin.js admin@chaq.co.kr '임시비밀번호' 관리자
 ```
 
    실행 기록에 비밀번호가 남으니, 로그인을 확인한 뒤 같은 이메일로 한 번 더 실행해 새 비밀번호로 바꿉니다(같은 이메일이면 비밀번호만 갱신).
@@ -102,8 +102,8 @@ aws ecs update-service --cluster chaq-prod --service chaq-prod-api --force-new-d
 ```
 
 4. **점검** (오픈 전, 사이트를 아직 광고하지 않은 상태에서):
-   - [ ] `https://chaq.kr`에서 메인, 목록, 상세, 차량선택이 정상이고 `/api/quotes.js`가 200 또는 304로 응답합니다.
-   - [ ] `https://origin.chaq.kr`에 직접 접속하면 403이 납니다(CloudFront만 허용).
+   - [ ] `https://chaq.co.kr`에서 메인, 목록, 상세, 차량선택이 정상이고 `/api/quotes.js`가 200 또는 304로 응답합니다.
+   - [ ] `https://origin.chaq.co.kr`에 직접 접속하면 403이 납니다(CloudFront만 허용).
    - [ ] `/admin`에서 다음이 동작합니다: 엑셀 받기, 올리기, 미리보기, 반영(1분 안), 되돌리기.
    - [ ] 상세에서 문의하면 채널톡이 열리고, 관리자 목록에 '유입'이 표시되며, 알림 채널에 새 문의가 옵니다.
    - [ ] `?utm_source=naver&utm_medium=cpc&utm_campaign=test`로 접속해 문의합니다.

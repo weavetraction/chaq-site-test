@@ -42,7 +42,7 @@ server/
 
 ```js
 window.CHAQ_API = {
-  base: "https://api.chaq.kr",        // 배포한 API 주소
+  base: "https://api.chaq.co.kr",        // 배포한 API 주소
   channelPluginKey: "채널톡 플러그인 키",
   channelButton: false                // 채널톡 기본 버튼 표시 여부
 };
@@ -60,9 +60,9 @@ cd server && npm install
 export DATABASE_URL=postgres://chaq:chaq@localhost:5432/chaq
 npm run migrate
 npm run seed                                      # 사이트의 현재 견적 데이터를 DB 로 옮기고 반영
-npm run create-admin -- admin@chaq.kr '비밀번호10자이상' 관리자
+npm run create-admin -- admin@chaq.co.kr '비밀번호10자이상' 관리자
 npm run dev                                       # http://localhost:8080/admin
-API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.kr ADMIN_PASSWORD='...' npm test   # 동작 점검
+API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.co.kr ADMIN_PASSWORD='...' npm test   # 동작 점검
 ```
 
 ## 배포 (AWS)
@@ -73,7 +73,7 @@ API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.kr ADMIN_PASSWORD='...' np
 
 ```
 사용자 ─ CloudFront(WAF·인증서) ─┬─ S3 : 사이트 (index.html · pages/…)
-         chaq.kr                 └─ /api/* · /admin* ─ ALB(CloudFront 만 허용) ─ ECS Fargate API (2~10대)
+         chaq.co.kr                 └─ /api/* · /admin* ─ ALB(CloudFront 만 허용) ─ ECS Fargate API (2~10대)
                                                                                  ├─ RDS PostgreSQL (Multi-AZ)
                                                                                  └─ ElastiCache Redis
 ```

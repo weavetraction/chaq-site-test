@@ -55,7 +55,7 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   ok(back.stock.length === before.stock.rows && back.stock[0].cost["2"]["60"]["0"] === old, "되돌린 데이터 확인");
 
   // 5) 문의 접수
-  const iq = await call("/api/inquiries", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ source: "DETAIL", kind: "stock", recId: s1.id, trimId: s1.trimId, carName: "현대 그랜저", trimName: s1.trim, spec: "2027년형 · 가솔린 2.5", conditions: { product: "장기렌트", term: "60", plan: "0", dist: "2" }, monthly: old, options: ["빌트인 캠"], pageUrl: "https://chaq.kr/pages/car-detail.html?id=" + s1.id }) });
+  const iq = await call("/api/inquiries", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ source: "DETAIL", kind: "stock", recId: s1.id, trimId: s1.trimId, carName: "현대 그랜저", trimName: s1.trim, spec: "2027년형 · 가솔린 2.5", conditions: { product: "장기렌트", term: "60", plan: "0", dist: "2" }, monthly: old, options: ["빌트인 캠"], pageUrl: "https://chaq.co.kr/pages/car-detail.html?id=" + s1.id }) });
   const iqj = await iq.json(); ok(iq.status === 201 && iqj.id > 0 && /문의번호/.test(iqj.message), "문의 접수 → 채널톡 메시지 " + JSON.stringify(iqj.message).slice(0, 80));
   const list = await (await call("/api/admin/inquiries")).json(); ok(list.rows.some((r: any) => r.id === iqj.id), "관리자 문의 목록");
   const upd = await call(`/api/admin/inquiries/${iqj.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "IN_PROGRESS", memo: "테스트 메모" }) });

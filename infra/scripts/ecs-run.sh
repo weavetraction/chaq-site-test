@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 운영/스테이징 API 이미지로 1회성 명령 실행 (ECS RunTask) — 결과는 CloudWatch 로그 /chaq/<env>/api
 #   infra/scripts/ecs-run.sh prod node dist/scripts/seed-from-site.js
-#   infra/scripts/ecs-run.sh prod node dist/scripts/create-admin.js admin@chaq.kr '비밀번호' 관리자
+#   infra/scripts/ecs-run.sh prod node dist/scripts/create-admin.js admin@chaq.co.kr '비밀번호' 관리자
 set -euo pipefail
 ENV="${1:?env (staging|prod)}"; shift
 REGION="${AWS_REGION:-ap-northeast-2}"

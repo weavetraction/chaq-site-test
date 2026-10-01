@@ -33,12 +33,12 @@ jobs:
       - run: npm run build
       - run: node dist/scripts/migrate.js
       - run: node dist/scripts/seed-from-site.js
-      - run: node dist/scripts/create-admin.js ci@chaq.kr 'CiPassw0rd!234' CI
+      - run: node dist/scripts/create-admin.js ci@chaq.co.kr 'CiPassw0rd!234' CI
       - name: 서버 실행 후 동작 점검
         run: |
           node dist/index.js > api.log 2>&1 &
           for i in $(seq 1 30); do curl -sf localhost:8080/api/health && break; sleep 1; done
-          API_BASE=http://localhost:8080 ADMIN_EMAIL=ci@chaq.kr ADMIN_PASSWORD='CiPassw0rd!234' node --import tsx src/scripts/smoke-test.ts
+          API_BASE=http://localhost:8080 ADMIN_EMAIL=ci@chaq.co.kr ADMIN_PASSWORD='CiPassw0rd!234' node --import tsx src/scripts/smoke-test.ts
       - if: failure()
         run: cat api.log
 

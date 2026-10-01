@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# [1단계] AWS CloudShell(서울)에서 실행 — chaq.kr DNS 를 Route 53 으로 준비 (몇 번 실행해도 안전)
+# [1단계] AWS CloudShell(서울)에서 실행 — chaq.co.kr DNS 를 Route 53 으로 준비 (몇 번 실행해도 안전)
 #   bash cloudshell-1-dns.sh            (다른 도메인이면: DOMAIN=example.kr bash cloudshell-1-dns.sh)
 set -euo pipefail
-DOMAIN="${DOMAIN:-chaq.kr}"
+DOMAIN="${DOMAIN:-chaq.co.kr}"
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN." --query "HostedZones[?Name=='$DOMAIN.'] | [0].Id" --output text | sed 's|/hostedzone/||')
 if [ "$ZONE_ID" = "None" ] || [ -z "$ZONE_ID" ]; then

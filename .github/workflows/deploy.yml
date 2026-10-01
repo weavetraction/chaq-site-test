@@ -2,7 +2,7 @@
 # 오픈 초기(lite)는 스테이징 없이 AUTO_DEPLOY_ENV=prod + 'prod' environment 승인자 지정 → push 후 승인하면 운영 반영
 # GitHub environment(staging·prod) 마다 변수(Variables) 설정:
 #   AWS_DEPLOY_ROLE_ARN  — Chaq-<env>-Cicd 스택 출력 DeployRoleArn
-#   SITE_API_BASE        — https://chaq.kr (스테이징 https://stg.chaq.kr)
+#   SITE_API_BASE        — https://chaq.co.kr (스테이징 https://stg.chaq.co.kr)
 #   CHANNEL_PLUGIN_KEY   — 채널톡 플러그인 키 (공개 값)
 #   GTM_ID               — GTM-XXXXXXX
 name: Deploy

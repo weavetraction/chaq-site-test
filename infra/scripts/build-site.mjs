@@ -1,5 +1,5 @@
 // 사이트 배포본 만들기: 저장소에서 사이트 파일만 dist-site/ 로 복사 + 환경별 api-config.js 작성
-//   SITE_API_BASE=https://chaq.kr CHANNEL_PLUGIN_KEY=... GTM_ID=GTM-XXXX node infra/scripts/build-site.mjs
+//   SITE_API_BASE=https://chaq.co.kr CHANNEL_PLUGIN_KEY=... GTM_ID=GTM-XXXX node infra/scripts/build-site.mjs
 import fs from "node:fs";
 import path from "node:path";
 

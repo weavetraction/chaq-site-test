@@ -35,7 +35,7 @@ export class CdnStack extends Stack {
       lifecycleRules: [{ expiration: Duration.days(90) }], removalPolicy: RemovalPolicy.RETAIN,
     });
 
-    // 대표 주소로 이동(www → chaq.kr) · 폴더 주소에 index.html 붙이기
+    // 대표 주소로 이동(www → chaq.co.kr) · 폴더 주소에 index.html 붙이기
     const edgeFn = new cloudfront.Function(this, "ViewerRequest", {
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       code: cloudfront.FunctionCode.fromInline(`

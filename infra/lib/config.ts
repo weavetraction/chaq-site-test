@@ -13,7 +13,7 @@ export interface EnvConfig {
   account: string;                 // AWS 계정 ID (12자리)
   region: string;                  // 서울
   // ---- 도메인
-  zoneName: string;                // Route 53 호스팅 영역 (예: chaq.kr)
+  zoneName: string;                // Route 53 호스팅 영역 (예: chaq.co.kr)
   hostedZoneId: string;            // Route 53 호스팅 영역 ID (예: Z0123456789ABCDEFG)
   siteDomains: string[];           // CloudFront 가 받는 주소 — 첫 번째가 대표 주소 (나머지는 대표 주소로 이동)
   originDomain: string;            // CloudFront → ALB 연결용 내부 주소 (사용자에게 노출 안 됨)
@@ -55,8 +55,8 @@ export interface EnvConfig {
 const common = {
   account: "713005939050",                                       // weavetraction
   region: "ap-northeast-2",
-  zoneName: "chaq.kr",
-  hostedZoneId: "Z09447102TMOR5NL3KVBN",                          // chaq.kr (Route 53)
+  zoneName: "chaq.co.kr",
+  hostedZoneId: "Z00000000000000000000",                          // ← chaq.co.kr 호스팅 영역 ID (CloudShell 1단계 출력)
   githubRepo: "weavetraction/chaq-site-test",
   ga4MeasurementId: "",
   metaPixelId: "",
@@ -65,8 +65,8 @@ const common = {
 export const PROD_FULL: EnvConfig = {
   ...common,
   name: "prod", tier: "full",
-  siteDomains: ["chaq.kr", "www.chaq.kr"],
-  originDomain: "origin.chaq.kr",
+  siteDomains: ["chaq.co.kr", "www.chaq.co.kr"],
+  originDomain: "origin.chaq.co.kr",
   vpcCidr: "10.10.0.0/16", azs: ["ap-northeast-2a", "ap-northeast-2c"], natGateways: 2,
   dbInstanceClass: "t4g.medium", dbMultiAz: true, dbAllocatedGb: 50, dbMaxAllocatedGb: 500, dbBackupDays: 14, dbDeletionProtection: true,
   redisEnabled: true, redisNodeType: "cache.t4g.small", redisReplicas: 1,
@@ -94,8 +94,8 @@ export const ENVS: Record<EnvName, EnvConfig> = {
   staging: {
     ...PROD_LITE,
     name: "staging",
-    siteDomains: ["stg.chaq.kr"],
-    originDomain: "origin-stg.chaq.kr",
+    siteDomains: ["stg.chaq.co.kr"],
+    originDomain: "origin-stg.chaq.co.kr",
     vpcCidr: "10.20.0.0/16",
     dbInstanceClass: "t4g.micro", dbAllocatedGb: 20, dbMaxAllocatedGb: 50, dbBackupDays: 1, dbDeletionProtection: false,
     apiMinTasks: 1, apiMaxTasks: 2,

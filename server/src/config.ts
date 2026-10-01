@@ -17,7 +17,7 @@ export const config = {
   // 앞단 프록시 수 (CloudFront → ALB = 2) — 접속 IP·요청 제한에 사용
   trustProxy: Number(process.env.TRUST_PROXY || 1),
   jwtSecret: process.env.JWT_SECRET || "",
-  // 사이트 주소(CORS 허용) 예: https://chaq.kr,https://weavetraction.github.io
+  // 사이트 주소(CORS 허용) 예: https://chaq.co.kr,https://weavetraction.github.io
   siteOrigins: list(process.env.SITE_ORIGINS),
   // 차량 데이터(Vehicle Master) 공통본 경로 — 트림 연결·검색에 사용
   vehicleMasterPath: process.env.VEHICLE_MASTER_PATH || path.resolve(ROOT, "../pages/data/vehicle-master.js"),
