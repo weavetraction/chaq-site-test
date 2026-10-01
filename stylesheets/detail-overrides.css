@@ -2751,3 +2751,42 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_trimsel .dts_chip.on small { color: var(--detail-green, #18a85c); }
 /* v193: 견적조회(및 견적 기준 차량선택)는 재고 수 개념이 없어 선택 팝업의 차량 수 숨김 — 재고특가·빠른인도는 유지 */
 .local-special-list.view-estimate .fpop_row .bcount { display: none; }
+/* v194: 견적조회 — 브랜드 팝업 국산/수입 섹션 간격 2배 · 등급 팝업 '세부 등급 N개' 우측 정렬 · 카드 월비용 옆 '>' */
+.local-special-list.view-estimate .fpop_row + .fpop_sec { margin-top: 40px; }   /* 행 간격 8 + 40 = 48px (기존 8 + 16 = 24px의 2배) */
+.local-special-list.view-estimate .fpop_row .bname { display: flex; align-items: center; gap: 10px; }
+.local-special-list.view-estimate .fpop_row .bname small.bsub { flex: none; margin: 0 0 0 auto; white-space: nowrap; }
+.local-special-list .est_card .est_monthly .est_go { display: inline-flex; width: 22px; height: 22px; margin-left: 4px; align-items: center; justify-content: center; vertical-align: -2px; color: var(--detail-green); }
+.local-special-list .est_card .est_monthly .est_go svg { width: 20px; height: 20px; }
+.local-special-list .est_card .est_monthly b.is-inquiry + .est_go { color: #5c6169; }
+/* 재고특가·빠른인도 카드: 옵션 옆 세부 등급 태그 */
+.local-special-list .stock-copy b .trim-tag { overflow: hidden; max-width: 9.5em; text-overflow: ellipsis; }
+/* v194: 상세 '세부 등급' 한 줄(트림명 · 트림 가격 · 기본옵션 N개 (i) · '>') + '같은 차량 다른 재고' */
+.local-car-detail .detail_trimsel .dts_bar { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px 10px 14px; border: 1px solid #e3e6ea; border-radius: 12px; background: #fff; }
+.local-car-detail .detail_trimsel .dts_bar.is-select { cursor: pointer; }
+.local-car-detail .detail_trimsel .dts_name { overflow: hidden; min-width: 0; flex: 0 1 auto; color: #232733; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_price { flex: none; color: #232733; font-size: 14px; font-weight: 600; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_std { display: inline-flex; flex: none; align-items: center; gap: 4px; color: #8a8f96; font-size: 13px; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_info { display: inline-flex; width: 17px; height: 17px; padding: 0; align-items: center; justify-content: center; border: 1.4px solid #9aa0a6; border-radius: 50%; background: transparent; color: #8a8f96; font: italic 700 11px/1 Georgia, serif; cursor: pointer; }
+.local-car-detail .detail_trimsel .dts_go { display: inline-flex; flex: none; margin-left: auto; color: #9aa0a6; }
+.local-car-detail .detail_trimsel .dts_go svg { width: 20px; height: 20px; }
+.local-car-detail .detail_samestock { display: flex; width: 100%; min-height: 46px; margin-top: 8px; padding: 0 12px 0 14px; align-items: center; gap: 8px; border: 0; border-radius: 12px; background: var(--detail-green-soft); color: var(--detail-green); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; }
+.local-car-detail .detail_samestock .dss_n { margin-left: auto; }
+.local-car-detail .detail_samestock .dss_go { display: inline-flex; }
+.local-car-detail .detail_samestock .dss_go svg { width: 20px; height: 20px; }
+.local-car-detail .detail_samestock.is-empty { background: #f0f1f3; color: #9aa0a6; cursor: default; }
+.local-car-detail .dts_pop .opt_row small { margin-left: 4px; color: var(--detail-green); font-size: 12px; font-weight: 700; }
+.local-car-detail .dts_pop .opt_row em { display: flex; flex-direction: column; align-items: flex-end; text-align: right; white-space: nowrap; }
+.local-car-detail .dts_pop .opt_row em small { margin: 2px 0 0; color: #9aa0a6; font-weight: 400; }
+.local-car-detail .dts_pop .opt_row { min-height: 56px; padding-top: 8px; padding-bottom: 8px; gap: 10px; }
+.local-car-detail .dts_pop .ss_row .ss_sub { display: block; margin: 3px 0 0; color: #9aa0a6; font-size: 12px; font-weight: 400; }
+.local-car-detail .dts_pop .dts_std_list { margin: 0; padding: 0 4px; list-style: none; }
+.local-car-detail .dts_pop .dts_std_list li { padding: 11px 2px; border-bottom: 1px solid #f1f2f4; color: #4a4f55; font-size: 14px; line-height: 1.45; }
+.local-car-detail .dts_pop .dts_empty { margin: 40px 0; color: #9aa0a6; font-size: 14px; text-align: center; }
+.local-car-detail .detail_trimsel .dts_bar { gap: 8px; padding: 10px 10px 10px 12px; }
+.local-car-detail .detail_trimsel .dts_name { font-size: 14.5px; }
+.local-car-detail .detail_trimsel .dts_price { font-size: 13.5px; }
+.local-car-detail .detail_trimsel .dts_std { font-size: 12.5px; }
+.local-car-detail .detail_trimsel .dts_go { margin-left: auto; }
+.local-car-detail .detail_trimsel .dts_name { flex: 0 1 auto; }
+.local-car-detail .detail_trimsel .dts_std { margin-left: auto; }
+.local-car-detail .detail_trimsel .dts_std + .dts_go { margin-left: 0; }

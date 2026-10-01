@@ -183,6 +183,10 @@
             function vmCount(pred){ var n=0; records.forEach(function(r){ var k=VMK[r.id]; if(k && pred(k)) n++; }); return n; }
             function vmImg(tid){ try { return (tid && VM.resolveImageUrl(tid,[PH],true)) || PH; } catch(e){ return PH; } }
             function escT(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            function trimTag(r){   // 재고특가·빠른인도 카드: 옵션 태그 옆 세부 등급 태그 (차량 데이터 트림명, 묶음에 나온 구동·인승 표기 제외)
+                var t = USE_VM && r.trimId ? VM.getTrim(r.trimId) : null; if (!t) return '';
+                TG.groupOfTrim(r.trimId); return '<span class="opt-tag trim-tag">'+escT(TG.shortName(t))+'</span>';
+            }
             function inquiryCard(tid, title, sub, c){   // 견적 데이터가 없는 차량: 비용칸 '별도문의'
                 return '<a class="stock-card is-inquiry" href="car-detail.html?trimId='+encodeURIComponent(tid)+'&from='+page+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
                     '<img src="'+escT(vmImg(tid))+'" alt="'+escT(title)+'" onerror="this.onerror=null;this.src=\''+PH+'\'">'+
@@ -232,7 +236,7 @@
                                 '<div class="est_visual"><img src="'+escT(vmImg(er.tid))+'" alt=""></div>'+
                                 '<strong class="est_name">'+escT(ed.fullName)+'</strong>'+
                                 '<span class="est_year">'+escT(F.trim ? er.g.label : '전체 등급')+'</span>'+
-                                '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b class="is-inquiry">별도문의</b></div>'+
+                                '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b class="is-inquiry">별도문의</b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
                                 '<span class="est_tag">상담 시 금융사/렌트사 견적 안내</span></div>';
                             return;
                         }
@@ -245,7 +249,7 @@
                         '<div class="est_visual"><img src="'+carImg(best)+'" alt=""></div>'+
                         '<strong class="est_name">'+best.brand+' '+best.model+'</strong>'+
                         '<span class="est_year">'+best.year+(best.trim?(' · '+best.trim):'')+'</span>'+
-                        '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b>0<em>원</em></b></div>'+
+                        '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b>0<em>원</em></b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
                         '<span class="est_tag">금융사/렌트사 실시간 최저가</span></div>';
                     animateNum(estEl.querySelector('.est_monthly b'), bestM, true);
                     return;
@@ -270,7 +274,7 @@
                         '<img src="'+carImg(r)+'" alt="'+r.brand+' '+r.model+'">'+
                         '<span class="stock-copy"><small>'+r.brand+' '+r.model+'</small>'+
                         '<strong>월 '+won(m)+'원</strong>'+
-                        '<b><span class="opt-tag">옵션 <em>'+(r.opts?r.opts.length:0)+'</em>개</span>'+
+                        '<b><span class="opt-tag">옵션 <em>'+(r.opts?r.opts.length:0)+'</em>개</span>'+trimTag(r)+
                         '</b></span>'+
                         '<span class="stock-cta">상세견적</span></a>';
                 });

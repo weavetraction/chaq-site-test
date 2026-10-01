@@ -547,7 +547,9 @@
             recompute();
         })();
     </script>
-    <!-- 세부 등급 선택: 목록의 '등급'은 큰 항목(연료·엔진·인승·구동 묶음)만 → 같은 묶음의 세부 트림을 여기서 고름 (data/trim-groups.js) -->
+    <!-- 세부 등급 (v194): 현재 차량의 트림명 · 트림 가격 · 기본옵션 N개 + (i) 를 한 줄로
+         · 견적조회(및 차량선택) 진입: 오른쪽 '>' → 같은 등급 묶음(data/trim-groups.js)의 다른 세부 트림 선택 팝업
+         · 재고특가·빠른인도 진입: 세부 등급 선택 없음(실제 재고 차량) + 아래 '같은 차량 다른 재고'(같은 목록 · 같은 트림) 선택 팝업 -->
     <script src="data/trim-groups.js"></script>
     <script>
         (function () {
@@ -569,30 +571,118 @@
                     setChip('dist','dist', function(v,t){ return (v==='3')===(t.indexOf('3만')>-1); });
                     setChip('plan','init', function(v,t){ var p=t.indexOf('보증')>-1?'b':(t.indexOf('선납')>-1?'s':'0'); return p===v; });
                 })();
-                var g = tid ? TG.groupOfTrim(tid) : null; if (!g) return;
                 var kind = fromP || (rec ? (String(rec.id)[0]==='f' ? 'fast' : String(rec.id)[0]==='e' ? 'estimate' : 'stock') : null);
+                var isStock = kind === 'stock' || kind === 'fast';          // 재고특가·빠른인도: 실제 재고 차량 → 세부 등급 선택 없음
+                var t = tid ? VM.getTrim(tid) : null, g = tid ? TG.groupOfTrim(tid) : null;
+                if (!t && !(isStock && rec)) return;
                 var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+                var won = function(n){ return (n||0).toLocaleString('ko-KR'); };
                 var man = function(n){ return n ? (Math.round(n/10000)).toLocaleString('ko-KR')+'만원' : ''; };
-                var box = document.createElement('div'); box.className = 'detail_trimsel';
-                box.innerHTML = '<p class="dts_head">세부 등급<small>'+esc(g.label)+'</small></p><div class="dts_row" role="radiogroup" aria-label="세부 등급">' +
-                    g.trims.map(function (t) { var lp = VM.getListPrice ? VM.getListPrice(t.id) : null, on = t.id === tid;
-                        return '<button type="button" class="dts_chip'+(on?' on':'')+'" role="radio" aria-checked="'+on+'" data-trim="'+esc(t.id)+'">'+esc(TG.shortName(t))+(lp&&lp.price?'<small>'+man(lp.price)+'</small>':'')+'</button>'; }).join('') + '</div>';
-                var anchor = document.querySelector('.detail_card .detail_year'); if (!anchor) return;
-                anchor.parentNode.insertBefore(box, anchor.nextSibling);
+                var CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>';
+                function priceOf(tr, r){ var lp = tr && VM.getListPrice ? VM.getListPrice(tr.id) : null; return (lp && lp.price) || (r && r.base) || null; }   // 트림 가격(차량 데이터 기본가), 없으면 견적 차량가
+                // 기본옵션: 데이터의 'A 기본 품목 포함/외' 표기를 따라 하위 등급 품목까지 합쳐 실제 기본 포함 전체로 (같은 라인업 안에서)
+                var STD_REF = /^(.+?)\s*기본\s*품목\s*(?:외|포함)\s*$/, nz = function(x){ return String(x||'').replace(/\s+/g,''); };
+                function stdParts(tr, depth){
+                    var own = VM.getStandardItems(tr.id).map(function(x){ return typeof x==='string'?x:(x&&x.name)||''; }).filter(Boolean), ref = null, base = [];
+                    own = own.filter(function(x){ var m = x.match(STD_REF); if (m && !ref) { ref = m[1]; return false; } return true; });
+                    if (ref && (depth||0) < 8) {
+                        var sib = VM.getTrims(tr.lineupId, { includeInactive: true }), hit = sib.filter(function(x){ return nz(x.name)===nz(ref); })[0] || sib.filter(function(x){ return nz(x.name).indexOf(nz(ref))===0; })[0];
+                        if (hit && hit.id !== tr.id) { var pp = stdParts(hit, (depth||0)+1); base = pp.own.concat(pp.base); }
+                    }
+                    var seen = {}; own.forEach(function(x){ seen[x]=1; }); base = base.filter(function(x){ if (seen[x]) return false; seen[x]=1; return true; });
+                    return { own: own, base: base, ref: ref };
+                }
+                function stdCount(tr){ if (!tr) return 0; var pp = stdParts(tr); return (pp.own.length + pp.base.length) || tr.stdCount || 0; }
                 function cond() {
                     function on(gr){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+gr+'"].on'); return b?b.textContent:''; }
                     var it = on('init');
-                    return '&term='+((on('term').match(/[0-9]+/)||['60'])[0])+'&plan='+(it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'))+'&dist='+(on('dist').indexOf('3만')>-1?'3':'2');
+                    return { term: (on('term').match(/[0-9]+/)||['60'])[0], plan: it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'), dist: on('dist').indexOf('3만')>-1?'3':'2' };
                 }
+                function condQ(){ var c = cond(); return '&term='+c.term+'&plan='+c.plan+'&dist='+c.dist; }
+                // ---- 바텀시트 (옵션선택 팝업과 같은 디자인)
+                function sheet(id, title){
+                    var p = document.createElement('div'); p.className = 'opt_pop dts_pop'; p.id = id; p.setAttribute('aria-hidden','true');
+                    p.innerHTML = '<div class="opt_sheet"><div class="opt_head"><h3>'+esc(title)+'</h3><button type="button" class="opt_close" aria-label="닫기">&times;</button></div><div class="opt_body"></div></div>';
+                    (document.querySelector('.detail_shell') || document.body).appendChild(p);
+                    function close(){ p.classList.remove('is-open'); p.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+                    p.querySelector('.opt_close').addEventListener('click', close);
+                    p.addEventListener('click', function(e){ if(e.target===p) close(); });
+                    return { el: p, body: p.querySelector('.opt_body'), title: p.querySelector('h3'), open: function(){ p.classList.add('is-open'); p.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; p.querySelector('.opt_body').scrollTop=0; }, close: close };
+                }
+                // ---- 세부 등급 한 줄
+                var name = t ? TG.shortName(t) : (rec && rec.trim) || '';
+                var price = priceOf(t, rec), sc = stdCount(t), selectable = !isStock && g && g.trims.length > 1;
+                var box = document.createElement('div'); box.className = 'detail_trimsel' + (isStock ? ' is-fixed' : '');
+                box.innerHTML = '<p class="dts_head">세부 등급'+(g?'<small>'+esc(g.label)+'</small>':'')+'</p>' +
+                    '<div class="dts_bar'+(selectable?' is-select':'')+'"'+(selectable?' role="button" tabindex="0" aria-label="다른 세부 등급 선택"':'')+'>' +
+                      '<strong class="dts_name">'+esc(name)+'</strong>' +
+                      (price ? '<span class="dts_price">'+man(price)+'</span>' : '') +
+                      (t ? '<span class="dts_std">기본옵션 '+sc+'개<button type="button" class="dts_info" aria-label="기본옵션 상세 보기">i</button></span>' : '') +
+                      (selectable ? '<span class="dts_go">'+CHEV+'</span>' : '') +
+                    '</div>';
+                var anchor = document.querySelector('.detail_card .detail_year'); if (!anchor) return;
+                anchor.parentNode.insertBefore(box, anchor.nextSibling);
+                // (i) 기본옵션 상세
+                var stdPop = null;
                 box.addEventListener('click', function (e) {
-                    var b = e.target.closest ? e.target.closest('.dts_chip') : null; if (!b) return;
-                    var nt = b.getAttribute('data-trim'); if (nt === tid) return;
-                    // 같은 목록(재고특가·빠른인도·견적조회)에 이 트림 견적이 있으면 그 견적으로, 없으면 차량 데이터 상세(월 납입금 '별도문의')
-                    var qs = kind ? VM.getQuotes(nt).filter(function(x){ return x.kind===kind; }) : [];
-                    var hit = null; if (qs.length) { var only = {}; only[kind] = D[kind] || []; var pk = VM.pickQuote(nt, kind, only); hit = pk && pk.rec; }
-                    location.href = hit ? ('car-detail.html?id='+encodeURIComponent(hit.id)+(kind!=='stock'?'&from='+kind:'')+cond())
-                                        : ('car-detail.html?trimId='+encodeURIComponent(nt)+(kind?'&from='+kind:'')+cond());
+                    if (!(e.target.closest && e.target.closest('.dts_info'))) return;
+                    e.stopPropagation();
+                    if (!stdPop) stdPop = sheet('dtsStdPop', '기본옵션');
+                    var pp = stdParts(t), li = function(arr){ return '<ul class="dts_std_list">'+arr.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ul>'; };
+                    stdPop.title.textContent = '기본옵션 · ' + name;
+                    stdPop.body.innerHTML = (pp.own.length + pp.base.length)
+                        ? ('<p class="opt_sec">총 '+(pp.own.length+pp.base.length)+'개 기본 포함</p>' +
+                           (pp.base.length ? (pp.own.length ? '<p class="opt_sec">'+esc(name)+' 추가 품목 '+pp.own.length+'개</p>'+li(pp.own) : '') + '<p class="opt_sec">'+esc(TG.shortName(VM.getTrims(t.lineupId,{includeInactive:true}).filter(function(x){ return nz(x.name)===nz(pp.ref); })[0] || {name: pp.ref}))+' 기본 품목 '+pp.base.length+'개</p>'+li(pp.base) : li(pp.own)))
+                        : '<p class="dts_empty">기본옵션 정보가 없습니다.</p>';
+                    stdPop.open();
                 });
+                // '>' 다른 세부 등급 선택 (견적조회)
+                if (selectable) {
+                    var trimPop = sheet('dtsTrimPop', '세부 등급 선택');
+                    trimPop.body.innerHTML = '<p class="opt_sec">'+esc(g.label)+'</p>' + g.trims.map(function (x) { var on = x.id === tid, p = priceOf(x, null);
+                        return '<button type="button" class="opt_row dts_opt'+(on?' on':'')+'" data-trim="'+esc(x.id)+'"><span>'+esc(TG.shortName(x))+(on?' <small>현재</small>':'')+'</span><em>'+(p?man(p):'')+'<small>기본옵션 '+stdCount(x)+'개</small></em></button>'; }).join('');
+                    var bar = box.querySelector('.dts_bar');
+                    bar.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('.dts_info')) return; trimPop.open(); });
+                    bar.addEventListener('keydown', function(e){ if (e.key==='Enter'||e.key===' ') { e.preventDefault(); trimPop.open(); } });
+                    trimPop.body.addEventListener('click', function (e) {
+                        var b = e.target.closest ? e.target.closest('.dts_opt') : null; if (!b) return;
+                        var nt = b.getAttribute('data-trim'); if (nt === tid) { trimPop.close(); return; }
+                        // 같은 목록(견적조회)에 이 트림 견적이 있으면 그 견적으로, 없으면 차량 데이터 상세(월 납입금 '별도문의')
+                        var hit = null; if (kind) { var only = {}; only[kind] = D[kind] || []; var pk = VM.pickQuote(nt, kind, only); hit = pk && pk.rec; }
+                        location.href = hit ? ('car-detail.html?id='+encodeURIComponent(hit.id)+(kind!=='stock'?'&from='+kind:'')+condQ())
+                                            : ('car-detail.html?trimId='+encodeURIComponent(nt)+(kind?'&from='+kind:'')+condQ());
+                    });
+                }
+                // '같은 차량 다른 재고' (재고특가·빠른인도): 같은 목록 · 같은 트림(트림 연결이 없으면 브랜드·모델·연식·등급 문자열 일치)
+                if (isStock && rec) {
+                    var list = (D[kind] || []).filter(function (r) {
+                        if (r.rem === 0) return false;
+                        return rec.trimId ? r.trimId === rec.trimId : (!r.trimId && r.brand===rec.brand && r.model===rec.model && r.year===rec.year && r.trim===rec.trim);
+                    });
+                    var others = list.filter(function(r){ return r.id !== rec.id; });
+                    function monthly(r, c){ var d=r.cost&&r.cost[c.dist]; if(!d) return null; var x=d[c.term]||d[Object.keys(d)[0]]; if(!x) return null; if(x[c.plan]!=null) return x[c.plan]; for(var p in x) return x[p]; return null; }   // 페이지 표시값과 같은 규칙
+                    var w = document.createElement('button'); w.type = 'button'; w.className = 'detail_samestock' + (others.length ? '' : ' is-empty');
+                    w.innerHTML = '<span class="dss_t">같은 차량 다른 재고</span><span class="dss_n">'+(others.length ? others.length+'대' : '없음')+'</span>'+(others.length ? '<span class="dss_go">'+CHEV+'</span>' : '');
+                    if (!others.length) w.disabled = true;
+                    box.parentNode.insertBefore(w, box.nextSibling);
+                    if (others.length) {
+                        var ssPop = sheet('dtsStockPop', '같은 차량 다른 재고');
+                        w.addEventListener('click', function () {
+                            var c = cond();
+                            ssPop.body.innerHTML = '<p class="opt_sec">'+esc(rec.brand+' '+rec.model+' · '+name)+' · '+list.length+'대</p>' + list.map(function (r) {
+                                var on = r.id === rec.id, m = monthly(r, c), oc = (r.opts||[]).length;
+                                return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+esc([r.ext, r['int']].filter(Boolean).join(' / ') || '색상 정보 없음')+(on?' <small>현재</small>':'')+
+                                    '<small class="ss_sub">'+esc(r.year||'')+' · 옵션 '+oc+'개'+(r.fin?' · '+esc(r.fin):'')+'</small></span><em>'+(m!=null?'월 '+won(m)+'원':'별도문의')+'</em></button>';
+                            }).join('');
+                            ssPop.open();
+                        });
+                        ssPop.body.addEventListener('click', function (e) {
+                            var b = e.target.closest ? e.target.closest('.ss_row') : null; if (!b) return;
+                            var id = b.getAttribute('data-id'); if (id === rec.id) { ssPop.close(); return; }
+                            location.href = 'car-detail.html?id='+encodeURIComponent(id)+(kind==='fast'?'&from=fast':'')+condQ();
+                        });
+                    }
+                }
             } catch (e) { if (window.console) console.warn('trim select', e); }
         })();
     </script>
