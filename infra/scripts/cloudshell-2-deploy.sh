@@ -9,7 +9,11 @@ cd infra
 npm ci --no-audit --no-fund
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 export CDK_DEFAULT_ACCOUNT="$ACCOUNT"
-grep -q "\"$ACCOUNT\"" lib/config.ts || echo "⚠ config.ts 의 계정 ID 가 이 계정($ACCOUNT)과 다릅니다 — 계정 ID 를 전달해 반영한 zip 을 받으세요" >&2
+grep -q "\"$ACCOUNT\"" lib/config.ts || { echo "⚠ config.ts 의 계정 ID 가 이 계정($ACCOUNT)과 다릅니다 — 이 메시지를 전달해 주세요" >&2; exit 1; }
+ZONE=$(aws route53 list-hosted-zones-by-name --dns-name "chaq.kr." --query "HostedZones[?Name=='chaq.kr.'] | [0].Id" --output text | sed 's|/hostedzone/||')
+grep -q "\"$ZONE\"" lib/config.ts || { echo "⚠ 호스팅 영역 ID 불일치: 실제 $ZONE — 이 메시지를 전달해 주세요" >&2; exit 1; }
+NS=$(dig +short NS chaq.kr 2>/dev/null || true)
+echo "$NS" | grep -q awsdns || { echo "⚠ 아직 네임서버가 Route 53 으로 바뀌지 않았습니다 (현재: ${NS:-없음}). 반영 후 다시 실행하세요." >&2; exit 1; }
 npx cdk bootstrap "aws://$ACCOUNT/ap-northeast-2" "aws://$ACCOUNT/us-east-1"
 aws iam get-open-id-connect-provider --open-id-connect-provider-arn "arn:aws:iam::$ACCOUNT:oidc-provider/token.actions.githubusercontent.com" >/dev/null 2>&1 \
   || npx cdk deploy Chaq-GitHubOidc --require-approval never

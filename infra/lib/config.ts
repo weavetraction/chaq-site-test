@@ -53,10 +53,10 @@ export interface EnvConfig {
 }
 
 const common = {
-  account: process.env.CDK_DEFAULT_ACCOUNT || "111111111111",   // ← 운영 계정 ID 로 교체
+  account: "713005939050",                                       // weavetraction
   region: "ap-northeast-2",
   zoneName: "chaq.kr",
-  hostedZoneId: "Z00000000000000000000",                          // ← Route 53 호스팅 영역 ID 로 교체
+  hostedZoneId: "Z09447102TMOR5NL3KVBN",                          // chaq.kr (Route 53)
   githubRepo: "weavetraction/chaq-site-test",
   ga4MeasurementId: "",
   metaPixelId: "",
