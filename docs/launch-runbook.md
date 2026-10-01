@@ -147,7 +147,14 @@ aws ecs update-service --cluster chaq-prod --service chaq-prod-api --force-new-d
   - 관리자 비밀번호는 10자 이상으로 합니다.
   - GuardDuty와 Security Hub를 켜는 것을 권장합니다.
 
-## 6. 2단계 예정 (참고)
+## 6. 보안 — 백엔드 완료 시 진행 (대표 결정, 2026-10-02)
+
+- **관리자 IP 제한:** 백엔드가 완료되면 사무실 고정 IP를 받아 `config.ts`의 `adminAllowCidrs`에 넣습니다.
+- **유료 봇 차단:** 백엔드가 완료되면 도입합니다(AWS WAF Bot Control, 또는 CloudFront 정액 Business 요금제).
+- **외부 서버 파일:** chaq.kr 서버의 파일은 불러오지 않습니다. 약관 페이지와 메인 배너는 자체 파일로 바꿨습니다.
+- **상시 점검:** AWS 루트 계정 MFA, 루트 대신 관리자 계정 사용, GitHub 2단계 인증과 사용한 토큰 삭제, GTM 편집 권한 최소화.
+
+## 7. 2단계 예정 (참고)
 
 - 카카오 알림톡: 문의 접수 확인(고객), 상담 배정(담당자)
 - 관리자 기능: 비밀번호 변경, 계정·권한, 상담 배정, 담당자별 통계

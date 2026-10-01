@@ -2818,3 +2818,11 @@ html.chaq-detail-loading .local-car-detail::after{
 /* v203: 상단 차량 카드 — 월 납입금 ↔ 옵션상세/옵션선택 버튼 좌우 위치 교체 (버튼 왼쪽, 월 납입금 오른쪽 · 기존과 같은 여백으로 대칭) */
 .local-car-detail .option_check_button { left: 18px; right: auto; }
 .local-car-detail .detail_card .detail_monthly { align-items: flex-end; text-align: right; padding-left: 0; padding-right: calc(10% - 22px); }
+
+/* ===== 약관 페이지 (agreement.html) — 자체 스타일, 외부 파일 없음 ===== */
+.agreement .agree_page { padding: 16px 20px 48px; color: #333; font-size: 14px; line-height: 1.7; word-break: keep-all; }
+.agreement .agree_info p { margin: 0 0 14px; }
+.agreement .agree_info label { display: block; }
+.agreement .agree_info .main_t_txt { font-size: 17px; font-weight: 700; color: #111; margin: 8px 0 6px; }
+.agreement .agree_info .sub_t_txt { font-weight: 600; color: #222; margin-bottom: 2px; }
+.agreement .agree_info hr { border: 0; border-top: 1px solid #eee; margin: 24px 0; }
