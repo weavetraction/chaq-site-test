@@ -12,7 +12,7 @@ export CDK_DEFAULT_ACCOUNT="$ACCOUNT"
 grep -q "\"$ACCOUNT\"" lib/config.ts || { echo "⚠ config.ts 의 계정 ID 가 이 계정($ACCOUNT)과 다릅니다 — 이 메시지를 전달해 주세요" >&2; exit 1; }
 ZONE=$(aws route53 list-hosted-zones-by-name --dns-name "chaq.co.kr." --query "HostedZones[?Name=='chaq.co.kr.'] | [0].Id" --output text | sed 's|/hostedzone/||')
 grep -q "\"$ZONE\"" lib/config.ts || { echo "⚠ 호스팅 영역 ID 불일치: 실제 $ZONE — 이 메시지를 전달해 주세요" >&2; exit 1; }
-NS=$(dig +short NS chaq.co.kr 2>/dev/null || true)
+NS=$( (command -v dig >/dev/null && dig +short NS chaq.co.kr) || curl -s "https://dns.google/resolve?name=chaq.co.kr&type=NS" || true)
 echo "$NS" | grep -q awsdns || { echo "⚠ 아직 네임서버가 Route 53 으로 바뀌지 않았습니다 (현재: ${NS:-없음}). 반영 후 다시 실행하세요." >&2; exit 1; }
 npx cdk bootstrap "aws://$ACCOUNT/ap-northeast-2" "aws://$ACCOUNT/us-east-1"
 aws iam get-open-id-connect-provider --open-id-connect-provider-arn "arn:aws:iam::$ACCOUNT:oidc-provider/token.actions.githubusercontent.com" >/dev/null 2>&1 \

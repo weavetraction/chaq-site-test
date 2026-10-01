@@ -72,7 +72,7 @@ export const PROD_FULL: EnvConfig = {
   redisEnabled: true, redisNodeType: "cache.t4g.small", redisReplicas: 1,
   apiCpu: 1024, apiMemoryMiB: 2048, apiMinTasks: 2, apiMaxTasks: 10,
   logRetentionDays: 90, containerInsights: true, monthlyBudgetUsd: 700,
-  alarmEmails: [],
+  alarmEmails: ["freefun@freefuncom.kr"],
   adminAllowCidrs: [],
   wafRateLimitPer5Min: 3000,
   githubEnvironment: "prod",
