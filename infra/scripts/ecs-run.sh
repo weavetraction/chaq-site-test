@@ -6,10 +6,10 @@ set -euo pipefail
 ENV="${1:?env (staging|prod)}"; shift
 REGION="${AWS_REGION:-ap-northeast-2}"
 out() { aws cloudformation describe-stacks --region "$REGION" --stack-name "Chaq-$ENV-App" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
-CLUSTER=$(out ClusterName); FAMILY=$(out TaskFamily); SUBNETS=$(out AppSubnets); SG=$(out AppSecurityGroup)
+CLUSTER=$(out ClusterName); FAMILY=$(out TaskFamily); SUBNETS=$(out AppSubnets); SG=$(out AppSecurityGroup); PUBIP=$(out AssignPublicIp)
 CMD=$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "$@")
 TASK=$(aws ecs run-task --region "$REGION" --cluster "$CLUSTER" --task-definition "$FAMILY" --launch-type FARGATE \
-  --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=DISABLED}" \
+  --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=${PUBIP:-DISABLED}}" \
   --overrides "{\"containerOverrides\":[{\"name\":\"api\",\"command\":${CMD}}]}" --query 'tasks[0].taskArn' --output text)
 echo "started $TASK"
 aws ecs wait tasks-stopped --region "$REGION" --cluster "$CLUSTER" --tasks "$TASK"

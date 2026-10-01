@@ -49,15 +49,8 @@ function handler(event) {
   return r;
 }`),
     });
-    const security = new cloudfront.ResponseHeadersPolicy(this, "Security", {
-      responseHeadersPolicyName: `chaq-${cfg.name}-security`,
-      securityHeadersBehavior: {
-        strictTransportSecurity: { accessControlMaxAge: Duration.days(365), includeSubdomains: true, override: true },
-        contentTypeOptions: { override: true },
-        frameOptions: { frameOption: cloudfront.HeadersFrameOption.SAMEORIGIN, override: true },
-        referrerPolicy: { referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
-      },
-    });
+    // 보안 헤더 (HSTS·nosniff·SAMEORIGIN·Referrer-Policy) — AWS 관리형 정책 (CloudFront 정액 요금제와 호환)
+    const security = cloudfront.ResponseHeadersPolicy.SECURITY_HEADERS;
 
     // API 원본 (ALB) — CloudFront 만 아는 헤더를 붙여 보냄
     const api = new origins.HttpOrigin(cfg.originDomain, {

@@ -10,6 +10,7 @@ import * as sns from "aws-cdk-lib/aws-sns";
 import * as subs from "aws-cdk-lib/aws-sns-subscriptions";
 import * as cw from "aws-cdk-lib/aws-cloudwatch";
 import * as cwActions from "aws-cdk-lib/aws-cloudwatch-actions";
+import * as budgets from "aws-cdk-lib/aws-budgets";
 import { EnvConfig, CLOUDFRONT_PREFIX_LIST } from "./config.js";
 
 export interface CoreProps extends StackProps { cfg: EnvConfig }
@@ -25,7 +26,10 @@ export class CoreStack extends Stack {
   readonly dbSecret: secrets.ISecret;
   readonly appSecret: secrets.Secret;
   readonly originVerifySecret: secrets.Secret;
-  readonly redisUrl: string;
+  readonly redisUrl: string | undefined;
+  /** API 서버 위치: NAT 가 없으면 공개 서브넷(공인 IP, 보안그룹으로 ALB 만 허용) */
+  readonly appSubnets: ec2.SubnetSelection;
+  readonly appPublicIp: boolean;
   readonly repo: ecr.Repository;
   readonly alarmTopic: sns.Topic;
 
@@ -44,12 +48,15 @@ export class CoreStack extends Stack {
       ipAddresses: ec2.IpAddresses.cidr(cfg.vpcCidr), availabilityZones: cfg.azs, natGateways: cfg.natGateways,
       subnetConfiguration: [
         { name: "public", subnetType: ec2.SubnetType.PUBLIC, cidrMask: 24 },
-        { name: "app", subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS, cidrMask: 22 },
+        // NAT 가 없을 때도 같은 이름·크기로 만들어 둠 → 나중에 full 로 올려도 DB 서브넷 주소가 바뀌지 않음
+        { name: "app", subnetType: cfg.natGateways > 0 ? ec2.SubnetType.PRIVATE_WITH_EGRESS : ec2.SubnetType.PRIVATE_ISOLATED, cidrMask: 22 },
         { name: "data", subnetType: ec2.SubnetType.PRIVATE_ISOLATED, cidrMask: 24 },
       ],
       gatewayEndpoints: { S3: { service: ec2.GatewayVpcEndpointAwsService.S3 } },
     });
-    if (prod) this.vpc.addFlowLog("RejectFlowLog", { trafficType: ec2.FlowLogTrafficType.REJECT });
+    this.appPublicIp = cfg.natGateways === 0;
+    this.appSubnets = this.appPublicIp ? { subnetType: ec2.SubnetType.PUBLIC } : { subnetGroupName: "app" };
+    if (cfg.tier === "full") this.vpc.addFlowLog("RejectFlowLog", { trafficType: ec2.FlowLogTrafficType.REJECT });
 
     // ---- 보안 그룹: 인터넷 → (CloudFront 만) → ALB → 앱 → DB·Redis
     this.albSg = new ec2.SecurityGroup(this, "AlbSg", { vpc: this.vpc, description: "ALB: CloudFront origin-facing only", allowAllOutbound: true });
@@ -77,36 +84,41 @@ export class CoreStack extends Stack {
     this.db = new rds.DatabaseInstance(this, "Db", {
       engine: rds.DatabaseInstanceEngine.postgres({ version: rds.PostgresEngineVersion.VER_16 }),
       instanceType: new ec2.InstanceType(cfg.dbInstanceClass),
-      vpc: this.vpc, vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED }, securityGroups: [dbSg],
+      vpc: this.vpc, vpcSubnets: { subnetGroupName: "data" }, securityGroups: [dbSg],
       credentials: rds.Credentials.fromGeneratedSecret("chaq", { secretName: `chaq/${cfg.name}/db` }),
       databaseName: "chaq", parameterGroup: params,
       multiAz: cfg.dbMultiAz, storageType: rds.StorageType.GP3, allocatedStorage: cfg.dbAllocatedGb, maxAllocatedStorage: cfg.dbMaxAllocatedGb, storageEncrypted: true,
       backupRetention: Duration.days(cfg.dbBackupDays), preferredBackupWindow: "18:00-19:00", preferredMaintenanceWindow: "sun:19:00-sun:20:00",   // UTC = 한국 새벽 3~5시
       deletionProtection: cfg.dbDeletionProtection, removalPolicy: prod ? RemovalPolicy.SNAPSHOT : RemovalPolicy.DESTROY,
-      monitoringInterval: Duration.seconds(60), enablePerformanceInsights: prod, cloudwatchLogsExports: ["postgresql"],
+      monitoringInterval: Duration.seconds(60), enablePerformanceInsights: cfg.tier === "full", cloudwatchLogsExports: ["postgresql"],
       autoMinorVersionUpgrade: true, copyTagsToSnapshot: true,
     });
     this.dbSecret = this.db.secret!;
     alarm("DbCpu", this.db.metricCPUUtilization({ period: Duration.minutes(5) }), 80, "RDS CPU 80% 초과");
     alarm("DbStorage", this.db.metricFreeStorageSpace({ period: Duration.minutes(5) }), 5 * 1024 ** 3, "RDS 남은 저장공간 5GB 미만", cw.ComparisonOperator.LESS_THAN_THRESHOLD, 1);
     alarm("DbMemory", this.db.metricFreeableMemory({ period: Duration.minutes(5) }), 200 * 1024 ** 2, "RDS 여유 메모리 200MB 미만", cw.ComparisonOperator.LESS_THAN_THRESHOLD);
-    alarm("DbConnections", this.db.metricDatabaseConnections({ period: Duration.minutes(5) }), prod ? 300 : 60, "RDS 연결 수 과다");
+    alarm("DbConnections", this.db.metricDatabaseConnections({ period: Duration.minutes(5) }), cfg.tier === "full" ? 300 : 60, "RDS 연결 수 과다");
 
-    // ---- Redis 7 (요청 제한 공유 · 이후 캐시/세션) — 운영은 복제본 + 자동 장애조치
-    const redisSubnets = new elasticache.CfnSubnetGroup(this, "RedisSubnets", {
-      description: "chaq redis", subnetIds: this.vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }).subnetIds,
-    });
-    const redis = new elasticache.CfnReplicationGroup(this, "Redis", {
-      replicationGroupDescription: `chaq ${cfg.name}`, engine: "redis", engineVersion: "7.1", cacheNodeType: cfg.redisNodeType,
-      numCacheClusters: 1 + cfg.redisReplicas, automaticFailoverEnabled: cfg.redisReplicas > 0, multiAzEnabled: cfg.redisReplicas > 0,
-      cacheSubnetGroupName: redisSubnets.ref, securityGroupIds: [redisSg.securityGroupId],
-      atRestEncryptionEnabled: true, transitEncryptionEnabled: true, transitEncryptionMode: "required",
-      snapshotRetentionLimit: prod ? 3 : 0, preferredMaintenanceWindow: "sun:20:00-sun:21:00",
-    });
-    this.redisUrl = `rediss://${redis.attrPrimaryEndPointAddress}:${redis.attrPrimaryEndPointPort}`;
-    const redisMetric = (m: string) => new cw.Metric({ namespace: "AWS/ElastiCache", metricName: m, dimensionsMap: { ReplicationGroupId: redis.ref }, period: Duration.minutes(5), statistic: "Maximum" });
-    alarm("RedisCpu", redisMetric("EngineCPUUtilization"), 80, "Redis CPU 80% 초과");
-    alarm("RedisMemory", redisMetric("DatabaseMemoryUsagePercentage"), 80, "Redis 메모리 80% 초과");
+    // ---- Redis 7 (요청 제한 공유 · 이후 캐시/세션) — full 에서만, 운영은 복제본 + 자동 장애조치
+    let redisAddress: string | undefined, redisUrl: string | undefined;
+    if (cfg.redisEnabled) {
+      const redisSubnets = new elasticache.CfnSubnetGroup(this, "RedisSubnets", {
+        description: "chaq redis", subnetIds: this.vpc.selectSubnets({ subnetGroupName: "data" }).subnetIds,
+      });
+      const redis = new elasticache.CfnReplicationGroup(this, "Redis", {
+        replicationGroupDescription: `chaq ${cfg.name}`, engine: "redis", engineVersion: "7.1", cacheNodeType: cfg.redisNodeType,
+        numCacheClusters: 1 + cfg.redisReplicas, automaticFailoverEnabled: cfg.redisReplicas > 0, multiAzEnabled: cfg.redisReplicas > 0,
+        cacheSubnetGroupName: redisSubnets.ref, securityGroupIds: [redisSg.securityGroupId],
+        atRestEncryptionEnabled: true, transitEncryptionEnabled: true, transitEncryptionMode: "required",
+        snapshotRetentionLimit: prod ? 3 : 0, preferredMaintenanceWindow: "sun:20:00-sun:21:00",
+      });
+      redisUrl = `rediss://${redis.attrPrimaryEndPointAddress}:${redis.attrPrimaryEndPointPort}`;
+      const redisMetric = (m: string) => new cw.Metric({ namespace: "AWS/ElastiCache", metricName: m, dimensionsMap: { ReplicationGroupId: redis.ref }, period: Duration.minutes(5), statistic: "Maximum" });
+      alarm("RedisCpu", redisMetric("EngineCPUUtilization"), 80, "Redis CPU 80% 초과");
+      alarm("RedisMemory", redisMetric("DatabaseMemoryUsagePercentage"), 80, "Redis 메모리 80% 초과");
+      redisAddress = redis.attrPrimaryEndPointAddress;
+    }
+    this.redisUrl = redisUrl;
 
     // ---- 비밀값
     this.appSecret = new secrets.Secret(this, "AppSecret", {
@@ -128,8 +140,20 @@ export class CoreStack extends Stack {
       removalPolicy: prod ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY, emptyOnDelete: !prod,
     });
 
+    // ---- 월 예산 알림 (계정 전체 요금 기준)
+    if (cfg.monthlyBudgetUsd > 0 && cfg.alarmEmails.length) {
+      const subscribers = cfg.alarmEmails.map((address) => ({ subscriptionType: "EMAIL", address }));
+      new budgets.CfnBudget(this, "MonthlyBudget", {
+        budget: { budgetName: `chaq-${cfg.name}-monthly`, budgetType: "COST", timeUnit: "MONTHLY", budgetLimit: { amount: cfg.monthlyBudgetUsd, unit: "USD" } },
+        notificationsWithSubscribers: [
+          { notification: { notificationType: "FORECASTED", comparisonOperator: "GREATER_THAN", threshold: 80, thresholdType: "PERCENTAGE" }, subscribers },
+          { notification: { notificationType: "ACTUAL", comparisonOperator: "GREATER_THAN", threshold: 100, thresholdType: "PERCENTAGE" }, subscribers },
+        ],
+      });
+    }
+
     new CfnOutput(this, "DbEndpoint", { value: this.db.dbInstanceEndpointAddress });
-    new CfnOutput(this, "RedisEndpoint", { value: redis.attrPrimaryEndPointAddress });
+    if (redisAddress) new CfnOutput(this, "RedisEndpoint", { value: redisAddress });
     new CfnOutput(this, "EcrRepo", { value: this.repo.repositoryUri });
     new CfnOutput(this, "AppSecretName", { value: this.appSecret.secretName });
   }

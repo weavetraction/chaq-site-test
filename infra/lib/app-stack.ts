@@ -27,7 +27,7 @@ export class AppStack extends Stack {
     const zone = route53.HostedZone.fromHostedZoneAttributes(this, "Zone", { hostedZoneId: cfg.hostedZoneId, zoneName: cfg.zoneName });
 
     // ---- ECS
-    const cluster = new ecs.Cluster(this, "Cluster", { clusterName: `chaq-${cfg.name}`, vpc: core.vpc, containerInsightsV2: ecs.ContainerInsights.ENABLED });
+    const cluster = new ecs.Cluster(this, "Cluster", { clusterName: `chaq-${cfg.name}`, vpc: core.vpc, containerInsightsV2: cfg.containerInsights ? ecs.ContainerInsights.ENABLED : ecs.ContainerInsights.DISABLED });
     const logGroup = new logs.LogGroup(this, "ApiLogs", { logGroupName: `/chaq/${cfg.name}/api`, retention: cfg.logRetentionDays as logs.RetentionDays, removalPolicy: prod ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY });
     const task = new ecs.FargateTaskDefinition(this, "ApiTask", {
       family: `chaq-${cfg.name}-api`, cpu: cfg.apiCpu, memoryLimitMiB: cfg.apiMemoryMiB,
@@ -45,7 +45,7 @@ export class AppStack extends Stack {
         SITE_ORIGINS: siteOrigins, ADMIN_URL: `https://${cfg.siteDomains[0]}/admin/`,
         DATABASE_SSL: "true", DB_POOL_MAX: "10", AUTO_MIGRATE: "true",
         TRUST_PROXY: "2",                                    // CloudFront → ALB
-        REDIS_URL: core.redisUrl,
+        ...(core.redisUrl ? { REDIS_URL: core.redisUrl } : {}),
         GA4_MEASUREMENT_ID: cfg.ga4MeasurementId, META_PIXEL_ID: cfg.metaPixelId,
         LOG_LEVEL: "info", IMAGE_TAG: imageTag,
       },
@@ -62,7 +62,7 @@ export class AppStack extends Stack {
     this.service = new ecs.FargateService(this, "ApiService", {
       serviceName: `chaq-${cfg.name}-api`, cluster, taskDefinition: task,
       desiredCount: cfg.apiMinTasks, minHealthyPercent: 100, maxHealthyPercent: 200,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }, securityGroups: [core.appSg], assignPublicIp: false,
+      vpcSubnets: core.appSubnets, securityGroups: [core.appSg], assignPublicIp: core.appPublicIp,   // lite: 공개 서브넷이지만 보안그룹이 ALB 외 접속 차단
       circuitBreaker: { enable: true, rollback: true },     // 새 버전이 안 뜨면 자동으로 이전 버전 유지
       enableExecuteCommand: true, healthCheckGracePeriod: Duration.seconds(60),
     });
@@ -128,7 +128,8 @@ export class AppStack extends Stack {
     new CfnOutput(this, "ClusterName", { value: cluster.clusterName });
     new CfnOutput(this, "ServiceName", { value: this.service.serviceName });
     new CfnOutput(this, "TaskFamily", { value: task.family });
-    new CfnOutput(this, "AppSubnets", { value: core.vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds.join(",") });
+    new CfnOutput(this, "AppSubnets", { value: core.vpc.selectSubnets(core.appSubnets).subnetIds.join(",") });
+    new CfnOutput(this, "AssignPublicIp", { value: core.appPublicIp ? "ENABLED" : "DISABLED" });
     new CfnOutput(this, "AppSecurityGroup", { value: core.appSg.securityGroupId });
   }
 }

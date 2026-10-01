@@ -69,6 +69,8 @@ API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.kr ADMIN_PASSWORD='...' np
 
 인프라 코드: `infra/` (AWS CDK). 처음 준비부터 오픈까지의 순서: [`docs/launch-runbook.md`](../docs/launch-runbook.md).
 
+오픈 초기에는 '라이트 운영'(`infra/lib/config.ts`의 `PROD_TIER = "lite"`)으로 시작합니다. 월 약 15~18만 원이며 DB 1대, API 1~4대, NAT·Redis 없음 구성입니다. 아래 그림은 운영급(`full`) 구성입니다.
+
 ```
 사용자 ─ CloudFront(WAF·인증서) ─┬─ S3 : 사이트 (index.html · pages/…)
          chaq.kr                 └─ /api/* · /admin* ─ ALB(CloudFront 만 허용) ─ ECS Fargate API (2~10대)

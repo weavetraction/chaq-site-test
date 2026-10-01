@@ -10,7 +10,7 @@
 
 | # | 항목 | 넣는 곳 | 비고 |
 |---|---|---|---|
-| 1 | **AWS 법인 계정** (루트 MFA, 결제 수단, IAM Identity Center 관리자) | `infra/lib/config.ts` `account` | 운영·스테이징 같은 계정 가능 (권장: AWS Organizations 로 분리) |
+| 1 | **AWS 계정** (가입 완료 ✔, 루트 MFA 켜기) | `infra/lib/config.ts` `account` | 계정 ID 는 CloudShell 1단계 출력으로 전달 |
 | 2 | **chaq.kr 도메인** 관리 권한 (가비아 등) | Route 53 호스팅 영역 생성 → 등록업체 네임서버를 Route 53 NS 4개로 변경 → `hostedZoneId` | 메일(MX) 레코드가 있으면 Route 53 에 먼저 옮겨 적기 |
 | 3 | **장애 알림 메일** | `config.ts` `alarmEmails` | 배포 후 받은 확인 메일에서 Confirm |
 | 4 | **관리자 접속 IP** (사무실 고정 IP, 선택) | `config.ts` `adminAllowCidrs` | 비우면 로그인만으로 접속 |
@@ -28,99 +28,109 @@
 
 > 14·15번은 법률 자문이 아닙니다. 오픈 전에 변호사나 노무·세무 전문가의 확인을 받으세요.
 
-## 1. AWS 준비 (1회)
+## 1. 진행 방식: '라이트 운영'으로 시작
+
+설정은 `infra/lib/config.ts`의 `PROD_TIER`로 정합니다. 처음에는 `"lite"`로 시작합니다.
+
+| | lite (오픈 초기) | full (광고 본격 집행) |
+|---|---|---|
+| DB | t4g.small 1대, 백업 7일, 삭제 보호 | t4g.medium 이중화(Multi-AZ), 백업 14일 |
+| API 서버 | 0.5 vCPU·1GB × 1~4대 (자동 확장) | 1 vCPU·2GB × 2~10대 |
+| NAT·Redis | 없음 (서버는 공개 서브넷, 보안그룹으로 ALB만 허용) | NAT 2개, Redis 2대 |
+| 월 비용(트래픽 제외) | 약 US$110~130 (15~18만 원) | 약 US$470~520 |
+
+- **같은 점:** CloudFront, WAF, 인증서, 무중단 배포, 자동 롤백, 경보, 월 예산 알림은 둘 다 들어 있습니다.
+- **full로 올리기:** `PROD_TIER = "full"`로 바꾸고 배포하면 됩니다. DB 서브넷 주소는 그대로이고 사양만 바뀝니다. DB 사양을 바꿀 때 몇 분간 재시작될 수 있으니 새벽에 진행합니다.
+- **스테이징:** 상시 운영하지 않습니다. 큰 변경을 시험할 때만 만들고(`ENV_NAME=staging`) 쓰고 나면 지웁니다(`npx cdk destroy`).
+
+## 2. AWS 구축 — 브라우저의 AWS CloudShell에서 (설치 필요 없음)
+
+**처음 할 일:** 루트 계정에 MFA를 켭니다.
+
+**CloudShell 여는 법:** AWS 콘솔 오른쪽 위 리전을 '서울'로 바꾼 뒤, 상단의 `>_` 아이콘(CloudShell)을 누릅니다.
+
+### 1단계: DNS 준비 (5분)
+
+1. CloudShell에서 Actions → Upload file로 `cloudshell-1-dns.sh`를 올립니다.
+2. `bash cloudshell-1-dns.sh`를 실행합니다.
+3. 출력된 4줄(계정 ID, 호스팅 영역 ID, CloudFront 목록, 도메인)을 개발 담당에게 전달합니다. 개발 담당은 이 값을 `config.ts`에 반영합니다.
+4. 도메인 구매처에서 네임서버를 출력된 4개로 바꿉니다. 반영에 보통 1시간 안팎, 길면 48시간이 걸립니다.
+
+### 2단계: 인프라 생성 (40~60분, 대부분 기다리는 시간)
+
+1. 계정 ID가 반영된 `chaq-infra.zip`과 `cloudshell-2-deploy.sh`를 CloudShell에 올립니다.
+2. `bash cloudshell-2-deploy.sh`를 실행합니다.
+3. 출력된 `AWS_DEPLOY_ROLE_ARN`을 GitHub 설정에 넣습니다(아래 3번).
+4. 알림 메일함에서 Confirm 링크를 누릅니다.
+
+## 3. GitHub 설정 (1회)
+
+저장소 Settings에서 설정합니다.
+
+- **Environments → `prod`:**
+  - Required reviewers에 대표를 지정합니다(배포 승인).
+  - Variables에 다음을 넣습니다.
+    - `AWS_DEPLOY_ROLE_ARN`
+    - `SITE_API_BASE` = `https://chaq.kr`
+    - `CHANNEL_PLUGIN_KEY`
+    - `GTM_ID`
+- **Secrets and variables → Actions → Repository variables:** `AUTO_DEPLOY_ENV` = `prod`로 설정합니다. main에 올라가면 승인한 뒤 운영에 반영됩니다.
+
+## 4. 첫 배포와 오픈
+
+1. **API·사이트 첫 배포:** Actions → Deploy → Run workflow를 env=prod로 실행하고 승인합니다.
+   - 이미지가 만들어지고 API 서버, ALB, 경보가 생깁니다. 사이트도 S3에 올라갑니다.
+2. **첫 데이터와 관리자 계정:** CloudShell에서 실행합니다.
 
 ```bash
-# 관리자 PC: Node 22, AWS CLI v2, 관리자 권한 로그인 (aws sso login 등)
-cd infra && npm ci
-# ① config.ts 의 account·hostedZoneId·alarmEmails 등 채우기 → PR 로 반영
-# ② CDK 부트스트랩 (서울 + us-east-1: CloudFront 인증서·WAF 는 us-east-1)
-npx cdk bootstrap aws://<계정ID>/ap-northeast-2 aws://<계정ID>/us-east-1
-# ③ CloudFront 접두사 목록 ID 확인 (config.ts CLOUDFRONT_PREFIX_LIST 와 같아야 함)
-aws ec2 describe-managed-prefix-lists --region ap-northeast-2 --filters Name=prefix-list-name,Values=com.amazonaws.global.cloudfront.origin-facing --query 'PrefixLists[0].PrefixListId'
+cd infra && bash scripts/ecs-run.sh prod node dist/scripts/seed-from-site.js
+bash scripts/ecs-run.sh prod node dist/scripts/create-admin.js admin@chaq.kr '임시비밀번호' 관리자
 ```
 
-## 2. 스테이징 구축 → 점검 → 운영 구축
+   실행 기록에 비밀번호가 남으니, 로그인을 확인한 뒤 같은 이메일로 한 번 더 실행해 새 비밀번호로 바꿉니다(같은 이메일이면 비밀번호만 갱신).
 
-같은 순서로 `-c env=staging`을 먼저 실행하고, 확인한 뒤 `-c env=prod`로 실행합니다.
+3. **비밀값 입력:** Secrets Manager의 `chaq/prod/app`에 다음 키를 입력합니다.
+   - `GA4_API_SECRET`
+   - `META_CAPI_TOKEN`
+   - `NOTIFY_WEBHOOK_URL`
+   - `SENTRY_DSN`
+
+   입력한 뒤 다음 명령을 실행합니다.
 
 ```bash
-npx cdk deploy Chaq-GitHubOidc                                   # 계정당 1번
-npx cdk deploy Chaq-staging-Edge Chaq-staging-Core -c env=staging    # 인증서 DNS 검증 포함 ~20분 (RDS)
-npx cdk deploy Chaq-staging-Cdn Chaq-staging-Cicd -c env=staging
+aws ecs update-service --cluster chaq-prod --service chaq-prod-api --force-new-deployment
 ```
 
-### GitHub 설정
-
-**경로:** 저장소 Settings → Environments에서 `staging`과 `prod`를 만듭니다.
-
-- **`prod` 보호 규칙:** Required reviewers에 대표 등을 지정합니다.
-- **두 환경의 Variables:**
-  - `AWS_DEPLOY_ROLE_ARN`: `Chaq-<env>-Cicd` 출력값
-  - `SITE_API_BASE`: `https://stg.chaq.kr`, 운영은 `https://chaq.kr`
-  - `CHANNEL_PLUGIN_KEY`
-  - `GTM_ID`
-
-### 첫 API 배포
-
-1. Actions → Deploy → Run workflow를 env=staging으로 실행합니다.
-   - 이미지가 ECR에 올라가고 `Chaq-staging-App`이 생성됩니다.
-   - 이때 ALB, ECS, 경보, 대시보드, `origin-stg.chaq.kr`이 만들어집니다.
-2. 첫 데이터와 관리자 계정을 만듭니다.
-
-```bash
-infra/scripts/ecs-run.sh staging node dist/scripts/seed-from-site.js
-infra/scripts/ecs-run.sh staging node dist/scripts/create-admin.js admin@chaq.kr '임시비밀번호' 관리자
-```
-
-실행 기록에 비밀번호가 남으니, 로그인을 확인한 뒤 같은 이메일로 한 번 더 실행해 새 비밀번호로 바꿉니다(같은 이메일이면 비밀번호만 갱신).
-
-### 비밀값 입력
-
-Secrets Manager의 `chaq/staging/app`에 다음 키를 입력합니다.
-
-- `GA4_API_SECRET`
-- `META_CAPI_TOKEN`
-- `NOTIFY_WEBHOOK_URL`
-- `SENTRY_DSN`
-
-입력한 뒤 다음 명령으로 서비스를 다시 배포합니다.
-
-```bash
-aws ecs update-service --cluster chaq-staging --service chaq-staging-api --force-new-deployment
-```
-
-## 3. 스테이징 점검표
-
-- [ ] `https://stg.chaq.kr`: 메인, 목록, 상세, 차량선택이 정상이고 견적이 API에서 옵니다(개발자도구 → `/api/quotes.js` 200 또는 304).
-- [ ] `https://origin-stg.chaq.kr`에 직접 접속하면 403이 납니다(CloudFront만 허용).
-- [ ] `/admin` 로그인 후 다음이 동작합니다: 엑셀 받기, 수정·올리기, 미리보기, 반영, 1분 안에 사이트 반영, 되돌리기.
-- [ ] 상세 → '이 조건 그대로 문의하기'를 누르면 채널톡이 열리고, 관리자 문의 목록에 '유입'이 표시되며, 알림 채널에 새 문의가 옵니다.
-- [ ] `?utm_source=naver&utm_medium=cpc&utm_campaign=test`로 접속한 뒤 문의합니다.
-  - 관리자 CSV에 UTM이 들어 있어야 합니다.
-  - GA4 DebugView에 `generate_lead`가 보여야 합니다.
-  - 메타 이벤트 관리자에 Lead가 브라우저와 서버 양쪽에서 들어오고, 중복 제거되어야 합니다.
-- [ ] 문의 상태를 '상담 중'과 '계약'으로 바꾸면 GA4에 `qualify_lead`와 `close_convert_lead`가 기록됩니다(DB `inquiries.conv_log`에 매체별 전송 결과가 기록됩니다).
-- [ ] 정상 배포와 실패 배포를 확인합니다.
-  - 정상: main에 push하면 무중단으로 교체됩니다.
-  - 실패: 일부러 실패하는 이미지를 배포하면 자동으로 롤백되고 사이트는 유지됩니다.
-- [ ] CloudWatch 대시보드 `chaq-staging`과 경보 메일 수신을 확인합니다.
-
-## 4. 운영 오픈
-
-1. 2~3번을 `prod`로 반복합니다(Actions → Deploy → env=prod → 승인).
-2. **DNS 전환:** 등록업체 NS를 Route 53으로 바꾼 뒤 `chaq.kr`과 `www.chaq.kr` 인증서가 발급됐는지 확인합니다. 전파에는 최대 48시간이 걸립니다.
-3. **GTM:** 컨테이너를 게시하고 미리보기 모드로 모든 태그를 확인합니다. 그 뒤 광고 매체별 전환을 '활성'으로 바꿉니다.
-4. **광고 집행:** UTM 규칙(`docs/analytics-events.md` §3)에 따라 링크를 만들고 소액으로 테스트합니다. 1~2일 동안 전환 수집을 확인한 뒤 예산을 늘립니다.
+4. **점검** (오픈 전, 사이트를 아직 광고하지 않은 상태에서):
+   - [ ] `https://chaq.kr`에서 메인, 목록, 상세, 차량선택이 정상이고 `/api/quotes.js`가 200 또는 304로 응답합니다.
+   - [ ] `https://origin.chaq.kr`에 직접 접속하면 403이 납니다(CloudFront만 허용).
+   - [ ] `/admin`에서 다음이 동작합니다: 엑셀 받기, 올리기, 미리보기, 반영(1분 안), 되돌리기.
+   - [ ] 상세에서 문의하면 채널톡이 열리고, 관리자 목록에 '유입'이 표시되며, 알림 채널에 새 문의가 옵니다.
+   - [ ] `?utm_source=naver&utm_medium=cpc&utm_campaign=test`로 접속해 문의합니다.
+     - 관리자 CSV에 UTM이 있어야 합니다.
+     - GA4 DebugView에 `generate_lead`가 보여야 합니다.
+     - 메타 이벤트 관리자에 Lead가 들어오고 중복 제거되어야 합니다.
+   - [ ] 문의 상태를 '상담 중'과 '계약'으로 바꾸면 GA4에 `qualify_lead`와 `close_convert_lead`가 기록됩니다(DB `inquiries.conv_log`).
+   - [ ] 일부러 실패하는 버전을 배포하면 자동으로 롤백되고 사이트는 유지됩니다.
+5. **광고 시작:**
+   1. GTM 컨테이너를 게시하고 미리보기로 태그를 확인합니다.
+   2. 매체별 전환을 활성으로 바꿉니다.
+   3. UTM 규칙에 따라 링크를 만들어 소액으로 테스트합니다.
+6. **full 전환 시점:** 다음 중 하나에 해당하면 `PROD_TIER = "full"`로 바꾸고 배포합니다.
+   - 광고 예산을 본격적으로 늘릴 때
+   - CPU 경보가 반복될 때
+   - 하루 방문이 수천 명을 넘을 때
 
 ## 5. 운영 메모
 
-- **비용(대략, 서울, 트래픽 제외):** 정확한 금액은 AWS 요금 계산기로 확인하세요.
+- **비용(대략, 서울, 트래픽 제외):** 정확한 금액은 AWS 요금 계산기로 확인하세요. 월 예산 알림이 설정되어 있습니다(lite US$200, full US$700, 80% 예상 시와 100% 도달 시 메일).
+  - **CloudFront 정액 요금제:** 콘솔에서 Pro(US$15)로 바꾸면 CDN, WAF, DNS 비용이 고정됩니다(요청 월 1천만 건까지).
 
   | 환경 | 월 비용 | 주요 항목 |
   |---|---|---|
-  | 운영 | US$450~600 | RDS Multi-AZ, NAT 2개, Fargate 2대, Redis 2대, ALB, WAF |
-  | 스테이징 | 약 US$150 | |
+  | 운영 lite | US$110~130 | RDS 1대, Fargate 1대, ALB, WAF, 공인 IP |
+  | 운영 full | US$470~520 | RDS Multi-AZ, NAT 2개, Fargate 2대, Redis 2대, ALB, WAF |
+  | 스테이징 | 켜 둔 동안만 (하루 약 US$3~4) | |
 
 - **확장:**
   - 트래픽은 API 2~10대 자동 확장과 견적 데이터 엣지 캐시로 받습니다.

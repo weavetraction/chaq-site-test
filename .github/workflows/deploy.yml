@@ -1,4 +1,5 @@
-# 배포: main 에 push → 스테이징 자동 / 운영은 Actions → Deploy → Run workflow (env=prod, GitHub environment 'prod' 승인 필요)
+# 배포: Actions → Deploy → Run workflow (env 선택) · main 에 push 하면 저장소 변수 AUTO_DEPLOY_ENV 환경으로 자동 배포 (비우면 자동 배포 안 함)
+# 오픈 초기(lite)는 스테이징 없이 AUTO_DEPLOY_ENV=prod + 'prod' environment 승인자 지정 → push 후 승인하면 운영 반영
 # GitHub environment(staging·prod) 마다 변수(Variables) 설정:
 #   AWS_DEPLOY_ROLE_ARN  — Chaq-<env>-Cicd 스택 출력 DeployRoleArn
 #   SITE_API_BASE        — https://chaq.kr (스테이징 https://stg.chaq.kr)
@@ -22,17 +23,17 @@ on:
 permissions:
   id-token: write
   contents: read
-concurrency: { group: "deploy-${{ inputs.env || 'staging' }}", cancel-in-progress: false }
+concurrency: { group: "deploy-${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}", cancel-in-progress: false }
 
 env:
   AWS_REGION: ap-northeast-2
-  ENV_NAME: ${{ inputs.env || 'staging' }}
+  ENV_NAME: ${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}
 
 jobs:
   api:
-    if: ${{ !inputs.skip_api }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || vars.AUTO_DEPLOY_ENV != '') && !inputs.skip_api }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.env || 'staging' }}
+    environment: ${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}
     steps:
       - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
@@ -55,9 +56,9 @@ jobs:
 
   site:
     needs: api
-    if: ${{ always() && (needs.api.result == 'success' || needs.api.result == 'skipped') }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || vars.AUTO_DEPLOY_ENV != '') && (needs.api.result == 'success' || needs.api.result == 'skipped') }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.env || 'staging' }}
+    environment: ${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
