@@ -112,6 +112,10 @@ aws ecs update-service --cluster chaq-prod --service chaq-prod-api --force-new-d
      - 메타 이벤트 관리자에 Lead가 들어오고 중복 제거되어야 합니다.
    - [ ] 문의 상태를 '상담 중'과 '계약'으로 바꾸면 GA4에 `qualify_lead`와 `close_convert_lead`가 기록됩니다(DB `inquiries.conv_log`).
    - [ ] 일부러 실패하는 버전을 배포하면 자동으로 롤백되고 사이트는 유지됩니다.
+   - [ ] **이용후기를 실제 고객 후기로 교체합니다(대표 결정).** 지금은 예시 글 5건이 들어 있습니다.
+     - 바꿀 파일: `pages/data/reviews.js`, 메인 `index.html` 후기 영역
+     - 필요한 것: 고객 동의, 이름 마스킹, 실제 출고 차량, 사진
+   - [ ] 약관과 개인정보처리방침의 회사명·주소를 바로잡습니다. 지금 본문에는 '주식회사 차큐', 'chaq.app'으로 적혀 있는데, 위브트랙션과 chaq.co.kr로 고쳐야 합니다.
 5. **광고 시작:**
    1. GTM 컨테이너를 게시하고 미리보기로 태그를 확인합니다.
    2. 매체별 전환을 활성으로 바꿉니다.
