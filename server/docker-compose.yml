@@ -1,0 +1,17 @@
+# 내 컴퓨터에서 실행:  (저장소 루트에서) docker compose -f server/docker-compose.yml up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: chaq, POSTGRES_PASSWORD: chaq, POSTGRES_DB: chaq }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  api:
+    build: { context: .., dockerfile: server/Dockerfile }
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgres://chaq:chaq@db:5432/chaq
+      JWT_SECRET: local-dev-secret-please-change-0123456789
+      SITE_ORIGINS: http://localhost:5500,http://127.0.0.1:5500,null
+      NODE_ENV: development
+    ports: ["8080:8080"]
+volumes: { pgdata: {} }

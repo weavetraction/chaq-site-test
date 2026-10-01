@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>차큐 관리자</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- 로그인 -->
+  <section id="loginView" class="login" hidden>
+    <form id="loginForm" class="login_box">
+      <h1>차큐 관리자</h1>
+      <label>이메일<input name="email" type="email" autocomplete="username" required></label>
+      <label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit" class="btn primary">로그인</button>
+      <p class="err" id="loginErr"></p>
+    </form>
+  </section>
+
+  <!-- 본문 -->
+  <div id="appView" hidden>
+    <header class="top">
+      <strong>차큐 관리자</strong>
+      <nav class="tabs">
+        <button type="button" data-tab="quotes" class="on">견적 데이터</button>
+        <button type="button" data-tab="inquiries">상담 문의 <b id="newBadge" class="badge" hidden></b></button>
+      </nav>
+      <span class="who"><span id="whoName"></span> <button type="button" id="logoutBtn" class="btn link">로그아웃</button></span>
+    </header>
+
+    <main>
+      <!-- 견적 데이터 -->
+      <section data-panel="quotes">
+        <div class="card">
+          <h2>지금 사이트에 나가는 데이터</h2>
+          <div class="kinds" id="liveKinds"></div>
+          <div class="row gap">
+            <a class="btn" id="dlAll" href="/api/admin/quotes/export.xlsx">현재 데이터 엑셀 받기 (전체)</a>
+            <a class="btn" href="/api/admin/quotes/export.xlsx?kinds=stock">재고특가만</a>
+            <a class="btn" href="/api/admin/quotes/export.xlsx?kinds=fast">빠른인도만</a>
+            <a class="btn" href="/api/admin/quotes/export.xlsx?kinds=estimate">견적조회만</a>
+            <a class="btn link" href="/api/admin/quotes/export.xlsx?empty=1">빈 양식</a>
+          </div>
+          <p class="hint">엑셀을 받아 수정한 뒤 그대로 올리면 됩니다. 파일에 들어 있는 구분(재고특가·빠른인도·견적조회)만 통째로 바뀌고, 없는 구분은 그대로입니다.</p>
+        </div>
+
+        <div class="card">
+          <h2>엑셀 올리기</h2>
+          <form id="uploadForm" class="row gap">
+            <input type="file" name="file" accept=".xlsx" required>
+            <button type="submit" class="btn primary">올리고 미리보기</button>
+          </form>
+          <p class="err" id="uploadErr"></p>
+        </div>
+
+        <div class="card" id="previewCard" hidden>
+          <div class="row between">
+            <h2 id="previewTitle">미리보기</h2>
+            <div class="row gap">
+              <button type="button" class="btn danger" id="discardBtn">폐기</button>
+              <button type="button" class="btn primary" id="publishBtn">사이트 반영</button>
+            </div>
+          </div>
+          <table class="tbl" id="previewTable"></table>
+          <div id="problems"></div>
+          <h3>차량 데이터 트림이 연결되지 않은 행 <small>(연결해야 차량 이미지·색상·옵션·세부 등급이 나옵니다. 연결 안 해도 목록·견적은 나옵니다)</small></h3>
+          <div id="unlinked"></div>
+        </div>
+
+        <div class="card">
+          <h2>업로드 이력</h2>
+          <table class="tbl" id="historyTable"></table>
+        </div>
+      </section>
+
+      <!-- 상담 문의 -->
+      <section data-panel="inquiries" hidden>
+        <div class="card">
+          <div class="row between wrap">
+            <div class="chips" id="statusChips"></div>
+            <div class="row gap">
+              <input type="search" id="iqSearch" placeholder="차량·메모·견적ID·문의번호 검색">
+              <a class="btn" href="/api/admin/inquiries/export.csv">CSV 받기</a>
+            </div>
+          </div>
+          <table class="tbl iq" id="iqTable"></table>
+          <div class="row gap center" id="iqPager"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>
