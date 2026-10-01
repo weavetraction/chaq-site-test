@@ -41,7 +41,10 @@
       c.monthly ? "월 납입금: " + c.monthly.toLocaleString("ko-KR") + "원" : "", c.options && c.options.length ? "옵션: " + c.options.join(", ") : "", c.color ? "색상: " + c.color : ""].filter(Boolean).join("\n");
   }
   function openChat(c) {
+    var T = window.CHAQ_TRACK, a = T ? T.attribution() : {}, k;   // 유입 경로(UTM·광고 클릭 ID)·GA/메타 식별값 → 서버 전환·매체별 성과
+    for (k in a) if (a[k] != null) c[k] = a[k];
     var done = function (msg, id) {
+      try { if (T) T.lead(id, c); } catch (e) {}
       try { if (id) window.ChannelIO("updateUser", { profile: { lastInquiryId: id, lastCar: (c.carName + " " + (c.trimName || "")).trim() } }); } catch (e) {}
       window.ChannelIO("openChat", undefined, msg);
     };

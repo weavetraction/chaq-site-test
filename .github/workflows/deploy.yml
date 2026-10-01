@@ -1,0 +1,83 @@
+# 배포: main 에 push → 스테이징 자동 / 운영은 Actions → Deploy → Run workflow (env=prod, GitHub environment 'prod' 승인 필요)
+# GitHub environment(staging·prod) 마다 변수(Variables) 설정:
+#   AWS_DEPLOY_ROLE_ARN  — Chaq-<env>-Cicd 스택 출력 DeployRoleArn
+#   SITE_API_BASE        — https://chaq.kr (스테이징 https://stg.chaq.kr)
+#   CHANNEL_PLUGIN_KEY   — 채널톡 플러그인 키 (공개 값)
+#   GTM_ID               — GTM-XXXXXXX
+name: Deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 배포 환경
+        type: choice
+        options: [staging, prod]
+        default: staging
+      skip_api:
+        description: 사이트만 배포 (API 건너뜀)
+        type: boolean
+        default: false
+permissions:
+  id-token: write
+  contents: read
+concurrency: { group: "deploy-${{ inputs.env || 'staging' }}", cancel-in-progress: false }
+
+env:
+  AWS_REGION: ap-northeast-2
+  ENV_NAME: ${{ inputs.env || 'staging' }}
+
+jobs:
+  api:
+    if: ${{ !inputs.skip_api }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: "${{ env.AWS_REGION }}" }
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: 이미지 빌드·올리기 (태그 = 커밋)
+        env: { REPO: "${{ steps.ecr.outputs.registry }}/chaq-${{ env.ENV_NAME }}-api", TAG: "${{ github.sha }}" }
+        run: |
+          if aws ecr describe-images --repository-name "chaq-$ENV_NAME-api" --image-ids imageTag="$TAG" >/dev/null 2>&1; then echo "이미 있음"; exit 0; fi
+          docker build -f server/Dockerfile -t "$REPO:$TAG" .
+          docker push "$REPO:$TAG"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: infra/package-lock.json }
+      - name: API 배포 (ECS 무중단 교체 · 실패 시 자동 롤백 · DB 마이그레이션은 서버 시작 시 1대만)
+        working-directory: infra
+        run: |
+          npm ci
+          npx cdk deploy "Chaq-$ENV_NAME-App" --exclusively -c env="$ENV_NAME" -c imageTag="${{ github.sha }}" --require-approval never
+
+  site:
+    needs: api
+    if: ${{ always() && (needs.api.result == 'success' || needs.api.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 배포본 만들기
+        env:
+          SITE_API_BASE: ${{ vars.SITE_API_BASE }}
+          CHANNEL_PLUGIN_KEY: ${{ vars.CHANNEL_PLUGIN_KEY }}
+          GTM_ID: ${{ vars.GTM_ID }}
+        run: node infra/scripts/build-site.mjs
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: "${{ env.AWS_REGION }}" }
+      - name: S3 올리기 · CloudFront 캐시 비우기
+        run: |
+          out() { aws cloudformation describe-stacks --stack-name "Chaq-$ENV_NAME-Cdn" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          BUCKET=$(out SiteBucket); DIST=$(out DistributionId)
+          # 이미지·폰트: 브라우저 7일 / 나머지(HTML·JS·CSS·데이터): 브라우저 1분, 엣지는 배포 때 비움
+          aws s3 sync dist-site/assets "s3://$BUCKET/assets" --delete --cache-control "public,max-age=604800"
+          aws s3 sync dist-site/font "s3://$BUCKET/font" --delete --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync dist-site "s3://$BUCKET" --delete --exclude "assets/*" --exclude "font/*" --cache-control "public,max-age=60,s-maxage=31536000"
+          ID=$(aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" --query Invalidation.Id --output text)
+          aws cloudfront wait invalidation-completed --distribution-id "$DIST" --id "$ID"
+          echo "배포 완료: $(out SiteUrl)"

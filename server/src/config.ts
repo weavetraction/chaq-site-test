@@ -8,8 +8,14 @@ const list = (v: string | undefined) => (v || "").split(",").map((s) => s.trim()
 
 export const config = {
   port: Number(process.env.PORT || 8080),
-  databaseUrl: process.env.DATABASE_URL || "postgres://chaq:chaq@localhost:5432/chaq",
+  // DATABASE_URL, 또는 AWS(ECS)에서는 RDS 비밀값의 DB_HOST·DB_PORT·DB_USER·DB_PASSWORD·DB_NAME 으로 조합
+  databaseUrl: process.env.DATABASE_URL || (process.env.DB_HOST
+    ? `postgres://${encodeURIComponent(process.env.DB_USER || "")}:${encodeURIComponent(process.env.DB_PASSWORD || "")}@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || "chaq"}`
+    : "postgres://chaq:chaq@localhost:5432/chaq"),
   databaseSsl: process.env.DATABASE_SSL === "true",
+  dbPoolMax: Number(process.env.DB_POOL_MAX || 10),
+  // 앞단 프록시 수 (CloudFront → ALB = 2) — 접속 IP·요청 제한에 사용
+  trustProxy: Number(process.env.TRUST_PROXY || 1),
   jwtSecret: process.env.JWT_SECRET || "",
   // 사이트 주소(CORS 허용) 예: https://chaq.kr,https://weavetraction.github.io
   siteOrigins: list(process.env.SITE_ORIGINS),

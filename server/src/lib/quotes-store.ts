@@ -5,18 +5,26 @@ import { vm } from "./vm.js";
 import { KINDS, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose } from "./quotes-format.js";
 
 type Published = Record<Kind, QuoteRecord[]>;
-let publicCache: { at: number; data: Published; js: string; json: string; etag: string } | null = null;
-export function invalidatePublic() { publicCache = null; }
+// 공개 데이터 캐시: 서버가 여러 대여도 DB 의 quotes_version 이 바뀌면 각 서버가 5초 안에 새로 읽음
+let publicCache: { at: number; version: string; data: Published; js: string; json: string; etag: string } | null = null;
+let checkedAt = 0;
+export async function invalidatePublic() {
+  publicCache = null;
+  await q(`INSERT INTO app_state (key, value, updated_at) VALUES ('quotes_version', $1, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [String(Date.now())]);
+}
+async function quotesVersion() { const r = await q(`SELECT value FROM app_state WHERE key = 'quotes_version'`); return String(r.rows[0]?.value || "0"); }
 
 /** 사이트에 나가는 현재 견적 (종류별 최근 반영 batch) */
 export async function getPublished(): Promise<Published> {
-  if (publicCache) return publicCache.data;
+  if (publicCache && Date.now() - checkedAt < 5000) return publicCache.data;
+  const version = await quotesVersion(); checkedAt = Date.now();
+  if (publicCache && publicCache.version === version) return publicCache.data;
   const out: Published = { stock: [], fast: [], estimate: [] };
   const { rows } = await q(`SELECT r.kind, r.data FROM published_sets p JOIN quote_rows r ON r.batch_id = p.batch_id AND r.kind = p.kind ORDER BY r.kind, r.sort_order`);
   for (const r of rows) out[r.kind as Kind].push(r.data);
   const json = JSON.stringify(out);
   const head = `/* 차큐 견적 데이터 (API 생성 ${new Date().toISOString()}) — window.CHAQ = { stock, fast, estimate } */\n`;
-  publicCache = { at: Date.now(), data: out, json, js: head + "window.CHAQ = " + json + ";\n", etag: `"${hash(json)}"` };
+  publicCache = { at: Date.now(), version, data: out, json, js: head + "window.CHAQ = " + json + ";\n", etag: `"${hash(json)}"` };
   return out;
 }
 export async function getPublicPayload() { await getPublished(); return publicCache!; }
@@ -136,7 +144,7 @@ export async function setRowTrim(batchId: number, kind: Kind, recId: string, tri
   applyLink(rec, link);
   await q(`UPDATE quote_rows SET trim_id = $4, link_status = $5, data = $6 WHERE batch_id = $1 AND kind = $2 AND rec_id = $3`, [batchId, kind, recId, link.trimId, link.status, rec]);
   const b = await q(`SELECT status FROM quote_batches WHERE id = $1`, [batchId]);
-  if (b.rows[0]?.status === "PUBLISHED") invalidatePublic();
+  if (b.rows[0]?.status === "PUBLISHED") await invalidatePublic();
   return rec;
 }
 
@@ -152,7 +160,7 @@ export async function publishBatch(batchId: number, adminId: number | null) {
     }
     await c.query(`UPDATE quote_batches SET status = 'PUBLISHED', published_at = now() WHERE id = $1`, [batchId]);
   });
-  invalidatePublic();
+  await invalidatePublic();
 }
 
 export async function discardBatch(batchId: number) {

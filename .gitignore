@@ -4,3 +4,4 @@
 *.csv
 shot_tags.mjs
 .DS_Store
+dist-site

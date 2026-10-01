@@ -10,7 +10,8 @@
 | API 서버 | Node.js 22 · TypeScript · Express |
 | DB | PostgreSQL 16 |
 | 관리자 화면 | `/admin` (서버가 함께 제공) |
-| 배포 | Docker (Railway·Render·AWS 등 어디든) |
+| 캐시·요청 제한 | Redis (서버 2대 이상일 때 공유) |
+| 배포 | AWS 서울 — CloudFront → ALB → ECS Fargate · RDS · ElastiCache (`infra/`, AWS CDK) |
 
 ## 구조
 
@@ -22,8 +23,10 @@ server/
   src/lib/quotes-store.ts   업로드 묶음(batch) · 자동 트림 연결 · 반영/되돌리기 · 공개 데이터 캐시
   src/lib/excel.ts          엑셀 양식 (견적데이터 시트 + 작성안내 시트)
   src/lib/vm.ts             차량 데이터(pages/data/vehicle-master.js) 읽기 · 트림 검색
-  src/lib/inquiries.ts      문의 저장·조회 · 채널톡 첫 메시지
-  migrations/001_init.sql   DB 테이블
+  src/lib/inquiries.ts      문의 저장·조회 · 채널톡 첫 메시지 · 유입 경로(UTM·광고 클릭 ID)
+  src/lib/conversions.ts    서버 전환(GA4 MP·메타 CAPI) · 새 문의 알림
+  src/lib/limits.ts         요청 제한 (REDIS_URL 이 있으면 서버 간 공유)
+  migrations/*.sql          DB 테이블 (서버 시작 시 자동 적용, 동시 시작해도 1대만)
   admin/                    관리자 화면 (HTML·JS·CSS)
 ```
 
@@ -62,24 +65,27 @@ npm run dev                                       # http://localhost:8080/admin
 API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.kr ADMIN_PASSWORD='...' npm test   # 동작 점검
 ```
 
-## 배포 (권장: Railway)
+## 배포 (AWS)
 
-1. **프로젝트 만들기:** railway.app에서 New Project → Deploy from GitHub repo로 이 저장소를 선택합니다.
-2. **DB 추가:** 같은 프로젝트에 **PostgreSQL**을 추가합니다. `DATABASE_URL`이 자동으로 연결됩니다.
-3. **서비스 설정:**
-   - Settings → Build: Dockerfile 경로를 `server/Dockerfile`로, 빌드 위치를 저장소 루트로 지정합니다.
-4. **환경변수 입력:** `.env.example`을 참고합니다.
-   - `JWT_SECRET`: 32자 이상 임의 문자열
-   - `SITE_ORIGINS`: 사이트 주소
-   - `DATABASE_SSL`: Railway 내부 연결이면 비워 둡니다.
-   - `NODE_ENV=production`
-5. **첫 배포 뒤 한 번만 실행:** Railway의 서비스 Shell에서 아래 두 명령을 실행합니다.
-   - `node dist/scripts/seed-from-site.js`
-   - `node dist/scripts/create-admin.js 이메일 비밀번호 이름`
-6. **도메인 연결:** 예: `api.chaq.kr` → Railway가 알려주는 주소로 CNAME을 연결합니다.
-7. **사이트 연결:** `pages/data/api-config.js`의 `base`에 그 주소를 넣고 사이트를 다시 올립니다.
+인프라 코드: `infra/` (AWS CDK). 처음 준비부터 오픈까지의 순서: [`docs/launch-runbook.md`](../docs/launch-runbook.md).
 
-저장소에 push하면 자동으로 다시 배포됩니다. 차량 데이터를 다시 빌드해 올리면, 서버도 새 차량 데이터로 트림을 연결합니다.
+```
+사용자 ─ CloudFront(WAF·인증서) ─┬─ S3 : 사이트 (index.html · pages/…)
+         chaq.kr                 └─ /api/* · /admin* ─ ALB(CloudFront 만 허용) ─ ECS Fargate API (2~10대)
+                                                                                 ├─ RDS PostgreSQL (Multi-AZ)
+                                                                                 └─ ElastiCache Redis
+```
+
+- **배포:** `main`에 push하면 GitHub Actions가 스테이징에 배포합니다(`.github/workflows/deploy.yml`).
+  - 운영은 Actions → Deploy → env=prod로 실행하고 승인을 받습니다.
+  - 이미지(커밋 태그)를 ECR에 올린 뒤 ECS 무중단 교체를 합니다. 새 버전이 뜨지 않으면 자동으로 롤백됩니다. 사이트는 S3에 올리고 CloudFront 캐시를 비웁니다.
+- **1회성 명령(시드·관리자 생성):**
+  - `infra/scripts/ecs-run.sh prod node dist/scripts/seed-from-site.js`
+  - `infra/scripts/ecs-run.sh prod node dist/scripts/create-admin.js 이메일 비밀번호 이름`
+- **비밀값:** Secrets Manager의 `chaq/<env>/app`에 입력한 뒤 ECS 서비스를 재배포합니다.
+  - 입력할 값: `GA4_API_SECRET`, `META_CAPI_TOKEN`, `NOTIFY_WEBHOOK_URL`, `SENTRY_DSN`
+  - `JWT_SECRET`은 자동으로 생성됩니다.
+- **DB 변경 규칙:** 배포 중에는 이전 버전과 새 버전이 잠시 함께 돕니다. 그래서 마이그레이션은 '추가' 위주로 작성합니다. 열 삭제·이름 변경은 두 번에 나눠 배포합니다.
 
 ## 운영 흐름
 
@@ -100,3 +106,7 @@ API_BASE=http://localhost:8080 ADMIN_EMAIL=admin@chaq.kr ADMIN_PASSWORD='...' np
 - **관리자 로그인:** bcrypt로 비밀번호를 저장하고, 12시간짜리 httpOnly 쿠키를 씁니다. 로그인 시도 횟수를 제한합니다.
 - **문의 접수:** IP당 분당 10회로 제한하고, 입력 형식을 검사합니다. 스팸 방지용 숨은 칸이 있습니다. IP는 원문 대신 해시로만 저장합니다.
 - **CORS:** 문의 접수는 `SITE_ORIGINS`에 적힌 사이트에서만 받습니다. 견적 데이터 읽기는 공개입니다(사이트에 이미 공개되는 정보).
+- **AWS:**
+  - API 서버는 CloudFront를 거친 요청만 받습니다(보안그룹 + 비밀 헤더).
+  - WAF가 다음을 막습니다: 악성 IP, 일반 공격 패턴, SQL 인젝션, IP당 과다 요청, 문의 도배.
+  - `adminAllowCidrs`를 설정하면 관리자 화면은 사무실 IP에서만 열립니다.

@@ -3,7 +3,13 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { q } from "../db.js";
 import { config } from "../config.js";
+import { onLeadCreated, onLeadStatus } from "./conversions.js";
 
+const Touch = z.object({
+  source: z.string().max(100), medium: z.string().max(100), campaign: z.string().max(200), term: z.string().max(200), content: z.string().max(200),
+  gclid: z.string().max(300), gbraid: z.string().max(300), wbraid: z.string().max(300), fbclid: z.string().max(300), n_media: z.string().max(100), n_query: z.string().max(200), n_ad: z.string().max(100), n_keyword: z.string().max(200),
+  kclid: z.string().max(300), landing: z.string().max(500), referrer: z.string().max(500), at: z.string().max(40),
+}).partial();
 export const InquiryInput = z.object({
   source: z.enum(["DETAIL", "GUIDE", "ETC"]).default("DETAIL"),
   kind: z.enum(["stock", "fast", "estimate"]).nullable().optional(),
@@ -18,6 +24,9 @@ export const InquiryInput = z.object({
   color: z.string().max(120).default(""),
   pageUrl: z.string().max(500).default(""),
   channelMemberId: z.string().max(100).nullable().optional(),
+  // 광고 유입 (analytics.js 가 저장해 둔 처음/마지막 유입) + 매체 식별값
+  firstTouch: Touch.optional(), lastTouch: Touch.optional(),
+  gaClientId: z.string().max(100).nullable().optional(), fbp: z.string().max(200).nullable().optional(), fbc: z.string().max(300).nullable().optional(),
   website: z.string().max(0).optional(),           // 스팸 방지용 숨은 칸 (사람은 비워둠)
 });
 export type InquiryInputT = z.infer<typeof InquiryInput>;
@@ -28,9 +37,11 @@ export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "
 const ipHash = (ip: string) => crypto.createHmac("sha256", config.jwtSecret).update(ip || "").digest("hex").slice(0, 16);
 
 export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string }) {
-  const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id, created_at`,
-    [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300)]);
+  const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent, first_touch, last_touch, ga_client_id, fbp, fbc)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+    [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300),
+     i.firstTouch || {}, i.lastTouch || {}, i.gaClientId ?? null, i.fbp ?? null, i.fbc ?? null]);
+  onLeadCreated(rows[0], { ip: meta.ip, ua: meta.ua });
   return rows[0] as { id: number; created_at: string };
 }
 
@@ -56,7 +67,9 @@ export async function updateInquiry(id: number, p: z.infer<typeof InquiryPatch>)
   const sets: string[] = [], params: unknown[] = [id];
   for (const [k, v] of Object.entries(p)) { if (v === undefined) continue; params.push(v); sets.push(`${k} = $${params.length}`); }
   if (!sets.length) return null;
+  const prev = (await q(`SELECT status FROM inquiries WHERE id = $1`, [id])).rows[0]?.status;
   const { rows } = await q(`UPDATE inquiries SET ${sets.join(", ")}, updated_at = now() WHERE id = $1 RETURNING *`, params);
+  if (rows[0] && p.status && prev) onLeadStatus(rows[0], prev);
   return rows[0] || null;
 }
 

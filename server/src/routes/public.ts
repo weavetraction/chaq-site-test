@@ -1,6 +1,6 @@
 // 공개 API (사이트에서 호출)
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { limiter } from "../lib/limits.js";
 import { getPublicPayload } from "../lib/quotes-store.js";
 import { InquiryInput, createInquiry, channelMessage } from "../lib/inquiries.js";
 import { config } from "../config.js";
@@ -25,7 +25,7 @@ publicRouter.get(["/api/quotes.js", "/api/quotes.json"], async (req, res, next) 
   } catch (e) { next(e); }
 });
 
-const inquiryLimit = rateLimit({ windowMs: 60_000, limit: 10, standardHeaders: true, legacyHeaders: false, message: { error: "잠시 후 다시 시도해 주세요" } });
+const inquiryLimit = limiter("inq", { windowMs: 60_000, limit: 10, message: { error: "잠시 후 다시 시도해 주세요" } });
 
 /** 상담 문의 접수 → 문의번호와 채널톡 첫 메시지 반환 */
 publicRouter.post("/api/inquiries", inquiryLimit, async (req, res, next) => {

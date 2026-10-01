@@ -1,6 +1,7 @@
 // 동작 점검: API_BASE·ADMIN_EMAIL·ADMIN_PASSWORD 로 로그인 → 엑셀 내려받기 → 수정해서 올리기 → 미리보기 → 반영 → 되돌리기 → 문의 접수
 //  npm test   (서버가 켜져 있어야 함, 운영 DB 에는 쓰지 마세요 — 마지막에 원래 데이터로 되돌리지만 업로드 이력이 남습니다)
 import ExcelJS from "exceljs";
+const TEST_TRIM = "테스트 등급 " + Date.now().toString(36);   // 실행마다 새 이름 (이전 실행의 자동 연결 기록에 안 걸리게)
 
 const BASE = process.env.API_BASE || "http://localhost:8080";
 let cookie = "";
@@ -26,7 +27,7 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   r2.getCell(head["월_2만_60개월_0원"]).value = old + 1000;
   r2.getCell(head["월_1만_60개월_0원"]).value = old - 30000;
   const src = ws.getRow(2).values as any[]; const nr = ws.addRow(src.slice(1));
-  nr.getCell(head["견적ID"]).value = ""; nr.getCell(head["차량데이터 트림ID"]).value = ""; nr.getCell(head["등급"]).value = "테스트 등급";
+  nr.getCell(head["견적ID"]).value = ""; nr.getCell(head["차량데이터 트림ID"]).value = ""; nr.getCell(head["등급"]).value = TEST_TRIM;
   const out = Buffer.from(await wb.xlsx.writeBuffer());
   const fd = new FormData(); fd.append("file", new Blob([out]), "smoke.xlsx");
   const up = await call("/api/admin/quotes/upload", { method: "POST", body: fd }); const upj = await up.json();
@@ -35,7 +36,7 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
 
   // 2) 미연결 행에 트림 지정
   const det = await (await call(`/api/admin/batches/${upj.batchId}?unlinked=1&kind=stock`)).json();
-  const target = det.rows.find((r: any) => r.trim === "테스트 등급"); ok(target, "미연결 행 조회");
+  const target = det.rows.find((r: any) => r.trim === TEST_TRIM); ok(target, "미연결 행 조회");
   const found = await (await call("/api/admin/trims?q=" + encodeURIComponent("그랜저 익스클루시브"))).json(); ok(found.length > 0, "트림 검색 " + found[0]?.label);
   const pt = await call(`/api/admin/batches/${upj.batchId}/rows`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "stock", recId: target.rec_id, trimId: found[0].trimId }) });
   ok(pt.ok, "트림 지정");
@@ -45,7 +46,7 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   const pub = await (await call("/api/quotes.json")).json();
   const s1 = pub.stock[0];
   ok(s1.cost["2"]["60"]["0"] === old + 1000 && s1.cost["1"]["60"]["0"] === old - 30000, "공개 데이터에 수정 금액·1만 km 반영");
-  ok(pub.stock.some((r: any) => r.trim === "테스트 등급" && r.trimId === found[0].trimId), "새 차량 + 지정 트림 반영");
+  ok(pub.stock.some((r: any) => r.trim === TEST_TRIM && r.trimId === found[0].trimId), "새 차량 + 지정 트림 반영");
   ok(pub.estimate.length === before.estimate.rows, "다른 구분(견적조회)은 그대로");
 
   // 4) 되돌리기: 이전 batch 다시 반영

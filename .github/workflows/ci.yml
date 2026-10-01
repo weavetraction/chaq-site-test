@@ -1,0 +1,69 @@
+# 점검: PR·push 마다 — API(빌드·DB 마이그레이션·동작 점검) · 인프라(타입·규칙 테스트·synth) · 차량 데이터 검증
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: chaq, POSTGRES_PASSWORD: chaq, POSTGRES_DB: chaq }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U chaq" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    env:
+      DATABASE_URL: postgres://chaq:chaq@localhost:5432/chaq
+      REDIS_URL: redis://localhost:6379
+      PORT: "8080"
+    defaults: { run: { working-directory: server } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: server/package-lock.json }
+      - run: npm ci
+      - run: npm run build
+      - run: node dist/scripts/migrate.js
+      - run: node dist/scripts/seed-from-site.js
+      - run: node dist/scripts/create-admin.js ci@chaq.kr 'CiPassw0rd!234' CI
+      - name: 서버 실행 후 동작 점검
+        run: |
+          node dist/index.js > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8080/api/health && break; sleep 1; done
+          API_BASE=http://localhost:8080 ADMIN_EMAIL=ci@chaq.kr ADMIN_PASSWORD='CiPassw0rd!234' node --import tsx src/scripts/smoke-test.ts
+      - if: failure()
+        run: cat api.log
+
+  infra:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: infra } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: infra/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx cdk synth -c env=staging -q && npx cdk synth -c env=prod -q
+        env: { CDK_DEFAULT_ACCOUNT: "111111111111" }
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: 차량 데이터 검증
+        run: |
+          node tools/vm-validate.js | tee vm.txt
+          grep -Eq "^errors +: 0$" vm.txt
+      - name: 배포본 만들기
+        run: node infra/scripts/build-site.mjs
