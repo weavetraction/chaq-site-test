@@ -56,7 +56,7 @@ const common = {
   account: "713005939050",                                       // weavetraction
   region: "ap-northeast-2",
   zoneName: "chaq.co.kr",
-  hostedZoneId: "Z00000000000000000000",                          // ← chaq.co.kr 호스팅 영역 ID (CloudShell 1단계 출력)
+  hostedZoneId: "Z0200270KYMUTU46N4DU",                           // chaq.co.kr (Route 53)
   githubRepo: "weavetraction/chaq-site-test",
   ga4MeasurementId: "",
   metaPixelId: "",
