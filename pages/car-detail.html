@@ -273,6 +273,30 @@
                         t = t.replace(/^·\s*/, ''); var pm = t.match(/^(.*?)\s*(\+[\d,]+원)$/);
                         html += '<div class="opt_row is-static"><span>' + esc(pm ? pm[1] : t) + '</span>' + (pm ? '<em>' + pm[2] + '</em>' : '') + '</div>';
                     });
+                    // 재고 차량 장착 옵션은 항목별 옵션 비용을 오른쪽 끝에: 견적 금액 → 없으면 차량 데이터의 공식 옵션가(이름 일치) → 없으면 '별도문의'
+                    var D = window.CHAQ || {}, VM = window.CHAQ_VM, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1];
+                    var rec = window.CHAQ_DETAIL_QUOTE || (idm ? (D.stock || []).concat(D.fast || [], D.estimate || []).filter(function (r) { return r.id === idm; })[0] : null);
+                    if (rec && (rec.opts || []).length) {
+                        var nz = function (x) { return String(x || '').toLowerCase().replace(/시그니쳐/g, '시그니처').replace(/plus/g, '플러스').replace(/krell/g, '크렐').replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2').replace(/Ⅲ/g, '3').replace(/(^|\s)iii(?=\s|$)/g, '$13').replace(/(^|\s)ii(?=\s|$)/g, '$12').replace(/(^|\s)i(?=\s|$)/g, '$11').replace(/[\s·,&+()\[\]\-_\/."'″]/g, ''); };
+                        var vo = (VM && rec.trimId && VM.getTrimOptions) ? VM.getTrimOptions(rec.trimId, 'SELECTABLE') : [];
+                        var vmPrice = function (n) {
+                            var k = nz(n); if (!k) return null;
+                            var hit = vo.filter(function (v) { return nz(v.name) === k; })[0];
+                            if (!hit) hit = vo.filter(function (v) { var x = nz(v.name), a = Math.min(x.length, k.length), b = Math.max(x.length, k.length); return a >= 3 && a / b >= 0.6 && (x.indexOf(k) > -1 || k.indexOf(x) > -1); })[0];
+                            if (!hit && /[(（]/.test(n)) return vmPrice(String(n).replace(/[(（][^)）]*[)）]?/g, ' '));   // 괄호 속 조건 문구 빼고 다시
+                            return hit && hit.price != null ? hit.price : null;
+                        };
+                        var sum = 0, cnt = 0, rows = '';
+                        rec.opts.forEach(function (o) {
+                            if (/^무옵션$/.test(String(o.n || '').trim())) { rows += '<div class="opt_row is-static"><span>추가 옵션 없음</span></div>'; return; }
+                            var pr = o.p != null && o.p !== '' && +o.p ? +o.p : vmPrice(o.n);
+                            if (pr != null) { sum += pr; cnt++; }
+                            rows += '<div class="opt_row is-static"><span>' + esc(o.n) + '</span><em' + (pr == null ? ' class="is-ask"' : '') + '>' + (pr != null ? '+' + pr.toLocaleString('ko-KR') + '원' : '별도문의') + '</em></div>';
+                        });
+                        html = '<p class="opt_sec">장착 옵션 ' + rec.opts.length + '개</p>' + rows +
+                            (cnt ? '<div class="opt_row is-static opt_total"><span>옵션 합계' + (cnt < rec.opts.length ? ' <small>(금액 확인된 ' + cnt + '개)</small>' : '') + '</span><em>' + sum.toLocaleString('ko-KR') + '원</em></div>' : '') +
+                            '<p class="opt_note">옵션 비용은 견적 금액 기준이며, 견적에 없는 항목은 공식 가격표의 옵션가입니다.</p>';
+                    }
                     detPop.querySelector('.opt_body').innerHTML = html || '<p class="opt_note">옵션 정보가 없습니다.</p>';
                     detPop.classList.add('is-open'); detPop.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; detPop.querySelector('.opt_body').scrollTop = 0;
                 });

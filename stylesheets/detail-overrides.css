@@ -2810,3 +2810,8 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .opt_detail_pop .opt_row.is-static { cursor: default; }
 .local-car-detail .opt_detail_pop .opt_row.is-static em { flex: none; margin-left: 10px; white-space: nowrap; }
 .local-car-detail .opt_detail_pop .opt_note { margin: 8px 4px; color: #8a8f96; font-size: 13px; line-height: 1.5; }
+/* v202: 옵션 상세 팝업 — 항목별 옵션 비용(우측 끝) · 합계 */
+.local-car-detail .opt_detail_pop .opt_row.is-static em.is-ask { color: #9aa0a6; font-weight: 600; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total { margin-top: 4px; background: var(--detail-green-soft); }
+.local-car-detail .opt_detail_pop .opt_row.opt_total span { color: #232733; font-weight: 700; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total small { color: #8a8f96; font-size: 12px; font-weight: 400; }
