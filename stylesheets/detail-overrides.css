@@ -2802,3 +2802,5 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_card .detail_monthly { padding-left: 10%; }
 /* v199: 월 납입금(라벨·금액) — v198 위치(10%)에서 왼쪽으로 20px */
 .local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 20px); }
+/* v200: 월 납입금(라벨·금액) — v199 위치에서 왼쪽으로 2px 더 */
+.local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 22px); }
