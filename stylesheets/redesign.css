@@ -454,3 +454,6 @@ main{background:#fff}
   left:60px;bottom:8px;width:53px;height:53px;
   background:url("../assets/icons/tag-delivery.svg") no-repeat center/contain;
 }
+
+/* 할인정보 카드 브랜드 표시 — 외부 로고 이미지 대신 글자 배지 (로고 파일은 assets 에 넣으면 교체 가능) */
+.discount-card .brand-logo.is-text{display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:-.02em;color:#222;line-height:1;border:1px solid #e5e5e5}
