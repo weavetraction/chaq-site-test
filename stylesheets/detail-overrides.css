@@ -2804,3 +2804,9 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 20px); }
 /* v200: 월 납입금(라벨·금액) — v199 위치에서 왼쪽으로 2px 더 */
 .local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 22px); }
+/* v201: 상세 조건 설정 — 상품(장기렌트·운용리스) 2개 버튼이 줄 끝까지 반반 */
+.local-car-detail .cond_wrap .filter_row.cond_type_row { grid-template-columns: repeat(2, 1fr); }
+/* v201: 재고특가·빠른인도 '옵션상세' 하단 팝업 (보기 전용 행) */
+.local-car-detail .opt_detail_pop .opt_row.is-static { cursor: default; }
+.local-car-detail .opt_detail_pop .opt_row.is-static em { flex: none; margin-left: 10px; white-space: nowrap; }
+.local-car-detail .opt_detail_pop .opt_note { margin: 8px 4px; color: #8a8f96; font-size: 13px; line-height: 1.5; }

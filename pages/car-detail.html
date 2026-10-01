@@ -54,7 +54,7 @@
             <div class="cond_wrap">
                 <div class="filter_group">
                     <span class="filter_sub">상품</span>
-                    <div class="filter_row">
+                    <div class="filter_row cond_type_row">
                         <button type="button" class="filter_chip on has-help" data-group="type">장기렌트<i class="chip_help" data-help="rent" aria-label="장기렌트 설명">!</i></button>
                         <button type="button" class="filter_chip has-help" data-group="type">운용리스<i class="chip_help" data-help="lease" aria-label="운용리스 설명">!</i></button>
                     </div>
@@ -78,6 +78,7 @@
                 <div class="filter_group">
                     <span class="filter_sub">주행 거리</span>
                     <div class="filter_row">
+                        <button type="button" class="filter_chip" data-group="dist">1만 km</button>
                         <button type="button" class="filter_chip on" data-group="dist">2만 km</button>
                         <button type="button" class="filter_chip" data-group="dist">3만 km</button>
                     </div>
@@ -248,11 +249,32 @@
                     });
                 });
             } else {
-                // 재고특가·빠른인도 등: '옵션상세' → 인라인 패널 펼치기
+                // 재고특가·빠른인도 등: '옵션상세' → 견적조회 '옵션선택'과 같은 하단 팝업 (내용 = 옵션 상세 패널, 보기 전용)
                 optBtn.textContent = '옵션상세';
+                var detPop = null;
+                function closeDetPop() { detPop.classList.remove('is-open'); detPop.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; }
                 optBtn.addEventListener('click', function () {
-                    var open = optPanel.classList.toggle('open');
-                    optBtn.textContent = open ? '옵션상세 닫기' : '옵션상세';
+                    if (!detPop) {
+                        detPop = document.createElement('div'); detPop.className = 'opt_pop opt_detail_pop'; detPop.id = 'optDetailPop'; detPop.setAttribute('aria-hidden', 'true');
+                        detPop.innerHTML = '<div class="opt_sheet"><div class="opt_head"><h3>옵션 상세</h3><button type="button" class="opt_close" aria-label="닫기">&times;</button></div><div class="opt_body"></div><div class="opt_foot"><button type="button" class="opt_apply">확인</button></div></div>';
+                        (document.querySelector('.detail_shell') || document.body).appendChild(detPop);
+                        detPop.querySelector('.opt_close').addEventListener('click', closeDetPop);
+                        detPop.querySelector('.opt_apply').addEventListener('click', closeDetPop);
+                        detPop.addEventListener('click', function (e) { if (e.target === detPop) closeDetPop(); });
+                    }
+                    // 패널 내용(줄 단위)을 팝업 행으로: <b>…</b> = 구분 제목, <small> = 안내, 나머지 = 옵션 행(끝의 +금액은 오른쪽)
+                    var txt = function (h) { var d = document.createElement('div'); d.innerHTML = h; return (d.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim(); };
+                    var esc = function (x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+                    var html = '';
+                    String(optPanel.innerHTML || '').split(/<br\s*\/?>/i).forEach(function (part) {
+                        var t = txt(part); if (!t) return;
+                        if (/^\s*<b>/i.test(part)) { html += '<p class="opt_sec">' + esc(t) + '</p>'; return; }
+                        if (/^\s*<small>/i.test(part) || /정보가 없습니다/.test(t)) { html += '<p class="opt_note">' + esc(t) + '</p>'; return; }
+                        t = t.replace(/^·\s*/, ''); var pm = t.match(/^(.*?)\s*(\+[\d,]+원)$/);
+                        html += '<div class="opt_row is-static"><span>' + esc(pm ? pm[1] : t) + '</span>' + (pm ? '<em>' + pm[2] + '</em>' : '') + '</div>';
+                    });
+                    detPop.querySelector('.opt_body').innerHTML = html || '<p class="opt_note">옵션 정보가 없습니다.</p>';
+                    detPop.classList.add('is-open'); detPop.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; detPop.querySelector('.opt_body').scrollTop = 0;
                 });
             }
             // 찜하기 토글
@@ -484,7 +506,7 @@
                 function on(g){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+g+'"].on'); return b?b.textContent:''; }
                 var term=(on('term').match(/[0-9]+/)||['60'])[0];
                 var it=on('init'); var plan= it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0');
-                var dist= on('dist').indexOf('3만')>-1?'3':'2';
+                var dist= (on('dist').match(/(\d)만/)||[0,'2'])[1];   // 1만 / 2만 / 3만 km
                 return {term:term,plan:plan,dist:dist};
             }
             function animateNum(el, to, em){
@@ -517,7 +539,7 @@
                 var m=monthly(c), rv=resid(c);
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
-                if(m==null && VMQ){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 연결 견적에 월납입금 없음
+                if(m==null){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
                 var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
                 var set=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
                 set('pBase', base!=null?won(base)+'원':'차량가 문의');
@@ -527,6 +549,7 @@
                 set('pTotal', base!=null?won(base+optSum+extra)+'원':'—');
                 var acq = (m!=null && rv!=null)? (m*parseInt(c.term)+rv) : null;
                 animateNum(acqEl, acq, false);
+                if(acq==null && acqEl) acqEl.textContent='—';   // 금액 없음 표시 통일 ('—원' → '—')
             }
             document.querySelectorAll('.detail_conds .filter_chip').forEach(function(ch){
                 ch.addEventListener('click', function(){ setTimeout(recompute,0); });
@@ -544,7 +567,7 @@
                     if(target){ [].forEach.call(chips, function(ch){ ch.classList.remove('on'); }); target.classList.add('on'); }
                 }
                 setChip('term','term', function(v,t){ return t.replace(/[^0-9]/g,'')===v; });                 // 36/48/60
-                setChip('dist','dist', function(v,t){ return (v==='3')===(t.indexOf('3만')>-1); });            // 2/3
+                setChip('dist','dist', function(v,t){ return (t.match(/(\d)만/)||[])[1]===v; });            // 1/2/3
                 setChip('plan','init', function(v,t){ var p=t.indexOf('보증')>-1?'b':(t.indexOf('선납')>-1?'s':'0'); return p===v; }); // 0/b/s
             })();
             recompute();
@@ -570,7 +593,7 @@
                     function setChip(param, group, match){ var m=q.match(new RegExp('[?&]'+param+'=([^&]+)')); if(!m) return; var v=decodeURIComponent(m[1]), chips=document.querySelectorAll('.detail_conds .filter_chip[data-group="'+group+'"]'), t=null;
                         [].forEach.call(chips, function(ch){ if(match(v, ch.textContent)) t=ch; }); if(t){ [].forEach.call(chips, function(ch){ ch.classList.remove('on'); }); t.classList.add('on'); } }
                     setChip('term','term', function(v,t){ return t.replace(/[^0-9]/g,'')===v; });
-                    setChip('dist','dist', function(v,t){ return (v==='3')===(t.indexOf('3만')>-1); });
+                    setChip('dist','dist', function(v,t){ return (t.match(/(\d)만/)||[])[1]===v; });
                     setChip('plan','init', function(v,t){ var p=t.indexOf('보증')>-1?'b':(t.indexOf('선납')>-1?'s':'0'); return p===v; });
                 })();
                 var kind = fromP || (rec ? (String(rec.id)[0]==='f' ? 'fast' : String(rec.id)[0]==='e' ? 'estimate' : 'stock') : null);
@@ -602,7 +625,7 @@
                 function cond() {
                     function on(gr){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+gr+'"].on'); return b?b.textContent:''; }
                     var it = on('init');
-                    return { term: (on('term').match(/[0-9]+/)||['60'])[0], plan: it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'), dist: on('dist').indexOf('3만')>-1?'3':'2' };
+                    return { term: (on('term').match(/[0-9]+/)||['60'])[0], plan: it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'), dist: (on('dist').match(/(\d)만/)||[0,'2'])[1] };
                 }
                 function condQ(){ var c = cond(); return '&term='+c.term+'&plan='+c.plan+'&dist='+c.dist; }
                 // ---- 바텀시트 (옵션선택 팝업과 같은 디자인)
