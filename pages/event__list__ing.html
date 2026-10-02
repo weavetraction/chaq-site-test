@@ -43,7 +43,8 @@
         </footer>
     </div>
 
-    <script src="data/content.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/content.js"><\/script>');})();</script>
+    <script>window.CHAQ_CONTENT || document.write('<script src="data/content.js"><\/script>');</script>
     <script>
         (function(){
             var STATUS = 'ing';

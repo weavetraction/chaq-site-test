@@ -73,5 +73,15 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   const mid = (await (await call("/api/admin/vm/trim/" + encodeURIComponent(tr[0].trimId))).json()).model.id;
   ok((await call(`/api/pub/vm/m/${mid}.js`)).ok, "모델별 상세본");
   const dr = await (await call("/api/admin/quotes/stock/draft", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).json(); ok(dr.batchId, "견적 화면 수정 작업본");
+  // 콘텐츠 (FAQ·후기·이벤트·아티클) — 서버 시작 후 사이트 파일에서 첫 가져오기
+  let faqJs = "";
+  for (let i = 0; i < 30; i++) { faqJs = await (await call("/api/pub/faq.js")).text(); if (faqJs.includes('"items":[{')) break; await new Promise((r) => setTimeout(r, 1000)); }
+  ok(faqJs.includes("window.CHAQ_FAQ"), "자주 묻는 질문 공개본");
+  ok((await (await call("/api/pub/reviews.js")).text()).includes("window.CHAQ_REVIEWS"), "이용후기 공개본");
+  ok((await (await call("/api/pub/content.js")).text()).includes("window.CHAQ_CONTENT"), "아티클·이벤트 공개본");
+  const ctl = await (await call("/api/admin/content/faq")).json(); ok(ctl.items?.length > 0 && ctl.cats?.length > 0, `관리자 FAQ 목록 (${ctl.items?.length})`);
+  const cbad = await call("/api/admin/content/faq", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cat: ctl.cats[0].id, q: "점검", a: "<p>답<script>x</script></p>" }) });
+  const bj = await cbad.json(); ok(cbad.ok && !bj.data.a.includes("script"), "본문 HTML 정리");
+  await call(`/api/admin/content/faq/${bj.id}`, { method: "DELETE" });
   console.log("모든 점검 통과");
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -21,7 +21,7 @@ export async function saveMedia(buf: Buffer, fileName: string, purpose: string, 
     if (/<script|on\w+\s*=|javascript:/i.test(s)) throw new MediaError("SVG 안에 스크립트가 있어 올릴 수 없습니다");
     mime = "image/svg+xml"; out = buf;
   } else {
-    let meta: sharp.Metadata;
+    let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
     try { meta = await sharp(buf).metadata(); } catch { throw new MediaError("이미지 파일이 아닙니다 (jpg·png·webp·gif·svg)"); }
     if (!meta.width || !meta.height) throw new MediaError("이미지 크기를 읽을 수 없습니다");
     if (meta.format === "gif" && (meta.pages || 1) > 1) { mime = "image/gif"; out = buf; width = meta.width; height = meta.pageHeight || meta.height; }

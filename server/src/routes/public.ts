@@ -7,6 +7,7 @@ import { config } from "../config.js";
 import { q } from "../db.js";
 import { getPublicVm } from "../lib/vm-store.js";
 import { getMedia } from "../lib/media.js";
+import { publicContent } from "../lib/content.js";
 
 export const publicRouter = Router();
 
@@ -54,6 +55,18 @@ publicRouter.get("/api/pub/vm/m/:file", async (req, res, next) => {
     res.setHeader("ETag", etag); res.setHeader("Access-Control-Allow-Origin", "*");
     if (req.headers["if-none-match"] === etag) return res.status(304).end();
     res.type("application/javascript; charset=utf-8").send(js);
+  } catch (e) { next(e); }
+});
+/** 자주 묻는 질문 · 이용후기 · 아티클/이벤트 — 기존 사이트 파일(faq.js · reviews.js · content.js)과 같은 모양 */
+publicRouter.get(["/api/pub/faq.js", "/api/pub/reviews.js", "/api/pub/content.js"], async (req, res, next) => {
+  try {
+    const p = await publicContent();
+    const key = req.path.endsWith("faq.js") ? "faq" : req.path.endsWith("reviews.js") ? "reviews" : "content";
+    const etag = p.etag.slice(0, -1) + "-" + key + '"';
+    res.setHeader("Cache-Control", `public, max-age=${config.publicQuotesMaxAge}`);
+    res.setHeader("ETag", etag); res.setHeader("Access-Control-Allow-Origin", "*");
+    if (req.headers["if-none-match"] === etag) return res.status(304).end();
+    res.type("application/javascript; charset=utf-8").send(p[key]);
   } catch (e) { next(e); }
 });
 /** 관리자가 올린 이미지: /api/pub/media/<id>.webp · <id>.thumb.webp (주소가 바뀌지 않으므로 1년 캐시) */

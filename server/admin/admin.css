@@ -122,3 +122,27 @@ input.saved { border-color: var(--green); }
 #qeTabs { margin-bottom: 10px; }
 @media (max-width: 960px) { .vm_layout { grid-template-columns: 1fr; } .vm_side { position: static; max-height: none; } .vm_list { max-height: 50vh; } }
 .fgrid label .row select { width: auto; flex: 1; min-width: 150px; }
+
+/* ---- 콘텐츠 (FAQ·후기·이벤트·아티클) ---- */
+#ctTabs, #ctCats { margin: 10px 0; }
+.tbl.ct td { vertical-align: middle; } .tbl.ct tr.off td { opacity: .5; }
+.tbl.ct td:first-child .btn { padding: 0 7px; margin-right: 2px; }
+.ct_thumb { float: left; width: 64px; height: 44px; margin-right: 10px; border-radius: 6px; object-fit: cover; background: #f3f4f6; }
+.switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch span { position: absolute; inset: 0; border-radius: 11px; background: #d1d5db; cursor: pointer; transition: .15s; }
+.switch span:before { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .15s; }
+.switch input:checked + span { background: var(--green); } .switch input:checked + span:before { transform: translateX(18px); }
+.cat_line { margin-bottom: 8px; } .cat_line input { flex: 1; }
+.img_field { display: grid; gap: 6px; } .img_field img { max-width: 320px; max-height: 180px; border-radius: 8px; object-fit: cover; background: #f3f4f6; }
+.photos { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.photos .ph { display: grid; gap: 4px; justify-items: center; } .photos img { width: 110px; height: 80px; border-radius: 8px; object-fit: cover; }
+.rte { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; color: #111827; }
+.rte_bar { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-bottom: 1px solid var(--line); background: #fafafa; }
+.rte_bar button { height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+.rte_bar button:hover { border-color: var(--green); }
+.rte_body { min-height: 260px; max-height: 60vh; overflow: auto; padding: 12px 14px; font-size: 14px; line-height: 1.7; outline: none; }
+.rte_body h3 { margin: 14px 0 6px; font-size: 16px; } .rte_body p { margin: 0 0 8px; }
+.rte_body img { display: block; max-width: 100%; max-height: 360px; margin: 8px 0; border-radius: 8px; }
+.rte_body ul, .rte_body ol { padding-left: 20px; } .rte_body a { color: var(--green); }
+.rte_body blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--green); background: #f5f8f6; }

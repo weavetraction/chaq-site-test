@@ -34,7 +34,8 @@
         </footer>
     </div>
 
-    <script src="data/content.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/content.js"><\/script>');})();</script>
+    <script>window.CHAQ_CONTENT || document.write('<script src="data/content.js"><\/script>');</script>
     <script>
         (function(){
             var list = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.articles) || [];
@@ -45,7 +46,7 @@
             if(!a){ view.innerHTML='<p class="detail_empty">아티클을 찾을 수 없습니다.</p>'; return; }
             function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
             document.title = '차큐 아티클 · ' + a.title;
-            var sections = a.body.map(function(b){
+            var sections = a.html ? '<section class="dv_sec dv_rich">'+a.html+'</section>' : (a.body||[]).map(function(b){
                 return '<section class="dv_sec"><h3>'+esc(b.h)+'</h3><p>'+esc(b.p)+'</p></section>';
             }).join('');
             view.innerHTML =

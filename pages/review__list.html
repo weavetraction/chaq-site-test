@@ -44,7 +44,8 @@
         <img src="" alt="후기 사진 확대">
     </div>
 
-    <script src="data/reviews.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/reviews.js"><\/script>');})();</script>
+    <script>window.CHAQ_REVIEWS || document.write('<script src="data/reviews.js"><\/script>');</script>
     <script src="data/review-link.js"></script>
     <script>
         // 차량별 후기 (?model=<familyKey>, 차량 상세 하단 후기 위젯의 '전체보기'): 차량 데이터가 필요할 때만 불러온 뒤 그린다

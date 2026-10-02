@@ -771,13 +771,15 @@
         })();
     </script>
     <!-- 이 차량 이용 후기 (하단 슬라이드 위젯) — 후기 데이터(reviews.js) ↔ 현재 차량(trimId·모델·계열) 연동. 연결 후기가 없으면 표시 안 함 -->
-    <script src="data/reviews.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/reviews.js"><\/script>');})();</script>
+    <script>window.CHAQ_REVIEWS || document.write('<script src="data/reviews.js"><\/script>');</script>
     <script src="data/review-link.js"></script>
     <script>
         (function(){ try { if (window.CHAQ_REVIEW_LINK) window.CHAQ_REVIEW_LINK.mountDetailWidget(); } catch (e) { if (window.console) console.warn('review widget', e); } })();
     </script>
     <!-- 하단 안내 블록 (후기 위젯 아래): 배너 · 장기렌트 3타일 · 문의부터 인도까지 5단계 · 같은 조건 다른 차량(현재 조건·월납입금대 연동) -->
-    <script src="data/faq.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/faq.js"><\/script>');})();</script>
+    <script>window.CHAQ_FAQ || document.write('<script src="data/faq.js"><\/script>');</script>
     <script src="data/detail-promo.js"></script>
     <script>
         (function(){ try { if (window.CHAQ_DETAIL_PROMO) window.CHAQ_DETAIL_PROMO.mount(); } catch (e) { if (window.console) console.warn('detail promo', e); } })();

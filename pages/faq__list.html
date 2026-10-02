@@ -84,7 +84,8 @@
     <main id="faqList"></main>
   </div>
 
-  <script src="data/faq.js"></script>
+  <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/faq.js"><\/script>');})();</script>
+    <script>window.CHAQ_FAQ || document.write('<script src="data/faq.js"><\/script>');</script>
   <script>
     (function(){
       // FAQ 데이터(faq.js)에서 카테고리 탭 + 질문 섹션 렌더링 (전체·메인 공용 단일 소스)

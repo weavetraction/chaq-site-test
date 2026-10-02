@@ -2826,3 +2826,14 @@ html.chaq-detail-loading .local-car-detail::after{
 .agreement .agree_info .main_t_txt { font-size: 17px; font-weight: 700; color: #111; margin: 8px 0 6px; }
 .agreement .agree_info .sub_t_txt { font-weight: 600; color: #222; margin-bottom: 2px; }
 .agreement .agree_info hr { border: 0; border-top: 1px solid #eee; margin: 24px 0; }
+
+/* 관리자 편집기로 쓴 본문 (아티클·이벤트) */
+.local-sub .detail_view .dv_rich{ font-size: 14px; line-height: 1.72; color: #4c5258; }
+.local-sub .detail_view .dv_rich h3, .local-sub .detail_view .dv_rich h4{ margin: 18px 0 7px; font-size: 16px; font-weight: 800; color: #1c1f23; letter-spacing: -.3px; }
+.local-sub .detail_view .dv_rich h3:first-child{ margin-top: 0; }
+.local-sub .detail_view .dv_rich p{ margin: 0 0 10px; }
+.local-sub .detail_view .dv_rich img{ display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: 10px; }
+.local-sub .detail_view .dv_rich ul, .local-sub .detail_view .dv_rich ol{ margin: 0 0 10px; padding-left: 20px; }
+.local-sub .detail_view .dv_rich a{ color: #18a85c; text-decoration: underline; }
+.local-sub .detail_view .dv_rich blockquote{ margin: 10px 0; padding: 10px 14px; border-left: 3px solid #18a85c; background: #f5f8f6; }
+.local-sub .detail_view .dv_rich hr{ border: 0; border-top: 1px solid #e5e7eb; margin: 16px 0; }

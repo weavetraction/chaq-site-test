@@ -21,6 +21,8 @@ COPY server/admin ./admin
 COPY pages/data/vehicle-master.js pages/data/quotes.js ./site-data/
 # 차량 데이터 모델별 상세본 (옵션·색상·기본품목) — DB 첫 가져오기 때 공통본과 합침
 COPY pages/data/vm ./site-data/vm
+# FAQ·후기·아티클/이벤트 — DB 첫 가져오기용
+COPY pages/data/faq.js pages/data/reviews.js pages/data/content.js ./site-data/
 USER node
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

@@ -14,6 +14,7 @@ import { log } from "./lib/log.js";
 import { pool } from "./db.js";
 import { redis } from "./lib/limits.js";
 import { ensureVmReady } from "./lib/vm-store.js";
+import { ensureContentReady } from "./lib/content.js";
 
 if (process.env.SENTRY_DSN) Sentry.init({ dsn: process.env.SENTRY_DSN, environment: process.env.APP_ENV || process.env.NODE_ENV, tracesSampleRate: Number(process.env.SENTRY_TRACES || 0.05) });
 
@@ -49,6 +50,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   const server = app.listen(config.port, () => log.info(`[chaq-api] listening on :${config.port}`));
   // 차량 데이터: DB 가 비어 있으면 사이트 파일에서 가져와 첫 반영본 생성 — 뒤에서 진행 (그동안 사이트는 자체 파일, 견적 트림 연결은 사이트 파일 기준)
   ensureVmReady().catch((e) => log.error({ err: e }, "[vm] 준비 실패"));
+  ensureContentReady().catch((e) => log.error({ err: e }, "[content] 준비 실패"));   // FAQ·후기·이벤트·아티클 첫 가져오기
   // 배포 교체 시(ECS) 처리 중 요청을 마치고 종료
   const stop = (sig: string) => { log.info({ sig }, "shutting down"); server.close(() => Promise.allSettled([pool.end(), redis?.quit()]).finally(() => process.exit(0))); setTimeout(() => process.exit(0), 15000).unref(); };
   process.on("SIGTERM", () => stop("SIGTERM")); process.on("SIGINT", () => stop("SIGINT"));

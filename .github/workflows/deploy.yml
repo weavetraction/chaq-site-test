@@ -32,11 +32,11 @@ env:
 jobs:
   api:
     if: ${{ (github.event_name == 'workflow_dispatch' || vars.AUTO_DEPLOY_ENV != '') && !inputs.skip_api }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: actions/checkout@v5
+      - uses: aws-actions/configure-aws-credentials@v6
         with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: "${{ env.AWS_REGION }}" }
       - id: ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -46,7 +46,7 @@ jobs:
           if aws ecr describe-images --repository-name "chaq-$ENV_NAME-api" --image-ids imageTag="$TAG" >/dev/null 2>&1; then echo "이미 있음"; exit 0; fi
           docker build -f server/Dockerfile -t "$REPO:$TAG" .
           docker push "$REPO:$TAG"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm, cache-dependency-path: infra/package-lock.json }
       - name: API 배포 (ECS 무중단 교체 · 실패 시 자동 롤백 · DB 마이그레이션은 서버 시작 시 1대만)
         working-directory: infra
@@ -57,11 +57,11 @@ jobs:
   site:
     needs: api
     if: ${{ always() && (github.event_name == 'workflow_dispatch' || vars.AUTO_DEPLOY_ENV != '') && (needs.api.result == 'success' || needs.api.result == 'skipped') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.env || vars.AUTO_DEPLOY_ENV || 'staging' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22 }
       - name: 배포본 만들기
         env:
@@ -69,7 +69,7 @@ jobs:
           CHANNEL_PLUGIN_KEY: ${{ vars.CHANNEL_PLUGIN_KEY }}
           GTM_ID: ${{ vars.GTM_ID }}
         run: node infra/scripts/build-site.mjs
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with: { role-to-assume: "${{ vars.AWS_DEPLOY_ROLE_ARN }}", aws-region: "${{ env.AWS_REGION }}" }
       - name: S3 올리기 · CloudFront 캐시 비우기
         run: |

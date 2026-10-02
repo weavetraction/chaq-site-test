@@ -34,7 +34,8 @@
         </footer>
     </div>
 
-    <script src="data/content.js"></script>
+    <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/content.js"><\/script>');})();</script>
+    <script>window.CHAQ_CONTENT || document.write('<script src="data/content.js"><\/script>');</script>
     <script>
         (function(){
             var list = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.events) || [];
@@ -46,10 +47,10 @@
             function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
             document.title = '차큐 이벤트 · ' + e.title;
             var ended = e.status==='end';
-            var sections = e.body.map(function(b){
+            var sections = e.html ? '<section class="dv_sec dv_rich">'+e.html+'</section>' : (e.body||[]).map(function(b){
                 return '<section class="dv_sec"><h3>'+esc(b.h)+'</h3><p>'+esc(b.p)+'</p></section>';
             }).join('');
-            var ctaHref = ended ? 'event__list__ing.html' : 'special-price-car__list.html';
+            var ctaHref = ended ? 'event__list__ing.html' : (e.ctaHref || 'special-price-car__list.html');   // 버튼 링크: 관리자 입력 우선
             view.innerHTML =
                 '<div class="dv_hero"><img src="'+e.img+'" alt="">'+
                     '<span class="dv_hero_badge'+(ended?' is-end':'')+'">'+esc(e.badge)+'</span></div>'+
