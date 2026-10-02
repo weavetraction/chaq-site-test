@@ -96,7 +96,10 @@ export class CoreStack extends Stack {
     this.dbSecret = this.db.secret!;
     alarm("DbCpu", this.db.metricCPUUtilization({ period: Duration.minutes(5) }), 80, "RDS CPU 80% 초과");
     alarm("DbStorage", this.db.metricFreeStorageSpace({ period: Duration.minutes(5) }), 5 * 1024 ** 3, "RDS 남은 저장공간 5GB 미만", cw.ComparisonOperator.LESS_THAN_THRESHOLD, 1);
-    alarm("DbMemory", this.db.metricFreeableMemory({ period: Duration.minutes(5) }), 200 * 1024 ** 2, "RDS 여유 메모리 200MB 미만", cw.ComparisonOperator.LESS_THAN_THRESHOLD);
+    // 여유 메모리 경보: 사양 메모리의 5% 미만 (t4g.micro 1GB 는 평소 여유가 200MB 안팎이라 고정값은 오경보)
+    const ramGiB = ({ micro: 1, small: 2, medium: 4, large: 8, xlarge: 16, "2xlarge": 32 } as Record<string, number>)[cfg.dbInstanceClass.split(".").pop() || ""] || 4;
+    const memMiB = Math.round(ramGiB * 1024 * 0.05);
+    alarm("DbMemory", this.db.metricFreeableMemory({ period: Duration.minutes(5) }), memMiB * 1024 ** 2, `RDS 여유 메모리 ${memMiB}MB 미만`, cw.ComparisonOperator.LESS_THAN_THRESHOLD);
     alarm("DbConnections", this.db.metricDatabaseConnections({ period: Duration.minutes(5) }), cfg.tier === "full" ? 300 : 60, "RDS 연결 수 과다");
 
     // ---- Redis 7 (요청 제한 공유 · 이후 캐시/세션) — full 에서만, 운영은 복제본 + 자동 장애조치
