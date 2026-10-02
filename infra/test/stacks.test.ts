@@ -59,7 +59,7 @@ test("CloudFront: 사이트 + /api·/admin → ALB, 견적 데이터만 캐시, 
 
 test("배포 역할: 해당 GitHub environment 만", () => {
   const t = build("full");
-  t.cicd.hasResourceProperties("AWS::IAM::Role", { AssumeRolePolicyDocument: Match.objectLike({ Statement: [Match.objectLike({ Condition: { StringEquals: Match.objectLike({ "token.actions.githubusercontent.com:sub": "repo:weavetraction/chaq-site-test:environment:prod" }) } })] }) });
+  t.cicd.hasResourceProperties("AWS::IAM::Role", { AssumeRolePolicyDocument: Match.objectLike({ Statement: [Match.objectLike({ Condition: { StringEquals: Match.objectLike({ "token.actions.githubusercontent.com:sub": ["repo:weavetraction/chaq-site-test:environment:prod", "repo:weavetraction@319288051/chaq-site-test@1398343955:environment:prod"] }) } })] }) });
 });
 
 test("lite(오픈 초기): NAT·Redis 없음, DB 단일 AZ, API 1대 공개 서브넷(ALB 만 허용), 월 예산 알림", () => {

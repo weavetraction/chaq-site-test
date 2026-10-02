@@ -53,6 +53,7 @@ export interface EnvConfig {
   metaPixelId: string;
   // ---- CI/CD
   githubRepo: string;              // owner/repo
+  githubIds: { owner: string; repo: string };   // GitHub 고유 ID — OIDC 신원(sub)이 'owner@ID/repo@ID' 형식으로 올 때 사용
   githubEnvironment: string;       // GitHub Actions environment 이름 (배포 승인·비밀값 분리)
 }
 
@@ -62,6 +63,7 @@ const common = {
   zoneName: "chaq.co.kr",
   hostedZoneId: "Z0200270KYMUTU46N4DU",                           // chaq.co.kr (Route 53)
   githubRepo: "weavetraction/chaq-site-test",
+  githubIds: { owner: "319288051", repo: "1398343955" },
   ga4MeasurementId: "",
   metaPixelId: "",
 };

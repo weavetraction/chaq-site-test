@@ -28,7 +28,11 @@ export class CicdStack extends Stack {
     const role = new iam.Role(this, "DeployRole", {
       roleName: `chaq-${cfg.name}-github-deploy`,
       assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
-        StringEquals: { [`${GH}:aud`]: "sts.amazonaws.com", [`${GH}:sub`]: `repo:${cfg.githubRepo}:environment:${cfg.githubEnvironment}` },
+        // GitHub 신원 형식 2가지 모두 허용 (기본 'owner/repo', 고유 ID 포함 'owner@ID/repo@ID') — 해당 environment 만
+        StringEquals: { [`${GH}:aud`]: "sts.amazonaws.com", [`${GH}:sub`]: [
+          `repo:${cfg.githubRepo}:environment:${cfg.githubEnvironment}`,
+          `repo:${cfg.githubRepo.split("/")[0]}@${cfg.githubIds.owner}/${cfg.githubRepo.split("/")[1]}@${cfg.githubIds.repo}:environment:${cfg.githubEnvironment}`,
+        ] },
       }),
       description: `GitHub Actions deploy (${cfg.githubRepo} / ${cfg.githubEnvironment})`,
     });
