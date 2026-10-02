@@ -6,10 +6,14 @@ export type EnvName = "prod" | "staging";
  *  광고 본격 집행 전에 PROD_TIER 를 "full" 로 바꾸고 배포하면 같은 코드로 올라감 (재개발 없음) */
 export type Tier = "lite" | "full";
 export const PROD_TIER = "lite" as Tier;
+/** AWS 계정이 '무료 플랜'인 동안 true — DB 를 무료 플랜 제한(t4g.micro·백업 1일·저장공간 자동 확장 없음)에 맞춤
+ *  오픈 전 유료 플랜으로 업그레이드한 뒤 false 로 바꾸고 배포 (DB 백업 7일·t4g.small 로 변경, 몇 분 재시작) */
+export const AWS_FREE_PLAN = true;
 
 export interface EnvConfig {
   name: EnvName;
   tier: Tier;
+  freePlan: boolean;               // AWS 무료 플랜 계정 (제한된 DB 설정)
   account: string;                 // AWS 계정 ID (12자리)
   region: string;                  // 서울
   // ---- 도메인
@@ -64,7 +68,7 @@ const common = {
 
 export const PROD_FULL: EnvConfig = {
   ...common,
-  name: "prod", tier: "full",
+  name: "prod", tier: "full", freePlan: false,
   siteDomains: ["chaq.co.kr", "www.chaq.co.kr"],
   originDomain: "origin.chaq.co.kr",
   vpcCidr: "10.10.0.0/16", azs: ["ap-northeast-2a", "ap-northeast-2c"], natGateways: 2,
@@ -88,8 +92,11 @@ export const PROD_LITE: EnvConfig = {
   logRetentionDays: 30, containerInsights: false, monthlyBudgetUsd: 200,
 };
 
+/** 무료 플랜 제한에 맞춘 설정 (DB 만 다름) */
+export const freePlan = (c: EnvConfig): EnvConfig => ({ ...c, freePlan: true, dbInstanceClass: "t4g.micro", dbBackupDays: 1, dbMaxAllocatedGb: c.dbAllocatedGb, dbMultiAz: false });
+
 export const ENVS: Record<EnvName, EnvConfig> = {
-  prod: PROD_TIER === "full" ? PROD_FULL : PROD_LITE,
+  prod: AWS_FREE_PLAN ? freePlan(PROD_LITE) : PROD_TIER === "full" ? PROD_FULL : PROD_LITE,
   // 스테이징: 필요할 때만 만들고(cdk deploy) 쓰고 나면 지움(cdk destroy) — 운영 DB 와 완전히 분리
   staging: {
     ...PROD_LITE,

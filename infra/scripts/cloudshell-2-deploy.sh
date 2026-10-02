@@ -4,7 +4,7 @@
 #   만드는 것: GitHub 배포 권한 · 인증서·WAF · VPC·DB·비밀값·이미지 저장소 · S3·CloudFront   (API 서버는 GitHub Actions 첫 배포 때)
 set -euo pipefail
 ENV_NAME="${ENV_NAME:-prod}"
-[ -d infra ] || unzip -oq chaq-infra.zip
+[ -f chaq-infra.zip ] && { rm -rf infra; unzip -oq chaq-infra.zip; }   # 올린 zip 이 있으면 항상 최신본으로
 cd infra
 npm ci --no-audit --no-fund
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text)

@@ -87,10 +87,10 @@ export class CoreStack extends Stack {
       vpc: this.vpc, vpcSubnets: { subnetGroupName: "data" }, securityGroups: [dbSg],
       credentials: rds.Credentials.fromGeneratedSecret("chaq", { secretName: `chaq/${cfg.name}/db` }),
       databaseName: "chaq", parameterGroup: params,
-      multiAz: cfg.dbMultiAz, storageType: rds.StorageType.GP3, allocatedStorage: cfg.dbAllocatedGb, maxAllocatedStorage: cfg.dbMaxAllocatedGb, storageEncrypted: true,
+      multiAz: cfg.dbMultiAz, storageType: rds.StorageType.GP3, allocatedStorage: cfg.dbAllocatedGb, maxAllocatedStorage: cfg.dbMaxAllocatedGb > cfg.dbAllocatedGb ? cfg.dbMaxAllocatedGb : undefined, storageEncrypted: true,
       backupRetention: Duration.days(cfg.dbBackupDays), preferredBackupWindow: "18:00-19:00", preferredMaintenanceWindow: "sun:19:00-sun:20:00",   // UTC = 한국 새벽 3~5시
       deletionProtection: cfg.dbDeletionProtection, removalPolicy: prod ? RemovalPolicy.SNAPSHOT : RemovalPolicy.DESTROY,
-      monitoringInterval: Duration.seconds(60), enablePerformanceInsights: cfg.tier === "full", cloudwatchLogsExports: ["postgresql"],
+      monitoringInterval: cfg.freePlan ? undefined : Duration.seconds(60), enablePerformanceInsights: cfg.tier === "full", cloudwatchLogsExports: ["postgresql"],
       autoMinorVersionUpgrade: true, copyTagsToSnapshot: true,
     });
     this.dbSecret = this.db.secret!;

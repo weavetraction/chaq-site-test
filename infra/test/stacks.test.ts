@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { App } from "aws-cdk-lib";
 import { Template, Match } from "aws-cdk-lib/assertions";
-import { ENVS, PROD_FULL, PROD_LITE, EnvConfig } from "../lib/config.js";
+import { ENVS, PROD_FULL, PROD_LITE, EnvConfig, freePlan } from "../lib/config.js";
 import { EdgeStack } from "../lib/edge-stack.js";
 import { CoreStack } from "../lib/core-stack.js";
 import { AppStack } from "../lib/app-stack.js";
@@ -77,6 +77,13 @@ test("lite(오픈 초기): NAT·Redis 없음, DB 단일 AZ, API 1대 공개 서�
 test("lite 와 full 의 DB 서브넷 주소가 같음 (올려도 DB 교체 없음)", () => {
   const cidrs = (w: "full" | "lite") => Object.entries(build(w).core.findResources("AWS::EC2::Subnet")).filter(([k]) => /data/.test(k)).map(([, v]: any) => v.Properties.CidrBlock).sort();
   assert.deepEqual(cidrs("lite"), cidrs("full"));
+});
+
+test("무료 플랜 계정: DB t4g.micro·백업 1일·저장공간 자동 확장 없음", () => {
+  const app = new App({ context: { "@aws-cdk/core:defaultCrossStackReferences": "strong" } });
+  const cfg = freePlan({ ...PROD_LITE, alarmEmails: [] });
+  const core = Template.fromStack(new CoreStack(app, "F", { cfg, env: { account: "123456789012", region: cfg.region } }));
+  core.hasResourceProperties("AWS::RDS::DBInstance", { DBInstanceClass: "db.t4g.micro", BackupRetentionPeriod: 1, MultiAZ: false, MaxAllocatedStorage: Match.absent(), MonitoringInterval: Match.absent() });
 });
 
 test("스테이징: 단일 AZ DB·작은 사양", () => {
