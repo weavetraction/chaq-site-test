@@ -1,5 +1,5 @@
-// 차량 데이터(Vehicle Master) 공통본 읽기 — 사이트의 pages/data/vehicle-master.js 를 그대로 사용
-//  · 견적 업로드 때 트림 자동 연결·연식 비교, 관리자 화면의 트림 검색에 사용
+// 차량 데이터(Vehicle Master) 트림 색인 — 견적 업로드 때 트림 자동 연결·연식 비교, 관리자 화면의 트림 검색에 사용
+//  · DB 작업본(vm-store)이 읽히면 그것을 사용, 아니면 사이트의 pages/data/vehicle-master.js
 import fs from "node:fs";
 import { config } from "../config.js";
 
@@ -14,8 +14,13 @@ export type TrimInfo = {
 };
 
 let cache: { mtime: number; trims: Map<string, TrimInfo>; list: TrimInfo[] } | null = null;
+let fromDb = false;
+
+/** DB 작업본이 바뀔 때마다 vm-store 가 호출 */
+export function setVmSource(M: { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[] }) { cache = build(M, -1); fromDb = true; }
 
 function load() {
+  if (fromDb && cache) return cache;
   const file = config.vehicleMasterPath;
   const st = fs.statSync(file);
   if (cache && cache.mtime === st.mtimeMs) return cache;
@@ -23,7 +28,11 @@ function load() {
   const i = src.indexOf("window.CHAQ_VEHICLE_MASTER =");
   if (i < 0) throw new Error("vehicle-master.js 형식을 알 수 없습니다: " + file);
   const json = src.slice(src.indexOf("=", i) + 1).trim().replace(/;\s*$/, "");
-  const M = JSON.parse(json) as { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[] };
+  cache = build(JSON.parse(json), st.mtimeMs);
+  return cache;
+}
+
+function build(M: { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[] }, mtime: number) {
   const B = new Map(M.brands.map((b) => [b.id, b])), MO = new Map(M.models.map((m) => [m.id, m])), L = new Map(M.lineups.map((l) => [l.id, l]));
   const trims = new Map<string, TrimInfo>();
   for (const t of M.trims) {
@@ -38,8 +47,7 @@ function load() {
     };
     trims.set(t.id, info);
   }
-  cache = { mtime: st.mtimeMs, trims, list: [...trims.values()] };
-  return cache;
+  return { mtime, trims, list: [...trims.values()] };
 }
 
 export const vm = {

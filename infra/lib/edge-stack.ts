@@ -24,20 +24,22 @@ export class EdgeStack extends Stack {
     });
 
     // ---- WAF (CloudFront 앞단): AWS 관리 규칙 + IP 당 요청 상한 + 문의 접수 상한 + (선택) 관리자 IP 제한
-    const managed = (name: string, priority: number, excluded: string[] = []): wafv2.CfnWebACL.RuleProperty => ({
+    const managed = (name: string, priority: number, excluded: string[] = [], scopeDown?: wafv2.CfnWebACL.StatementProperty): wafv2.CfnWebACL.RuleProperty => ({
       name, priority, overrideAction: { none: {} },
-      statement: { managedRuleGroupStatement: { vendorName: "AWS", name, ruleActionOverrides: excluded.map((n) => ({ name: n, actionToUse: { count: {} } })) } },
+      statement: { managedRuleGroupStatement: { vendorName: "AWS", name, ruleActionOverrides: excluded.map((n) => ({ name: n, actionToUse: { count: {} } })), ...(scopeDown ? { scopeDownStatement: scopeDown } : {}) } },
       visibilityConfig: { sampledRequestsEnabled: true, cloudWatchMetricsEnabled: true, metricName: name },
     });
     const pathStarts = (p: string): wafv2.CfnWebACL.StatementProperty => ({
       byteMatchStatement: { fieldToMatch: { uriPath: {} }, positionalConstraint: "STARTS_WITH", searchString: p, textTransformations: [{ priority: 0, type: "LOWERCASE" }] },
     });
+    const notAdminApi: wafv2.CfnWebACL.StatementProperty = { notStatement: { statement: pathStarts("/api/admin/") } };
     const rules: wafv2.CfnWebACL.RuleProperty[] = [
       managed("AWSManagedRulesAmazonIpReputationList", 10),
       // 관리자 엑셀 업로드(최대 20MB)가 본문 크기 규칙에 걸리지 않게 해당 규칙만 '기록'으로
-      managed("AWSManagedRulesCommonRuleSet", 20, ["SizeRestrictions_BODY", "CrossSiteScripting_BODY"]),
+      // 관리자 API(로그인 필요)는 본문 검사 제외 — 차량 데이터 설명·이미지 업로드가 오탐으로 막히지 않게
+      managed("AWSManagedRulesCommonRuleSet", 20, ["SizeRestrictions_BODY", "CrossSiteScripting_BODY"], notAdminApi),
       managed("AWSManagedRulesKnownBadInputsRuleSet", 30),
-      managed("AWSManagedRulesSQLiRuleSet", 40),
+      managed("AWSManagedRulesSQLiRuleSet", 40, [], notAdminApi),
       {
         name: "RateLimitPerIp", priority: 50, action: { block: {} },
         statement: { rateBasedStatement: { limit: cfg.wafRateLimitPer5Min, aggregateKeyType: "IP" } },

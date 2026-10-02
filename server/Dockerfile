@@ -19,6 +19,8 @@ COPY server/migrations ./migrations
 COPY server/admin ./admin
 # 차량 데이터(트림 연결·검색용)와 첫 이전용 견적 데이터 — 사이트 저장소의 파일을 그대로 사용
 COPY pages/data/vehicle-master.js pages/data/quotes.js ./site-data/
+# 차량 데이터 모델별 상세본 (옵션·색상·기본품목) — DB 첫 가져오기 때 공통본과 합침
+COPY pages/data/vm ./site-data/vm
 USER node
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

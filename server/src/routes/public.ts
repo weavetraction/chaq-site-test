@@ -5,6 +5,8 @@ import { getPublicPayload } from "../lib/quotes-store.js";
 import { InquiryInput, createInquiry, channelMessage } from "../lib/inquiries.js";
 import { config } from "../config.js";
 import { q } from "../db.js";
+import { getPublicVm } from "../lib/vm-store.js";
+import { getMedia } from "../lib/media.js";
 
 export const publicRouter = Router();
 
@@ -22,6 +24,48 @@ publicRouter.get(["/api/quotes.js", "/api/quotes.json"], async (req, res, next) 
     if (req.headers["if-none-match"] === p.etag) return res.status(304).end();
     if (req.path.endsWith(".json")) return res.type("application/json").send(p.json);
     res.type("application/javascript; charset=utf-8").send(p.js);
+  } catch (e) { next(e); }
+});
+
+// ---------------------------------------------------------------- 공개 데이터 (/api/pub/* — CloudFront 가 캐시)
+/** 차량 데이터 공통본: 기존 pages/data/vehicle-master.js 와 같은 모양 (window.CHAQ_VEHICLE_MASTER) */
+publicRouter.get("/api/pub/vm/core.js", async (req, res, next) => {
+  try {
+    const p = await getPublicVm();
+    res.setHeader("Cache-Control", `public, max-age=${config.publicQuotesMaxAge}`);
+    res.setHeader("ETag", p.etag); res.setHeader("Access-Control-Allow-Origin", "*");
+    if (req.headers["if-none-match"] === p.etag) return res.status(304).end();
+    res.type("application/javascript; charset=utf-8").send(p.coreJs);
+  } catch (e) { next(e); }
+});
+/** 모델별 상세본 (옵션·색상·기본품목) — ?r=<반영본번호> 가 현재 반영본이면 오래 캐시 */
+publicRouter.get("/api/pub/vm/m/:file", async (req, res, next) => {
+  try {
+    const mid = String(req.params.file).replace(/\.js$/, "");
+    const p = await getPublicVm();
+    let js = p.details.get(mid);
+    if (!js) {
+      if (!p.modelIds.has(mid)) return res.status(404).type("application/javascript").send("/* 없음 */");
+      js = `(window.CHAQ_VM_DETAILS = window.CHAQ_VM_DETAILS || []).push(${JSON.stringify({ modelId: mid, options: [], trimOptions: [], colors: [], trimColors: [], colorRules: [], standardItems: {} })});\nif (window.CHAQ_VM && window.CHAQ_VM.addDetail) window.CHAQ_VM.addDetail(window.CHAQ_VM_DETAILS[window.CHAQ_VM_DETAILS.length - 1]);\n`;
+    }
+    const pinned = String(req.query.r || "") === String(p.releaseId);
+    res.setHeader("Cache-Control", pinned ? "public, max-age=31536000, immutable" : `public, max-age=${config.publicQuotesMaxAge}`);
+    const etag = p.etag.slice(0, -1) + "-" + mid + '"';
+    res.setHeader("ETag", etag); res.setHeader("Access-Control-Allow-Origin", "*");
+    if (req.headers["if-none-match"] === etag) return res.status(304).end();
+    res.type("application/javascript; charset=utf-8").send(js);
+  } catch (e) { next(e); }
+});
+/** 관리자가 올린 이미지: /api/pub/media/<id>.webp · <id>.thumb.webp (주소가 바뀌지 않으므로 1년 캐시) */
+publicRouter.get("/api/pub/media/:file", async (req, res, next) => {
+  try {
+    const m = String(req.params.file).match(/^([a-z0-9]{6,24})(\.thumb)?\.(webp|png|jpg|gif|svg)$/);
+    if (!m) return res.status(404).end();
+    const f = await getMedia(m[1], !!m[2]); if (!f) return res.status(404).end();
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("Content-Type", f.mime); res.setHeader("X-Content-Type-Options", "nosniff");
+    if (f.mime === "image/svg+xml") res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.send(f.bytes);
   } catch (e) { next(e); }
 });
 

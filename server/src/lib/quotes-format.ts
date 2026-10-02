@@ -13,7 +13,10 @@ export type QuoteRecord = {
   id: string; gu?: string; brand: string; model: string; year: string; trim: string; ext?: string; int?: string; fuel?: string; seg?: string; fin?: string;
   opts: { n: string; p?: number }[]; base: number | null; rem?: number; cost: Record<string, Record<string, Record<string, number>>>;
   resid: Record<string, Record<string, number>>; vehiclePrice?: number | null; trimId?: string | null; vmLink?: unknown;
+  incl?: Incl;   // 포함 사항 (선팅·블박·탁송) — 없으면 사이트 기본 표시
 };
+export const INCL_KEYS = [["tint", "선팅"], ["blackbox", "블박"], ["delivery", "탁송"]] as const;
+export type Incl = Partial<Record<(typeof INCL_KEYS)[number][0], boolean>>;
 
 const costCol = (d: string, t: string, pk: string) => `월_${d}만_${t}개월_${pk}`;
 const residCol = (d: string, t: string) => `잔가_${d}만_${t}개월`;
@@ -34,6 +37,7 @@ export const BASE_COLUMNS: { key: string; header: string; width: number; note?: 
   { key: "rem", header: "재고수", width: 7, note: "재고특가·빠른인도: 0 이면 목록에서 숨김" },
   { key: "base", header: "차량가", width: 12, note: "원 단위 숫자" },
   { key: "opts", header: "옵션", width: 40, note: "옵션명:가격 | 옵션명:가격 (가격 없으면 옵션명만)" },
+  ...INCL_KEYS.map(([k, ko]) => ({ key: "incl." + k, header: ko, width: 6, note: `${ko} 포함 Y / 미포함 N (비우면 사이트 기본: 포함)` })),
   { key: "trimId", header: "차량데이터 트림ID", width: 30, note: "비워두면 같은 차량명으로 자동 연결 — 안 되면 관리자 화면에서 지정" },
 ];
 export const COST_COLUMNS = DISTS.flatMap((d) => TERMS.flatMap((t) => PLANS.map(([pk, pko]) => ({ d, t, pk, header: costCol(d, t, pko) }))));
@@ -54,6 +58,7 @@ export function recordToRow(kind: Kind, r: QuoteRecord): Record<string, unknown>
   for (const c of BASE_COLUMNS) {
     if (c.key === "kind") row[c.header] = KIND_KO[kind];
     else if (c.key === "opts") row[c.header] = optsToText(r.opts);
+    else if (c.key.startsWith("incl.")) { const v = r.incl?.[c.key.slice(5) as keyof Incl]; row[c.header] = v === true ? "Y" : v === false ? "N" : ""; }
     else row[c.header] = (r as any)[c.key] ?? "";
   }
   for (const c of COST_COLUMNS) { const v = r.cost?.[c.d]?.[c.t]?.[c.pk]; row[c.header] = v ?? ""; }
@@ -66,6 +71,14 @@ const num = (v: unknown): number | null => {
   if (typeof v === "number") return Number.isFinite(v) ? Math.round(v) : null;
   const s = String(v).replace(/[,\s원]/g, ""); if (!s) return null;
   const n = Number(s); return Number.isFinite(n) ? Math.round(n) : NaN;
+};
+/** Y/N → true/false, 빈칸 → null */
+export const yn = (v: unknown): boolean | null | "bad" => {
+  if (v === true || v === false) return v;
+  const s = String(v ?? "").trim().toUpperCase(); if (!s) return null;
+  if (["Y", "O", "포함", "YES", "TRUE", "1"].includes(s)) return true;
+  if (["N", "X", "미포함", "NO", "FALSE", "0"].includes(s)) return false;
+  return "bad";
 };
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
@@ -100,6 +113,9 @@ export function rowToRecord(row: Record<string, unknown>, rowNo: number): Parsed
     (rec.resid[c.d] ||= {})[c.t] = v;
   }
   if (!costCount) errors.push("월 납입금이 하나도 없음");
+  const incl: Incl = {};
+  for (const [k, ko] of INCL_KEYS) { const v = yn(row[ko]); if (v === "bad") errors.push(`${ko}: Y 또는 N`); else if (v !== null) incl[k] = v; }
+  if (Object.keys(incl).length) rec.incl = incl;
   const trimIdGiven = str(row["차량데이터 트림ID"]) || null;
   return { kind: (kind || "estimate") as Kind, rec, rowNo, errors, trimIdGiven };
 }

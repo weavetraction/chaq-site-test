@@ -64,6 +64,12 @@ function handler(event) {
       queryStringBehavior: cloudfront.CacheQueryStringBehavior.none(), headerBehavior: cloudfront.CacheHeaderBehavior.none(), cookieBehavior: cloudfront.CacheCookieBehavior.none(),
       enableAcceptEncodingGzip: true, enableAcceptEncodingBrotli: true,
     });
+    // 공개 데이터(/api/pub/*: 차량 데이터·관리자 업로드 이미지·이후 콘텐츠): 서버 Cache-Control 을 따름 (이미지·고정 반영본은 1년, 나머지 60초)
+    const pubCache = new cloudfront.CachePolicy(this, "PubCache", {
+      cachePolicyName: `chaq-${cfg.name}-pub`, minTtl: Duration.seconds(0), defaultTtl: Duration.seconds(60), maxTtl: Duration.days(365),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(), headerBehavior: cloudfront.CacheHeaderBehavior.none(), cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      enableAcceptEncodingGzip: true, enableAcceptEncodingBrotli: true,
+    });
     const dynamic: cloudfront.BehaviorOptions = {
       origin: api, viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY, allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
       cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
@@ -83,6 +89,7 @@ function handler(event) {
       },
       additionalBehaviors: {
         "/api/quotes.*": { ...dynamic, allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD, cachePolicy: quotesCache, originRequestPolicy: undefined, compress: true },
+        "/api/pub/*": { ...dynamic, allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD, cachePolicy: pubCache, originRequestPolicy: undefined, compress: true },
         "/api/*": dynamic,
         "/admin*": dynamic,
       },

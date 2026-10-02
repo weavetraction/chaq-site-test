@@ -24,6 +24,7 @@
     <header class="top">
       <strong>차큐 관리자</strong>
       <nav class="tabs">
+        <button type="button" data-tab="vm">차량 데이터</button>
         <button type="button" data-tab="quotes" class="on">견적 데이터</button>
         <button type="button" data-tab="inquiries">상담 문의 <b id="newBadge" class="badge" hidden></b></button>
       </nav>
@@ -31,8 +32,45 @@
     </header>
 
     <main>
+      <!-- 차량 데이터 (마스터) -->
+      <section data-panel="vm" id="vmRoot" hidden>
+        <div class="card vm_top">
+          <div class="row between wrap">
+            <div class="vm_counts" id="vmCounts"></div>
+            <div class="row gap"><span id="vmPending"></span><button type="button" class="btn" id="vmHistoryBtn">반영 이력 · 변경 기록</button><button type="button" class="btn" id="vmPublish">사이트 반영</button></div>
+          </div>
+          <p class="hint" id="vmCurrent"></p>
+          <div id="vmHistory" hidden>
+            <h3>반영 이력 <small>(되돌리면 사이트와 작업본이 그 시점으로)</small></h3><div class="tbl_wrap short"><table class="tbl" id="vmReleases"></table></div>
+            <h3>최근 변경 기록</h3><div class="tbl_wrap short"><table class="tbl" id="vmChanges"></table></div>
+          </div>
+        </div>
+        <div class="vm_layout">
+          <div class="card vm_side">
+            <div class="vm_search picker"><input type="search" id="vmSearch" placeholder="트림 바로 찾기 (예: 쏘렌토 하이브리드 시그니처)"><div class="res" id="vmSearchRes" hidden></div></div>
+            <div class="vm_crumbs" id="vmCrumbs"></div>
+            <div class="row between"><b id="vmListTitle">브랜드 목록</b><button type="button" class="btn sm" id="vmAdd">+ 추가</button></div>
+            <input type="search" id="vmFilter" placeholder="이 목록에서 찾기">
+            <div class="vm_list" id="vmList"></div>
+          </div>
+          <div class="card vm_editor" id="vmEditor"></div>
+        </div>
+        <div class="card">
+          <h2>엑셀로 한 번에 수정 <small class="hint">(브랜드·모델·라인업·트림·옵션·트림옵션·색상·트림색상·이미지 시트)</small></h2>
+          <div class="row gap"><select id="vmXlsBrand"><option value="">전체 브랜드</option></select><button type="button" class="btn" id="vmXlsDown">엑셀 받기</button></div>
+          <form id="vmXlsForm" class="row gap" style="margin-top:10px"><input type="file" name="file" accept=".xlsx" required><button type="submit" class="btn primary">올리고 미리보기</button></form>
+          <p class="hint">받은 엑셀에서 필요한 칸만 고쳐 올리세요. 고치지 않은 행은 그대로이고, 삭제는 '삭제' 열에 Y. 가격(트림가격·옵션가격·추가금액)은 원 단위 숫자.</p>
+          <div id="vmXlsPlan"></div>
+        </div>
+      </section>
+
       <!-- 견적 데이터 -->
       <section data-panel="quotes">
+        <div class="card" id="qeRoot">
+          <div class="row between wrap"><h2>페이지별 견적 데이터 — 화면에서 수정</h2>
+            <nav class="chips" id="qeTabs"><button type="button" data-k="estimate">견적조회</button><button type="button" data-k="stock" class="on">재고특가</button><button type="button" data-k="fast">빠른인도</button></nav></div>
+          <div id="qeBody"></div>
+        </div>
         <div class="card">
           <h2>지금 사이트에 나가는 데이터</h2>
           <div class="kinds" id="liveKinds"></div>
@@ -47,7 +85,7 @@
         </div>
 
         <div class="card">
-          <h2>엑셀 올리기</h2>
+          <h2>엑셀 올리기 <small class="hint">(여러 페이지를 한 번에 — 파일에 있는 구분만 교체)</small></h2>
           <form id="uploadForm" class="row gap">
             <input type="file" name="file" accept=".xlsx" required>
             <button type="submit" class="btn primary">올리고 미리보기</button>
@@ -91,6 +129,12 @@
       </section>
     </main>
   </div>
+  <!-- 팝업 · 알림 -->
+  <div class="modal" id="vmModal" hidden><div class="modal_box"><div class="row between"><h2 id="vmModalTitle"></h2><button type="button" class="btn link" id="vmModalClose">닫기</button></div><div id="vmModalBody" class="vm_form"></div><div class="row gap end"><button type="button" class="btn primary" id="vmModalSave">저장</button></div></div></div>
+  <div class="modal" id="qeModal" hidden><div class="modal_box wide"><div class="row between"><h2 id="qeModalTitle"></h2><button type="button" class="btn link" id="qeModalClose">닫기</button></div><div id="qeModalBody" class="vm_form"></div><div class="row gap end"><button type="button" class="btn primary" id="qeModalSave">저장</button></div></div></div>
+  <div class="toast" id="vmToast"></div>
   <script src="admin.js"></script>
+  <script src="admin-vm.js"></script>
+  <script src="admin-qedit.js"></script>
 </body>
 </html>

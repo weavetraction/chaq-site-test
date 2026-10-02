@@ -77,3 +77,48 @@ main { max-width: 1200px; margin: 0 auto; padding: 20px; }
 .iq select { height: 30px; font-size: 12.5px; }
 .st-NEW { color: var(--red); font-weight: 700; }
 @media (max-width: 760px) { .kinds { grid-template-columns: 1fr; } .ul_row { grid-template-columns: 1fr; } .top { gap: 8px; padding: 0 10px; } .who #whoName { display: none; } }
+
+/* ---- 차량 데이터 · 견적 화면 수정 ---- */
+main { max-width: 1400px; }
+.vm_counts { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
+.vm_counts b { margin-right: 3px; color: #111827; font-size: 15px; }
+.vm_layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+.vm_side { position: sticky; top: 72px; display: grid; gap: 10px; max-height: calc(100vh - 90px); }
+.vm_side input[type=search] { width: 100%; }
+.vm_crumbs { font-size: 12.5px; color: var(--muted); line-height: 1.8; }
+.vm_crumbs button { padding: 0; border: 0; background: none; color: var(--green); font: inherit; cursor: pointer; }
+.vm_list { overflow: auto; min-height: 200px; border-top: 1px solid var(--line); }
+.vm_item { display: block; width: 100%; padding: 9px 6px; border: 0; border-bottom: 1px solid #f1f2f4; background: #fff; text-align: left; font: inherit; cursor: pointer; }
+.vm_item:hover { background: #fafafa; } .vm_item.on { background: var(--green-soft); }
+.vm_item.off b { color: #9ca3af; }
+.vm_item b { display: block; font-size: 13px; } .vm_item small { color: var(--muted); font-size: 12px; }
+.vm_editor { min-height: 400px; } .pad { padding: 30px 6px; }
+.vm_form { display: grid; gap: 12px; margin: 10px 0 18px; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px 14px; }
+.fgrid label, .vm_form > label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.fgrid label.wide, .vm_form > label.wide { grid-column: 1 / -1; }
+.fgrid input, .fgrid select, .fgrid textarea, .vm_form textarea { width: 100%; color: #111827; }
+.idrow { display: grid; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 8px; } .idrow input { width: 100%; }
+.num_in { width: 110px; text-align: right; }
+.note_in { width: 48%; margin-right: 2%; height: 30px; font-size: 12px; }
+input.saved { border-color: var(--green); }
+.chip { display: inline-block; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #d1d5db; vertical-align: middle; }
+.imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 8px 0 16px; }
+.img_card { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.img_card img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: contain; background: #f3f4f6; }
+.img_card img.broken { opacity: .2; }
+.img_meta { display: grid; gap: 6px; padding: 8px; } .img_meta select { height: 30px; font-size: 12px; }
+.tbl_wrap { overflow: auto; } .tbl_wrap.short { max-height: 280px; }
+.tbl.qe td { font-size: 12.5px; } .tbl.qe tr.unl td { background: #fff7f7; }
+.tbl.cost td { padding: 4px; } .tbl.cost .num_in { width: 100%; min-width: 96px; }
+.opt_line { margin-bottom: 6px; } .opt_line .opt_n { flex: 1; min-width: 200px; }
+.problems.ok { background: #f0fdf4; color: #14532d; }
+.modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: start center; overflow: auto; padding: 40px 12px; background: rgba(17,24,39,.45); }
+.modal_box { width: min(760px, 100%); padding: 20px 22px; border-radius: 14px; background: #fff; }
+.modal_box.wide { width: min(1080px, 100%); }
+.row.end { justify-content: flex-end; }
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 30; transform: translate(-50%, 20px); padding: 10px 16px; border-radius: 10px; background: #111827; color: #fff; font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); } .toast.bad { background: var(--red); }
+#qeTabs { margin-bottom: 10px; }
+@media (max-width: 960px) { .vm_layout { grid-template-columns: 1fr; } .vm_side { position: static; max-height: none; } .vm_list { max-height: 50vh; } }
+.fgrid label .row select { width: auto; flex: 1; min-width: 150px; }

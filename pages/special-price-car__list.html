@@ -101,7 +101,8 @@
     <script src="data/api-config.js"></script>
     <script>/* 견적 데이터: 차큐 API(관리자에서 올린 최신 데이터) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/quotes.js"><\/script>');})();</script>
     <script>window.CHAQ || document.write('<script src="data/quotes.js"><\/script>');</script>
-    <script src="data/vehicle-master.js"></script>
+    <script>/* 차량 데이터: 차큐 API(관리자에서 '사이트 반영'한 최신본) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/vm/core.js"><\/script>');})();</script>
+    <script>window.CHAQ_VEHICLE_MASTER || document.write('<script src="data/vehicle-master.js"><\/script>');</script>
     <script src="data/vehicle-master-helper.js"></script>
     <script src="data/trim-groups.js"></script>
     <script>

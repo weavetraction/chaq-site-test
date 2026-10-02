@@ -46,7 +46,8 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   const pub = await (await call("/api/quotes.json")).json();
   const s1 = pub.stock[0];
   ok(s1.cost["2"]["60"]["0"] === old + 1000 && s1.cost["1"]["60"]["0"] === old - 30000, "공개 데이터에 수정 금액·1만 km 반영");
-  ok(pub.stock.some((r: any) => r.trim === TEST_TRIM && r.trimId === found[0].trimId), "새 차량 + 지정 트림 반영");
+  // 브랜드·모델·등급명은 차량 데이터 기준으로 바뀌고, 엑셀에 적은 이름은 srcName 에 남음
+  ok(pub.stock.some((r: any) => r.srcName?.trim === TEST_TRIM && r.trimId === found[0].trimId && r.trim !== TEST_TRIM), "새 차량 + 지정 트림 반영 (이름은 차량 데이터 기준)");
   ok(pub.estimate.length === before.estimate.rows, "다른 구분(견적조회)은 그대로");
 
   // 4) 되돌리기: 이전 batch 다시 반영
@@ -63,5 +64,14 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   const bad = await call("/api/inquiries", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ monthly: "abc" }) });
   ok(bad.status === 400, "잘못된 입력 거부");
   ok((await fetch(BASE + "/api/admin/inquiries")).status === 401, "로그인 없이 관리자 API 거부");
+  // 차량 데이터 (서버 시작 후 뒤에서 첫 가져오기 — 최대 60초 대기)
+  let core: Response | null = null;
+  for (let i = 0; i < 60; i++) { core = await call("/api/pub/vm/core.js"); if (core.ok) break; await new Promise((r) => setTimeout(r, 1000)); }
+  ok(core?.ok && (await core.text()).includes("window.CHAQ_VEHICLE_MASTER"), "차량 데이터 공개본 (core.js)");
+  const vs = await (await call("/api/admin/vm/status")).json(); ok(vs.counts?.trims > 0 && vs.current, `차량 데이터 작업본·반영본 (트림 ${vs.counts?.trims})`);
+  const tr = await (await call("/api/admin/vm/search?q=" + encodeURIComponent("그랜저"))).json(); ok(tr.length > 0, "차량 데이터 검색");
+  const mid = (await (await call("/api/admin/vm/trim/" + encodeURIComponent(tr[0].trimId))).json()).model.id;
+  ok((await call(`/api/pub/vm/m/${mid}.js`)).ok, "모델별 상세본");
+  const dr = await (await call("/api/admin/quotes/stock/draft", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).json(); ok(dr.batchId, "견적 화면 수정 작업본");
   console.log("모든 점검 통과");
 })().catch((e) => { console.error(e); process.exit(1); });

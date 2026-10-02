@@ -50,7 +50,8 @@
         // 차량별 후기 (?model=<familyKey>, 차량 상세 하단 후기 위젯의 '전체보기'): 차량 데이터가 필요할 때만 불러온 뒤 그린다
         function rvLoad(srcs, done){ if(!srcs.length) return done(); var sc=document.createElement('script'); sc.src=srcs[0]; sc.onload=sc.onerror=function(){ rvLoad(srcs.slice(1), done); }; document.body.appendChild(sc); }
         var RV_MODEL = (location.search.match(/[?&]model=([^&#]+)/)||[])[1];
-        if (RV_MODEL && !window.CHAQ_VM) rvLoad(['data/vehicle-master.js','data/vehicle-master-helper.js'], rvBoot); else rvBoot();
+        var RV_API = (window.CHAQ_API||{}).base ? String(window.CHAQ_API.base).replace(/\/$/,'') + '/api/pub/vm/core.js' : null;   // 차량 데이터: API 최신본 우선, 못 읽으면 사이트 파일
+        if (RV_MODEL && !window.CHAQ_VM) rvLoad(RV_API ? [RV_API] : [], function(){ rvLoad((window.CHAQ_VEHICLE_MASTER ? [] : ['data/vehicle-master.js']).concat(['data/vehicle-master-helper.js']), rvBoot); }); else rvBoot();
         function rvBoot(){
             var list = (window.CHAQ_REVIEWS || []);
             var wrap = document.getElementById('reviewList');

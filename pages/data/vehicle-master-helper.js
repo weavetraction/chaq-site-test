@@ -211,7 +211,8 @@
   /** 트림에서 실제 이미지가 있는 외장색 키 목록 (색상 선택 UI 에서 이미지 교체 가능 여부 판단용) */
   function getImageColorKeys(trimId) { var t = getTrim(trimId); if (!t) return []; var arr = verifiedFirst(IX.imagesByTrim[trimId]).concat(verifiedFirst(IX.imagesByLineup[t.lineupId])), o = {}, r = []; arr.forEach(function (im) { if (im.colorKey && !o[im.colorKey]) { o[im.colorKey] = 1; r.push(im.colorKey); } }); return r; }
   /** 사이트 루트 기준 상대경로(assets/…)를 현재 페이지 위치에 맞게 보정 (pages/ 하위면 ../) */
-  function siteUrl(u) { if (!u || /^(https?:|data:|\/|\.\.\/|file:)/.test(u)) return u; var p = (root.location && root.location.pathname) || ""; return /\/pages\//.test(p) ? "../" + u : u; }
+  function siteUrl(u) { if (u && /^\/api\//.test(u) && root.CHAQ_API && root.CHAQ_API.base) return String(root.CHAQ_API.base).replace(/\/$/, '') + u;   // 관리자 화면에서 올린 이미지 (/api/pub/media/...)
+    if (!u || /^(https?:|data:|\/|\.\.\/|file:)/.test(u)) return u; var p = (root.location && root.location.pathname) || ""; return /\/pages\//.test(p) ? "../" + u : u; }
   /** 노출 우선순위: trim VERIFIED → lineup VERIFIED(외장색 일치 → 대표) → fallbacks[] (placeholder) */
   function resolveImageUrl(trimId, fallbacks, preferThumb, colorKey, view) { var im = getPrimaryImage(trimId, colorKey, view); if (im) return siteUrl((preferThumb && im.thumbnailUrl) || im.imageUrl); fallbacks = fallbacks || []; for (var i = 0; i < fallbacks.length; i++) if (fallbacks[i]) return fallbacks[i]; return null; }
   /** 이미지 출처 표기문: 차큐 자체 제작 이미지는 표기 없음(null). 과거 외부 이미지 호환: Commons / 뉴스룸 */

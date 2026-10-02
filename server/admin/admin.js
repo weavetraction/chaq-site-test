@@ -23,7 +23,7 @@
 
   // ---------------------------------------------------------------- 로그인
   function showLogin() { $("#appView").hidden = true; $("#loginView").hidden = false; }
-  function showApp(me) { $("#loginView").hidden = true; $("#appView").hidden = false; $("#whoName").textContent = (me.name || me.email) + "님"; loadQuotes(); loadInquiries(); }
+  function showApp(me) { $("#loginView").hidden = true; $("#appView").hidden = false; $("#whoName").textContent = (me.name || me.email) + "님"; loadQuotes(); loadInquiries(); document.dispatchEvent(new CustomEvent("chaq:app")); }
   $("#loginForm").addEventListener("submit", function (e) {
     e.preventDefault(); $("#loginErr").textContent = "";
     api("/api/admin/login", { method: "POST", json: { email: e.target.email.value, password: e.target.password.value } }).then(showApp).catch(function (er) { $("#loginErr").textContent = er.message; });
@@ -34,6 +34,7 @@
       $$(".tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
       $$("[data-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== b.getAttribute("data-tab"); });
       if (b.getAttribute("data-tab") === "inquiries") loadInquiries();
+      document.dispatchEvent(new CustomEvent("chaq:tab", { detail: b.getAttribute("data-tab") }));
     });
   });
 
@@ -165,5 +166,7 @@
   });
   setInterval(function () { if (!$("#appView").hidden) loadInquiries(); }, 60000);   // 새 문의 배지 1분마다 갱신
 
+  // 다른 화면 모듈(admin-vm.js · admin-qedit.js)에서 같이 쓰는 도구
+  window.CHAQ_ADMIN = { api: api, esc: esc, won: won, dt: dt, $: $, $$: $$, KIND: KIND, reloadQuotes: loadQuotes, openBatch: openBatch };
   api("/api/admin/me").then(showApp).catch(showLogin);
 })();

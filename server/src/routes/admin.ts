@@ -6,7 +6,8 @@ import { limiter } from "../lib/limits.js";
 import { q } from "../db.js";
 import { issue, clear, requireAdmin, adminOf } from "../middleware/auth.js";
 import { buildWorkbook, parseWorkbook } from "../lib/excel.js";
-import { createBatch, publishBatch, discardBatch, setRowTrim, publishedStatus, getPublished, refreshSummary } from "../lib/quotes-store.js";
+import { createBatch, publishBatch, discardBatch, setRowTrim, publishedStatus, getPublished, refreshSummary, openEditDraft, saveDraftRow, deleteDraftRow, reorderDraftRows, getRow } from "../lib/quotes-store.js";
+import { adminVmRouter } from "./admin-vm.js";
 import { KINDS, Kind } from "../lib/quotes-format.js";
 import { vm } from "../lib/vm.js";
 import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
@@ -57,7 +58,7 @@ adminRouter.post("/api/admin/quotes/upload", upload.single("file"), wrap(async (
 }));
 
 adminRouter.get("/api/admin/batches", wrap(async (_req, res) => {
-  const { rows } = await q(`SELECT b.id, b.status, b.source, b.file_name, b.kinds, b.summary, b.created_at, b.published_at, a.name AS created_by_name,
+  const { rows } = await q(`SELECT b.id, b.status, b.source, b.file_name, b.kinds, b.summary, b.created_at, b.published_at, b.strict_master, b.updated_at, a.name AS created_by_name,
       ARRAY(SELECT kind FROM published_sets p WHERE p.batch_id = b.id) AS live_kinds
     FROM quote_batches b LEFT JOIN admins a ON a.id = b.created_by ORDER BY b.id DESC LIMIT 50`);
   res.json(rows);
@@ -70,7 +71,9 @@ adminRouter.get("/api/admin/batches/:id", wrap(async (req, res) => {
   if (!b) return res.status(404).json({ error: "없음" });
   const where = req.query.unlinked ? "AND trim_id IS NULL" : "";
   const kind = KINDS.includes(req.query.kind as Kind) ? req.query.kind : null;
-  const { rows } = await q(`SELECT kind, rec_id, trim_id, link_status, data->>'brand' AS brand, data->>'model' AS model, data->>'year' AS year, data->>'trim' AS trim
+  const { rows } = await q(`SELECT kind, rec_id, trim_id, link_status, data->>'brand' AS brand, data->>'model' AS model, data->>'year' AS year, data->>'trim' AS trim,
+      data->>'ext' AS ext, data->>'int' AS int, data->>'fin' AS fin, (data->>'base')::bigint AS base, (data->>'rem')::int AS rem, data->'incl' AS incl, jsonb_array_length(COALESCE(data->'opts','[]'::jsonb)) AS opt_count,
+      (SELECT MIN(v::bigint) FROM jsonb_each(COALESCE(data->'cost','{}'::jsonb)) d, jsonb_each(d.value) t, jsonb_each_text(t.value) p(k, v)) AS min_monthly
     FROM quote_rows WHERE batch_id = $1 ${where} ${kind ? "AND kind = $2" : ""} ORDER BY kind, sort_order LIMIT 2000`, kind ? [id, kind] : [id]);
   res.json({ batch: b, rows: rows.map((r) => ({ ...r, trimLabel: vm.get(r.trim_id)?.label || null })) });
 }));
@@ -91,6 +94,19 @@ adminRouter.patch("/api/admin/batches/:id/rows", wrap(async (req, res) => {
 
 adminRouter.post("/api/admin/batches/:id/publish", wrap(async (req, res) => { await publishBatch(Number(req.params.id), adminOf(req).id); res.json({ ok: true, published: await publishedStatus() }); }));
 adminRouter.post("/api/admin/batches/:id/discard", wrap(async (req, res) => { await discardBatch(Number(req.params.id)); res.json({ ok: true }); }));
+
+// 화면 수정: 페이지별 작업본 (현재 사이트 데이터 복사) → 행 추가·수정·삭제 → 반영
+const kindParam = (k: unknown): Kind => { if (!KINDS.includes(k as Kind)) throw Object.assign(new Error("페이지 구분 오류"), { status: 400 }); return k as Kind; };
+adminRouter.post("/api/admin/quotes/:kind/draft", wrap(async (req, res) => res.json(await openEditDraft(kindParam(req.params.kind), adminOf(req).id, { reset: !!req.body?.reset }))));
+adminRouter.get("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => {
+  const r = await getRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId));
+  if (!r) return res.status(404).json({ error: "없음" });
+  res.json({ ...r, trimLabel: vm.get(r.trim_id)?.label || null });
+}));
+adminRouter.post("/api/admin/batches/:id/rows/:kind", wrap(async (req, res) => res.status(201).json(await saveDraftRow(Number(req.params.id), kindParam(req.params.kind), null, req.body || {}))));
+adminRouter.put("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json(await saveDraftRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId), req.body || {}))));
+adminRouter.delete("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json({ ok: true, summary: await deleteDraftRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId)) })));
+adminRouter.post("/api/admin/batches/:id/reorder", wrap(async (req, res) => { await reorderDraftRows(Number(req.params.id), kindParam(req.body?.kind), (req.body?.recIds || []).map(String)); res.json({ ok: true }); }));
 
 adminRouter.get("/api/admin/trims", wrap(async (req, res) => res.json(vm.search(String(req.query.q || ""), 30))));
 
@@ -117,3 +133,6 @@ adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
   res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent("차큐_상담문의.csv")}`);
   res.send("﻿" + [head.map(esc).join(","), ...body].join("\n"));
 }));
+
+// 차량 데이터·이미지 (로그인 확인 뒤에 연결)
+adminRouter.use(adminVmRouter);

@@ -52,7 +52,7 @@ test("CloudFront: 사이트 + /api·/admin → ALB, 견적 데이터만 캐시, 
   const t = build("full");
   t.cdn.hasResourceProperties("AWS::CloudFront::Distribution", { DistributionConfig: Match.objectLike({
     Aliases: ["chaq.co.kr", "www.chaq.co.kr"], WebACLId: Match.anyValue(), ViewerCertificate: Match.objectLike({ MinimumProtocolVersion: "TLSv1.2_2021" }),
-    CacheBehaviors: [Match.objectLike({ PathPattern: "/api/quotes.*" }), Match.objectLike({ PathPattern: "/api/*" }), Match.objectLike({ PathPattern: "/admin*" })],
+    CacheBehaviors: [Match.objectLike({ PathPattern: "/api/quotes.*" }), Match.objectLike({ PathPattern: "/api/pub/*" }), Match.objectLike({ PathPattern: "/api/*" }), Match.objectLike({ PathPattern: "/admin*" })],
   }) });
   t.edge.hasResourceProperties("AWS::WAFv2::WebACL", { Scope: "CLOUDFRONT", Rules: Match.arrayWith([Match.objectLike({ Name: "RateLimitInquiry" })]) });
 });
