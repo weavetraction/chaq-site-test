@@ -84,7 +84,7 @@ function eventStatus(d: any) { const t = today(); if (d.forceEnd) return "end"; 
 function toSite(kind: ContentKind, row: { id: string; data: any }, catIndex?: Map<string, number>) {
   const d = row.data;
   switch (kind) {
-    case "faq": return { c: catIndex?.get(d.cat) ?? 0, q: d.q, a: d.a, p: d.p || firstPara(d.a) };
+    case "faq": return { id: row.id, c: catIndex?.get(d.cat) ?? 0, q: d.q, a: d.a, p: d.p || firstPara(d.a) };
     case "review": return { id: Number(row.id) || row.id, modelId: d.modelId || null, trimId: d.trimId || null, name: d.name, stars: d.stars, car: d.car, trim: d.trim, text: d.text, photos: d.photos || [], date: d.date ? dot(d.date) : undefined };
     case "article": return { id: row.id, cat: d.cat, title: d.title, date: dot(d.date || ""), img: d.img, lead: d.lead, ...(d.html ? { html: d.html, body: [] } : { body: d.body || [] }) };
     case "event": {

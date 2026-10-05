@@ -219,11 +219,31 @@
   <script src="pages/data/vehicle-master-helper.js"></script>
   <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/faq.js"><\/script>');})();</script>
     <script>window.CHAQ_FAQ || document.write('<script src="pages/data/faq.js"><\/script>');</script>
+    <script>/* 메인 화면 설정(섹션별 노출 선택·배너): 관리자 설정(API) — 못 읽으면 지금 모습 그대로 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/home.js"><\/script>');})();</script>
     <script>/* 이용후기: 관리자에서 등록한 최신 데이터(API) 우선 — 못 읽으면 페이지에 있는 기본 후기 그대로 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/reviews.js"><\/script>');})();</script>
   <script>
     // 메인페이지 3개 섹션을 실제 차량/FAQ 데이터에서 렌더링 (redesign.js보다 먼저 실행)
     (function(){
       var C = window.CHAQ || {};
+      // 관리자 '메인 화면' 설정: 섹션별 자동/직접 선택 (설정이 없으면 자동 = 지금 규칙)
+      var HM = window.CHAQ_HOME || null, SEC = function(k){ var s = HM && HM.sections && HM.sections[k]; return s || { mode:'auto', ids:[], count:null }; };
+      var pickBy = function(list, k, idOf){ var s = SEC(k); if(s.mode!=='pick' || !s.ids.length) return null; var m = {}; (list||[]).forEach(function(x){ m[String(idOf(x))] = x; }); return s.ids.map(function(id){ return m[String(id)]; }).filter(Boolean); };
+      var inclTags = function(r){ var i = r.incl || {}; return (i.tint===false?'':'<span class="opt-tag">선팅</span>')+(i.blackbox===false?'':'<span class="opt-tag">블박</span>'); };   // 견적의 포함 사항(선팅·블박)대로
+      // 배너: 관리자에서 등록한 상단 배너·중간 띠배너(메뉴 페이지 배너 공통). 없으면 페이지 기본 배너
+      var bEsc=function(x){ return String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+      var HB = HM && HM.heroBanners || [], heroTrack = document.querySelector('.hero-track');
+      if(heroTrack && HB.length){
+        heroTrack.innerHTML = HB.map(function(b,i){ return '<a class="hero-slide'+(i===0?' is-active':'')+'"'+(b.href?' href="'+bEsc(b.href)+'"':'')+'><img src="'+bEsc(b.img)+'" alt="'+bEsc(b.alt)+'"></a>'; }).join('');
+        var hc=document.querySelector('.hero-count'); if(hc){ hc.textContent='1 / '+HB.length+' ›'; hc.hidden = HB.length<2; }
+      }
+      var MB = HM && HM.midBanners || [];
+      if(MB.length) [].forEach.call(document.querySelectorAll('.cash-slider'), function(w){
+        w.setAttribute('href', MB[0].href||'#');
+        w.innerHTML = '<span class="cs-track">'+MB.map(function(b,i){ return '<span class="cs-slide'+(i===0?' is-active':'')+'" data-href="'+bEsc(b.href||'')+'"><img src="'+bEsc(b.img)+'" alt="'+bEsc(b.alt)+'"></span>'; }).join('')+'</span>'+
+          (MB.length>1?'<span class="cs-dots" aria-hidden="true">'+MB.map(function(_,i){ return '<i'+(i===0?' class="is-on"':'')+'></i>'; }).join('')+'</span>':'');
+        w.addEventListener('click', function(e){ e.preventDefault(); var a = w.querySelector('.cs-slide.is-active'), h = a && a.getAttribute('data-href'); if(h) location.href = h; });   // 지금 보이는 배너의 링크로 (링크 없는 배너는 이동 없음)
+      });
+
       // A) '기다림 없는 신차 장기렌트' — 각 차량데이터 기반 수량 합산
       function sumQty(arr){ return (arr||[]).reduce(function(s,r){ return s + (typeof r.rem==='number'? r.rem : 1); }, 0); }
       function setCount(id, n){ var el=document.getElementById(id); if(el) el.textContent = Number(n).toLocaleString('ko-KR')+' 대'; }
@@ -237,7 +257,14 @@
       function monthly(r){ try{ return r.cost['2']['60']['0']; }catch(e){ return null; } }
       function pg(m){ return m<500000?'30':(m<800000?'50':'80'); }
       var perGroup={'30':0,'50':0,'80':0}, picks=[];
-      (C.stock||[]).forEach(function(r){ var m=monthly(r); if(m==null) return; var g=pg(m); if(perGroup[g]<6){ perGroup[g]++; picks.push({r:r,m:m,g:g}); } });
+      var stockPick = pickBy(C.stock, 'stock', function(r){ return r.id; }), stockCap = SEC('stock').count;
+      if(stockPick){ stockPick.forEach(function(r){ var m=monthly(r); if(m==null) return; if(!stockCap || picks.length<stockCap) picks.push({r:r,m:m,g:pg(m)}); }); }   // 직접 선택: 고른 순서대로
+      else (C.stock||[]).forEach(function(r){ var m=monthly(r); if(m==null) return; var g=pg(m); if(perGroup[g]<(stockCap||6)){ perGroup[g]++; picks.push({r:r,m:m,g:g}); } });
+      if(stockPick){   // 직접 선택: 고른 차량이 없는 월 이용료 탭은 숨기고, 있는 첫 탭부터
+        var has={}, first=null; picks.forEach(function(o){ has[o.g]=1; });
+        [].forEach.call(document.querySelectorAll('[data-price-filter]'), function(b){ var g=b.getAttribute('data-price-filter'); b.hidden=!has[g]; b.classList.toggle('is-active', false); if(has[g] && !first) first=b; });
+        if(first) first.classList.add('is-active');
+      }
       var listEl=document.getElementById('stockList');
       if(listEl){
         listEl.innerHTML = picks.map(function(o){
@@ -247,7 +274,7 @@
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
             '<span class="stock-copy"><small>'+carNm(r)+'</small>'+
             '<strong>월 '+o.m.toLocaleString('ko-KR')+'원</strong>'+
-            '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span><span class="opt-tag">선팅</span><span class="opt-tag">블박</span></b>'+
+            '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
             '</span><span class="stock-cta">상세견적</span></a>';
         }).join('');
       }
@@ -258,7 +285,9 @@
       function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
       if(faqEl && Fq.items.length){
         var seen={}, sel=[];
-        Fq.items.forEach(function(it){ if(seen[it.c]===undefined){ seen[it.c]=1; sel.push(it); } });
+        var faqPick = pickBy(Fq.items, 'faq', function(it){ return it.id; });
+        if(faqPick) sel = faqPick.slice(0, SEC('faq').count || 10);
+        else Fq.items.forEach(function(it){ if(seen[it.c]===undefined && (!SEC('faq').count || sel.length<SEC('faq').count)){ seen[it.c]=1; sel.push(it); } });
         faqEl.innerHTML = sel.map(function(it){
           return '<details><summary><span class="faq-cat">'+esc(Fq.cats[it.c])+'</span>'+
             '<span class="faq-qrow"><span class="faq-q">'+esc(it.q)+'</span><i class="faq-arrow"></i></span></summary>'+
@@ -278,7 +307,8 @@
       var RV=window.CHAQ_REVIEWS, rvEl=document.querySelector('.review-scroll');
       if(rvEl && RV && RV.length){
         var rvImg=function(u){ return String(u||'').replace(/^\.\.\//,''); };   // 후기 데이터 사진 경로는 pages/ 기준
-        rvEl.innerHTML = RV.slice(0,5).map(function(r){
+        var rvList = (pickBy(RV, 'review', function(r){ return r.id; }) || RV).slice(0, SEC('review').count || 5);
+        rvEl.innerHTML = rvList.map(function(r){
           var st=Math.max(1,Math.min(5,+r.stars||5)), ph=(r.photos||[])[0];
           return '<article data-review-id="'+esc(r.id)+'"><small>'+esc(r.name||'')+'</small><div class="stars">'+'★★★★★'.slice(0,st)+'☆☆☆☆☆'.slice(0,5-st)+'</div><p>'+esc(r.text||'')+'</p>'+
             '<div class="review-mini">'+(ph?'<span class="rm-photos"><img src="'+esc(rvImg(ph))+'" alt=""></span>':'')+'<span class="rm-info"><strong>'+esc(r.car||'')+'</strong><em>'+esc(r.trim||'')+'</em></span></div></article>';
@@ -296,7 +326,8 @@
           if(isSuv) t.push('suv'); else t.push('sedan');
           return t;
         };
-        fastEl.innerHTML=(C.fast||[]).map(function(r){
+        var fastSrc = pickBy(C.fast, 'fast', function(r){ return r.id; }) || (C.fast||[]); if(SEC('fast').count) fastSrc = fastSrc.slice(0, SEC('fast').count);
+        fastEl.innerHTML=fastSrc.map(function(r){
           var m=monthly(r); m=(m==null)?0:m;
           var oc=(r.opts?r.opts.length:0);
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=2" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
@@ -304,12 +335,17 @@
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
             '<span class="stock-copy"><small>'+carNm(r)+'</small>'+
             '<strong>월 '+m.toLocaleString('ko-KR')+'원</strong>'+
-            '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span><span class="opt-tag">선팅</span><span class="opt-tag">블박</span></b>'+
+            '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
             '</span><span class="stock-cta">상세견적</span></a>';
         }).join('');
         var fastCards=[].slice.call(fastEl.querySelectorAll('.stock-card'));
         var fastMore=document.getElementById('fastMore');
         var fastType='ev', fastVisible=5;
+        if(SEC('fast').mode==='pick'){   // 직접 선택: 고른 차량이 없는 차종 탭은 숨기고, 있는 첫 탭부터
+          var fBtns=[].slice.call(document.querySelectorAll('.fast-stock-section [data-cartype-filter]')), fFirst=null;
+          fBtns.forEach(function(btn){ var t=btn.getAttribute('data-cartype-filter'), n=fastCards.filter(function(c){ return c.dataset.cartype.split(' ').indexOf(t)>-1; }).length; btn.hidden=!n; btn.classList.remove('is-active'); if(n && !fFirst) fFirst=btn; });
+          if(fFirst){ fFirst.classList.add('is-active'); fastType=fFirst.getAttribute('data-cartype-filter'); }
+        }
         function renderFast(){
           var matches=fastCards.filter(function(c){ return c.dataset.cartype.split(' ').indexOf(fastType)>-1; });
           fastCards.forEach(function(c){ c.hidden=true; });
@@ -332,7 +368,7 @@
       }
     })();
   </script>
-  <script src="scripts/redesign.js?v=20260903-16"></script>
+  <script src="scripts/redesign.js?v=20261005-1"></script>
   <script>
     // 후기 본문: 고정 높이 카드에서 넘치면 '..'로 마무리
     (function () {

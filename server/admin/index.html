@@ -27,6 +27,7 @@
         <button type="button" data-tab="vm">차량 데이터</button>
         <button type="button" data-tab="quotes" class="on">견적 데이터</button>
         <button type="button" data-tab="content">콘텐츠</button>
+        <button type="button" data-tab="home">메인 화면</button>
         <button type="button" data-tab="inquiries">상담 문의 <b id="newBadge" class="badge" hidden></b></button>
       </nav>
       <span class="who"><span id="whoName"></span> <button type="button" id="logoutBtn" class="btn link">로그아웃</button></span>
@@ -123,6 +124,13 @@
         </div>
       </section>
 
+      <!-- 메인 화면: 상단 배너 · 중간 띠배너 · 섹션별 노출 -->
+      <section data-panel="home" id="hmRoot" hidden>
+        <div class="card hm_top"><div class="row between wrap"><div><h2>메인 화면 <small class="hint">[저장]을 누르면 1분 안에 사이트에 반영됩니다</small></h2><span class="hint" id="hmState"></span></div>
+          <div class="row gap"><button type="button" class="btn" id="hmReload">되돌리기</button><button type="button" class="btn" id="hmSave">저장</button></div></div></div>
+        <div id="hmBody"></div>
+      </section>
+
       <!-- 상담 문의 -->
       <section data-panel="inquiries" hidden>
         <div class="card">
@@ -148,5 +156,6 @@
   <script src="admin-vm.js"></script>
   <script src="admin-qedit.js"></script>
   <script src="admin-content.js"></script>
+  <script src="admin-home.js"></script>
 </body>
 </html>

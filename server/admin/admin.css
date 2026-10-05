@@ -146,3 +146,17 @@ input.saved { border-color: var(--green); }
 .rte_body img { display: block; max-width: 100%; max-height: 360px; margin: 8px 0; border-radius: 8px; }
 .rte_body ul, .rte_body ol { padding-left: 20px; } .rte_body a { color: var(--green); }
 .rte_body blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--green); background: #f5f8f6; }
+
+/* ---- 메인 화면 (배너·섹션 노출) ---- */
+.hm_top { position: sticky; top: 56px; z-index: 4; box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+.banners { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.bn_card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; } .bn_card.off img { opacity: .45; }
+.bn_card img { display: block; width: 100%; aspect-ratio: 10/4; object-fit: cover; background: #f3f4f6; }
+.bn_meta { display: grid; gap: 8px; padding: 10px 12px; font-size: 12px; }
+.bn_meta label { display: grid; gap: 3px; color: var(--muted); } .bn_meta input { width: 100%; height: 30px; font-size: 12.5px; }
+.bn_meta .row.gap label { flex: 1; } .chk { display: inline-flex !important; grid-auto-flow: column; align-items: center; gap: 5px; color: #111827; font-size: 13px; }
+.chk input { width: auto !important; height: auto !important; } .cnt { width: 70px; height: 30px; }
+.pick_list { display: grid; gap: 4px; margin: 8px 0; }
+.pick_row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.pick_row.miss { background: #fff7f7; } .pick_row .no { width: 22px; color: var(--muted); font-size: 12px; } .pick_row .lb { flex: 1; font-size: 13px; }
+.hm_sec .picker input { width: 100%; }

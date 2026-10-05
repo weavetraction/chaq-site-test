@@ -60,7 +60,7 @@
   var filterButtons=Array.prototype.slice.call(document.querySelectorAll("[data-price-filter]"));
   var stockCards=Array.prototype.slice.call(document.querySelectorAll("#stockList .stock-card"));
   var stockMore=document.getElementById("stockMore");
-  var activeGroup="30";
+  var activeGroup=(document.querySelector("[data-price-filter].is-active")||{dataset:{priceFilter:"30"}}).dataset.priceFilter||"30";   // 메인 화면 설정에 따라 시작 탭이 바뀔 수 있음
   var visibleCount=5;
 
   function renderStocks(){

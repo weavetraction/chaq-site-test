@@ -83,5 +83,11 @@ const ok = (cond: unknown, msg: string) => { if (!cond) { console.error("✖", m
   const cbad = await call("/api/admin/content/faq", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cat: ctl.cats[0].id, q: "점검", a: "<p>답<script>x</script></p>" }) });
   const bj = await cbad.json(); ok(cbad.ok && !bj.data.a.includes("script"), "본문 HTML 정리");
   await call(`/api/admin/content/faq/${bj.id}`, { method: "DELETE" });
+  // 메인 화면 설정 (3단계)
+  ok((await (await call("/api/pub/home.js")).text()).includes("window.CHAQ_HOME"), "메인 화면 설정 공개본");
+  const hm = await (await call("/api/admin/home")).json(); ok(hm.config?.sections?.stock, "메인 화면 설정 조회");
+  const cand = await (await call("/api/admin/home/candidates?section=stock")).json(); ok(Array.isArray(cand) && cand.length > 0, `메인 노출 후보 (재고특가 ${cand.length})`);
+  const hbad = await call("/api/admin/home", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...hm.config, heroBanners: [{ img: "javascript:alert(1)" }] }) });
+  ok(hbad.status === 400, "잘못된 배너 거부");
   console.log("모든 점검 통과");
 })().catch((e) => { console.error(e); process.exit(1); });

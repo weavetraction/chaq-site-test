@@ -9,6 +9,7 @@ import { buildWorkbook, parseWorkbook } from "../lib/excel.js";
 import { createBatch, publishBatch, discardBatch, setRowTrim, publishedStatus, getPublished, refreshSummary, openEditDraft, saveDraftRow, deleteDraftRow, reorderDraftRows, getRow } from "../lib/quotes-store.js";
 import { adminVmRouter } from "./admin-vm.js";
 import { adminContentRouter } from "./admin-content.js";
+import { adminHomeRouter } from "./admin-home.js";
 import { KINDS, Kind } from "../lib/quotes-format.js";
 import { vm } from "../lib/vm.js";
 import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
@@ -138,3 +139,4 @@ adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
 // 차량 데이터·이미지 (로그인 확인 뒤에 연결)
 adminRouter.use(adminVmRouter);
 adminRouter.use(adminContentRouter);
+adminRouter.use(adminHomeRouter);

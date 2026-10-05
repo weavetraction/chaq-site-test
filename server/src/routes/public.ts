@@ -8,6 +8,7 @@ import { q } from "../db.js";
 import { getPublicVm } from "../lib/vm-store.js";
 import { getMedia } from "../lib/media.js";
 import { publicContent } from "../lib/content.js";
+import { publicHome } from "../lib/home.js";
 
 export const publicRouter = Router();
 
@@ -67,6 +68,16 @@ publicRouter.get(["/api/pub/faq.js", "/api/pub/reviews.js", "/api/pub/content.js
     res.setHeader("ETag", etag); res.setHeader("Access-Control-Allow-Origin", "*");
     if (req.headers["if-none-match"] === etag) return res.status(304).end();
     res.type("application/javascript; charset=utf-8").send(p[key]);
+  } catch (e) { next(e); }
+});
+/** 메인 화면 설정 (섹션별 노출 선택 · 배너) — window.CHAQ_HOME */
+publicRouter.get("/api/pub/home.js", async (req, res, next) => {
+  try {
+    const p = await publicHome();
+    res.setHeader("Cache-Control", `public, max-age=${config.publicQuotesMaxAge}`);
+    res.setHeader("ETag", p.etag); res.setHeader("Access-Control-Allow-Origin", "*");
+    if (req.headers["if-none-match"] === p.etag) return res.status(304).end();
+    res.type("application/javascript; charset=utf-8").send(p.js);
   } catch (e) { next(e); }
 });
 /** 관리자가 올린 이미지: /api/pub/media/<id>.webp · <id>.thumb.webp (주소가 바뀌지 않으므로 1년 캐시) */
