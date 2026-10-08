@@ -1,6 +1,6 @@
 /* 차큐 사이트 공통 함수 (여러 페이지가 같이 씀) — 글자 이스케이프 · 금액 · 차량 이미지 · 색상칩 · 숫자 애니메이션
    · 페이지마다 복사돼 있던 같은 함수를 한 곳으로 모음 (261008 코드 정비)
-   · 사용: window.CHAQ_UTIL.esc(s) / won(n) / PH / carImg(rec) / hex(colorName) / animateNum(el, to, em, nullText) */
+   · 사용: window.CHAQ_UTIL.esc(s) / won(n) / PH / carImg(rec) / hex(colorName[, trimId, type]) / animateNum(el, to, em, nullText) */
 (function (root) {
   "use strict";
   var inPages = /\/pages\//.test(root.location && root.location.pathname || "");
@@ -17,8 +17,9 @@
       return (VM.imageByName && VM.imageByName(r.brand, r.model)) || PH;   // 트림 미연결 견적: 같은 모델 대표 이미지
     } catch (e) { return PH; }
   }
-  /** 색상 이름 → 색상칩 대략 색 (차량 데이터에 HEX 가 없을 때) */
-  function hex(name) {
+  /** 색상 이름 → 색상칩 색. trimId 가 있으면 차량 데이터의 HEX(type: EXTERIOR·INTERIOR), 못 찾으면 이름으로 대략 색 */
+  function hex(name, trimId, type) {
+    if (trimId) { try { var h = root.CHAQ_VM && root.CHAQ_VM.colorHexByName && root.CHAQ_VM.colorHexByName(trimId, name, type); if (h) return h; } catch (e) {} }
     var n = String(name || "");
     if (/화이트|white|스노우|아이보리|백/i.test(n)) return "#eef0f2";
     if (/블랙|black|느와르|오닉스|원톤|모노톤/i.test(n)) return "#1b1b1d";

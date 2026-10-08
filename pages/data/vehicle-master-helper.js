@@ -205,6 +205,17 @@
   function colorKeyOf(c) { if (!c) return null; if (typeof c === "string") c = IX.color[c] || { id: c }; var k = c.manufacturerCode ? c.manufacturerCode : String(c.id || c.colorId || "").replace(/^[a-z-]+?-color-/, ""); return String(k).toLowerCase().replace(/[^a-z0-9-]+/g, "-") || null; }
   /** 견적(재고 실차)의 외장색 이름 → 이 트림 외장색의 colorKey. 공백·괄호 무시 정확 일치 → 포함 관계. 없으면 null (추정 금지) */
   function colorKeyByName(trimId, name) { if (!name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null; var cs = getTrimColors(trimId, "EXTERIOR"), i; for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return colorKeyOf(cs[i].colorId); for (i = 0; i < cs.length; i++) { var c = n(cs[i].name); if (c && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) return colorKeyOf(cs[i].colorId); } return null; }
+  /** 견적 색상 이름 → 차량 데이터의 HEX (색상칩용). 이 트림의 같은 종류(외장/내장) 색상 정확 일치 → 가장 긴 포함 일치 → 같은 브랜드 색상 정확 일치. 없으면 null */
+  function colorHexByName(trimId, name, type) {
+    if (!trimId || !name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null;
+    var cs = getTrimColors(trimId, type || "EXTERIOR").filter(function (c) { return c.hex; }), i, best = null, bl = 0;
+    for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return cs[i].hex;
+    for (i = 0; i < cs.length; i++) { var c = n(cs[i].name); if (c && c.length > bl && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) { best = cs[i]; bl = c.length; } }
+    if (best) return best.hex;
+    var t = getTrim(trimId), l = t && IX.lineup[t.lineupId], m = l && IX.model[l.modelId], bid = m && m.brandId; if (!bid) return null;
+    for (var id in IX.color) { var x = IX.color[id]; if (x && x.hex && x.brandId === bid && (n(x.name) === q || (x.nameEn && n(x.nameEn) === q))) return x.hex; }
+    return null;
+  }
   /** 목록 카드용: 재고 외장색 이름 → colorKey. 상세본(트림 색상)이 있으면 그것으로, 없으면 공통본 이미지의 색상명(colorNames)으로. 못 찾으면 null(→ 대표 이미지) */
   function colorKeyForQuote(trimId, name) {
     if (!trimId || !name) return null; var t = getTrim(trimId); if (!t) return null;
@@ -253,7 +264,9 @@
   function getImageColorKeys(trimId) { var t = getTrim(trimId); if (!t) return []; var arr = verifiedFirst(IX.imagesByTrim[trimId]).concat(verifiedFirst(IX.imagesByLineup[t.lineupId])), o = {}, r = []; arr.forEach(function (im) { if (im.colorKey && !o[im.colorKey]) { o[im.colorKey] = 1; r.push(im.colorKey); } }); return r; }
   /** 사이트 루트 기준 상대경로(assets/…)를 현재 페이지 위치에 맞게 보정 (pages/ 하위면 ../) */
   function siteUrl(u) { if (u && /^\/api\//.test(u) && root.CHAQ_API && root.CHAQ_API.base) return String(root.CHAQ_API.base).replace(/\/$/, '') + u;   // 관리자 화면에서 올린 이미지 (/api/pub/media/...)
-    if (!u || /^(https?:|data:|\/|\.\.\/|file:)/.test(u)) return u; var p = (root.location && root.location.pathname) || ""; return /\/pages\//.test(p) ? "../" + u : u; }
+    if (!u || /^(https?:|data:|\/|\.\.\/|file:)/.test(u)) return u; var p = (root.location && root.location.pathname) || "";
+    var v = root.CHAQ_API && root.CHAQ_API.imgVer; if (v && /^assets\/vehicles\//.test(u) && u.indexOf("?") < 0) u += "?v=" + v;   // 차량 이미지 교체 시 브라우저 캐시 갱신 (배포 때 값이 정해짐)
+    return /\/pages\//.test(p) ? "../" + u : u; }
   /** 노출 우선순위: trim VERIFIED → lineup VERIFIED(외장색 일치 → 대표) → fallbacks[] (placeholder) */
   function resolveImageUrl(trimId, fallbacks, preferThumb, colorKey, view) { var im = getPrimaryImage(trimId, colorKey, view); if (im) return siteUrl((preferThumb && im.thumbnailUrl) || im.imageUrl); fallbacks = fallbacks || []; for (var i = 0; i < fallbacks.length; i++) if (fallbacks[i]) return fallbacks[i]; return null; }
   /** 이미지 출처 표기문: 차큐 자체 제작 이미지는 표기 없음(null). 과거 외부 이미지 호환: Commons / 뉴스룸 */
@@ -407,7 +420,7 @@
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
-    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
+    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, colorHexByName: colorHexByName, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
     dispName: dispName, imageByName: imageByName, nameParts: nameParts, carNameHtml: carNameHtml, optionPriceByName: optionPriceByName,
     getSources: getSources, fromQuote: fromQuote, getQuotes: getQuotes, pickQuote: pickQuote, quoteView: quoteView, validate: validate
   };
