@@ -2607,7 +2607,7 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_trimsel .dts_go { color: #fff; }
 /* ④ 색상: 외장·내장 구분 표기 */
 .local-car-detail .detail_colors .color-tag .ct_kind { margin-right: 5px; color: #8a8f96; font-size: 12px; font-style: normal; font-weight: 600; }
-/* ⑤ 옵션 버튼: 글자 버튼 '옵션 N개 >' (배경·테두리 없음, 차량명과 같은 좌측선) */
+/* ⑤ 옵션 버튼: 글자 버튼 '추가옵션 N개 >' · 견적조회 '추가옵션 >' (배경·테두리 없음, 차량명과 같은 좌측선) */
 .local-car-detail .option_check_button, .local-car-detail .detail_card .option_check_button { display: inline-flex; align-items: center; gap: 1px; left: 33px; padding: 6px 0; border: 0; border-radius: 0; background: transparent; color: #1d1f22; font-size: 15px; font-weight: 600; line-height: 1; }
 .local-car-detail .option_check_button b { font-weight: 700; }
 .local-car-detail .option_check_button svg { width: 18px; height: 18px; margin-top: 1px; color: #8a8f96; }
