@@ -25,8 +25,9 @@ export async function pushQuoteToChannel(row: { id: number; report_token: string
     quotePlan: s.plan || PLAN[c.plan || ""] || "",
     quoteDist: s.dist || (c.dist && Number(c.dist) ? (Number(c.dist) * 10000).toLocaleString("ko-KR") + "km" : ""),
     quoteMonthly: i.monthly ? i.monthly.toLocaleString("ko-KR") + "원" : "상담 시 안내",
-    quoteDelivery: s.delivery || "",
+    quoteDelivery: s.delivery || "상담 시 안내",
     quoteUrl: reportUrl(row.report_token, i.pageUrl),
+    quoteToken: row.report_token,                 // 알림톡 버튼 주소: https://chaq.co.kr/pages/quote-report.html?t=#{quoteToken} (도메인은 고정, 뒤만 변수)
     quotePhone: m.phone ? fmtPhone(m.phone) : "",
   };
   for (const k of Object.keys(profile)) if (profile[k] === undefined || profile[k] === "") delete profile[k];
