@@ -164,7 +164,7 @@
                     estEl.innerHTML =
                         '<span class="est_type">장기렌트</span>'+
                         '<div class="est_visual"><img src="'+esc2(img)+'" alt="'+esc2(d.fullName)+'" onerror="this.onerror=null;this.src=\''+PH+'\'"></div>'+
-                        '<strong class="est_name">'+esc2(d.fullName)+'</strong>'+
+                        '<strong class="est_name cn">'+(VM.carNameHtml ? VM.carNameHtml({trimId: repTrim}) : esc2(d.fullName))+'</strong>'+
                         '<span class="est_year">'+esc2(F.trim ? grp.label : '전체 등급')+(grp.trims.length>1?' · 세부 등급 '+grp.trims.length+'개':'')+'</span>'+
                         '<div class="ms_ready"><span class="ms_check">차량 선택 완료</span>'+
                         '<p class="ms_desc">'+T.label+' 실시간 견적은 외부 데이터 연동 후 제공됩니다.</p></div>'+

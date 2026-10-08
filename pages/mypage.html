@@ -142,7 +142,7 @@
                 var m=(q.price!=null?q.price:monthly(r,q)); // 저장 당시 월비용(스냅샷) — 실시간 차량데이터 미연동
                 return '<a class="mp_qcard" href="'+detailHref(q.id,q)+'">'+
                     '<img src="'+carImg(r)+'" alt="">'+
-                    '<span class="mp_qinfo"><small>'+esc((window.CHAQ_VM&&window.CHAQ_VM.carName)?window.CHAQ_VM.carName(r):(r.brand+' '+r.model))+'</small>'+
+                    '<span class="mp_qinfo"><small class="cn">'+((window.CHAQ_VM&&window.CHAQ_VM.carNameHtml)?window.CHAQ_VM.carNameHtml(r):esc(r.brand+' '+r.model))+'</small>'+
                     '<strong>월 '+won(m)+'원</strong>'+
                     '<span class="mp_qcond">'+esc(condText(q))+'</span></span>'+
                     '<span class="mp_qcta">확인하기</span></a>';
@@ -155,7 +155,7 @@
                 var m=monthly(r,{term:'60',plan:'0',dist:'2'});
                 return '<a class="mp_recent" href="'+detailHref(id,{term:'60',plan:'0',dist:'2'})+'">'+
                     '<img src="'+carImg(r)+'" alt="">'+
-                    '<small>'+esc((window.CHAQ_VM&&window.CHAQ_VM.carName)?window.CHAQ_VM.carName(r):(r.brand+' '+r.model))+'</small>'+
+                    '<small class="cn">'+((window.CHAQ_VM&&window.CHAQ_VM.carNameHtml)?window.CHAQ_VM.carNameHtml(r):esc(r.brand+' '+r.model))+'</small>'+
                     '<strong>월 '+won(m)+'원</strong></a>';
             }).join('') || '<p class="mp_empty">최근 본 견적이 없습니다.</p>';
 

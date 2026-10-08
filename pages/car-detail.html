@@ -375,10 +375,10 @@
             window.chaqSwapCarImage = function(tid, ck){ var u = VM.resolveImageUrl(tid, [null], true, ck); if(!u) return; document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ if(im.getAttribute('src')!==u){ im.onerror=function(){ this.onerror=null; this.src=PH; }; im.src=u; } }); };
             var colWrap=document.querySelector('.detail_colors');
             if(colWrap && qv && qv.quoteColors.length){   // 재고 차량 색상은 견적 기준
-                colWrap.innerHTML = qv.quoteColors.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+hex(c)+'"></i>'+esc(c)+'</span>'; }).join('');
+                colWrap.innerHTML = [[pk && pk.rec.ext, '외장'], [pk && pk.rec['int'], '내장']].filter(function(x){return x[0];}).map(function(x){ return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0])+'"></i>'+esc(x[0])+'</span>'; }).join('') || qv.quoteColors.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+hex(c)+'"></i>'+esc(c)+'</span>'; }).join('');
             } else if(colWrap){
-                var tags = ext.map(function(c){ return '<span class="color-tag"><i class="color-chip" data-color-code="'+esc(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; });
-                if(intc.length) tags = tags.concat(intc.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>내장 '+esc(c.name)+'</span>'; }));
+                var tags = ext.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">외장</em>':'')+'<i class="color-chip" data-color-code="'+esc(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; });
+                if(intc.length) tags = tags.concat(intc.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">내장</em>':'')+'<i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+'</span>'; }));
                 colWrap.innerHTML = tags.join('') || '<span class="color-tag">색상 정보 준비 중</span>';
             }
             // 옵션 상세: 선택 옵션(공식 옵션가) + 기본품목 수
@@ -483,19 +483,20 @@
             var colWrap=document.querySelector('.detail_colors');
             var vmC = window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getTrimColors;
             if(colWrap && colors.length){
-                colWrap.innerHTML = colors.map(function(c){
-                    return '<span class="color-tag"><i class="color-chip" style="background:'+hex(c)+'"></i>'+c+'</span>';
+                colWrap.innerHTML = [[rec.ext,'외장'],[rec['int'],'내장']].filter(function(x){return x[0];}).map(function(x){
+                    return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0])+'"></i>'+x[0]+'</span>';
                 }).join('');
             } else if(colWrap && vmC){   // 견적에 색상이 없으면 차량 데이터(마스터)의 색상
                 var vx = window.CHAQ_VM.getTrimColors(rec.trimId,'EXTERIOR'), vi = window.CHAQ_VM.getTrimColors(rec.trimId,'INTERIOR');
-                var ct = vx.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+String(c.name).replace(/</g,'&lt;')+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; })
-                    .concat(vi.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>내장 '+String(c.name).replace(/</g,'&lt;')+'</span>'; }));
+                var ct = vx.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">외장</em>':'')+'<i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+String(c.name).replace(/</g,'&lt;')+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; })
+                    .concat(vi.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">내장</em>':'')+'<i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+String(c.name).replace(/</g,'&lt;')+'</span>'; }));
                 if(ct.length) colWrap.innerHTML = ct.join('');
             }
             } // !VMQ
 
             // 옵션 상세 패널
             var opts = rec.opts||[];
+            if (window.CHAQ_VM && window.CHAQ_VM.optionPriceByName && rec.trimId) opts.forEach(function(o){ if(!o.p){ var vp=window.CHAQ_VM.optionPriceByName(rec.trimId, o.n); if(vp){ o.p=vp; o.pSrc='VM'; } } });   // 견적에 옵션가가 없으면 공식 옵션가(차량 데이터)
             var priced = opts.filter(function(o){return o.p;});
             var optSum = priced.reduce(function(a,o){return a+(o.p||0);},0);
             var panel=document.getElementById('optionPanel');

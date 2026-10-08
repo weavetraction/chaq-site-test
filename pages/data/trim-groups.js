@@ -74,5 +74,15 @@
     return [(yr ? yr[1] : ly) ? (yr ? yr[1] : ly) + "년형" : null, lab, withTrim === false ? null : shortName(t)].filter(Boolean).join(" · ");
   }
 
-  root.CHAQ_TRIM_GROUPS = { CHANNELS: CHANNELS, groups: groups, groupOfTrim: groupOfTrim, groupByKey: groupByKey, shortName: shortName, specLine: specLine };
+  /** 견적조회 카드 한 줄: 'YYYY년형 · 연료 · 구동' 까지만 (대표 261008) */
+  function basicLine(trimId, rec) {
+    var vm = VM(), t = vm && vm.getTrim(trimId); if (!t) return null;
+    var g = groupOfTrim(trimId), l = vm.getLineup(t.lineupId) || {};
+    var yr = rec && String(rec.year || "").match(/(20\d{2})/), y = yr ? yr[1] : l.modelYear;
+    var fuel = (vm.FUEL_LABEL_KO || {})[l.fuelType] || null;
+    var drive = (g && (g.driveName || g.drive)) || t.driveLabel || t.drivetrain || null;
+    return [y ? y + "년형" : null, fuel, drive].filter(Boolean).join(" · ");
+  }
+
+  root.CHAQ_TRIM_GROUPS = { CHANNELS: CHANNELS, groups: groups, groupOfTrim: groupOfTrim, groupByKey: groupByKey, shortName: shortName, specLine: specLine, basicLine: basicLine };
 })(typeof window !== "undefined" ? window : globalThis);

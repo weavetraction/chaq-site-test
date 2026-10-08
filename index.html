@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#20a65a">
   <title>차큐 장기렌트</title>
   <link rel="preload" href="font/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="stylesheets/redesign.css?v=20260903-16">
+  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261008-1">
     <script src="pages/data/api-config.js"></script>
     <script src="pages/data/analytics.js"></script>
 </head>
@@ -44,9 +44,9 @@
         <a href="pages/special-price-car__list.html"><img src="assets/icons/special.svg" alt=""><span>재고특가</span></a>
         <a href="pages/special-price-car__list.html?from=fast"><img src="assets/icons/fast-delivery.svg" alt=""><span>빠른인도</span></a>
         <a href="pages/posting__list.html"><img src="assets/icons/exclaim.svg" alt=""><span>신차장기렌트</span></a>
-        <a href="pages/review__list.html"><img src="assets/icons/review-star.svg" alt=""><span>이용후기</span></a>
-        <a href="pages/faq__list.html"><img src="assets/icons/faq.svg" alt=""><span>FAQ</span></a>
-        <a href="pages/event__list__ing.html"><img src="assets/icons/review-event.svg" alt=""><span>후기 이벤트</span></a>
+        <a href="pages/review__list.html"><img src="assets/icons/icon-review.svg" alt=""><span>이용후기</span></a>
+        <a href="pages/faq__list.html"><img src="assets/icons/icon-faq.svg" alt=""><span>FAQ</span></a>
+        <a href="pages/event__list__ing.html"><img src="assets/icons/icon-review-event.svg" alt=""><span>후기 이벤트</span></a>
         <a href="pages/event__list__ing.html"><img src="assets/icons/release-event.svg" alt=""><span>출고 이벤트</span></a>
       </nav>
 
@@ -252,6 +252,7 @@
 
       // B) '재고특가' — 전체 stock 데이터 중 일부 선택 렌더링(가격그룹별 최대 6)
       var PH='assets/icons/car-placeholder.svg';
+      function carNmH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : carNm(r); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
       function carNm(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명
   function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
       function monthly(r){ try{ return r.cost['2']['60']['0']; }catch(e){ return null; } }
@@ -272,7 +273,7 @@
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'" data-price-group="'+o.g+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
-            '<span class="stock-copy"><small>'+carNm(r)+'</small>'+
+            '<span class="stock-copy"><small class="cn">'+carNmH(r)+'</small>'+
             '<strong>월 '+o.m.toLocaleString('ko-KR')+'원</strong>'+
             '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
             '</span><span class="stock-cta">상세견적</span></a>';
@@ -333,7 +334,7 @@
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=2" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
-            '<span class="stock-copy"><small>'+carNm(r)+'</small>'+
+            '<span class="stock-copy"><small class="cn">'+carNmH(r)+'</small>'+
             '<strong>월 '+m.toLocaleString('ko-KR')+'원</strong>'+
             '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
             '</span><span class="stock-cta">상세견적</span></a>';

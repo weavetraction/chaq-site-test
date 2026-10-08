@@ -60,6 +60,12 @@
     return out;
   }
 
+  /** 차량 정보 표기: '-' 빼고 띄어쓰기 (대표 261008: '메르세데스-벤츠' → '메르세데스 벤츠', 'H-Pick' → 'H Pick'). ID·색상명은 그대로 */
+  function dispName(v) { return v == null ? v : String(v).replace(/\s*-\s*/g, " ").replace(/\s{2,}/g, " ").trim(); }
+  function cleanNames() {
+    var f = function (arr, keys) { (arr || []).forEach(function (o) { keys.forEach(function (k) { if (typeof o[k] === "string" && o[k].indexOf("-") >= 0) o[k] = dispName(o[k]); }); }); };
+    f(D.brands, ["nameKo"]); f(D.models, ["nameKo"]); f(D.lineups, ["displayName", "shortLabel", "generationName"]); f(D.trims, ["name", "variantNote"]);
+  }
   function build() {
     IX = {
       brand: indexBy(D.brands, "id"), model: indexBy(D.models, "id"), lineup: indexBy(D.lineups, "id"), trim: indexBy(D.trims, "id"),
@@ -77,6 +83,7 @@
     if (isPilot(data)) data = adaptPilot(data);
     D = emptyData(); D.meta = data.meta || {};
     for (var i = 0; i < TABLES.length; i++) D[TABLES[i]] = Array.isArray(data[TABLES[i]]) ? data[TABLES[i]] : [];
+    cleanNames();
     build(); LOADED_DETAIL = {};
     (root.CHAQ_VM_DETAILS || []).forEach(function (d) { addDetail(d, true); }); if ((root.CHAQ_VM_DETAILS || []).length) build();
     return VM;
@@ -145,7 +152,7 @@
   /** 브랜드 + 모델 (모델명이 브랜드명으로 시작하면 한 번만: '폴스타 폴스타 2' → '폴스타 2') */
   function carFullName(b, m) { var bn = (b && b.nameKo) || "", mn = (m && m.nameKo) || ""; return mn.indexOf(bn + " ") === 0 || mn === bn ? mn : [bn, mn].filter(Boolean).join(" "); }
   /** 견적 레코드의 화면용 차명: 차량 데이터와 연결돼 있으면 카탈로그 차명, 아니면 견적의 브랜드·모델 */
-  function carName(rec) { var d = rec && rec.trimId ? describe(rec.trimId) : null; return d ? d.fullName : ((rec && rec.brand) || "") + " " + ((rec && rec.model) || ""); }
+  function carName(rec) { var d = rec && rec.trimId ? describe(rec.trimId) : null; return d ? d.fullName : dispName(((rec && rec.brand) || "") + " " + ((rec && rec.model) || "")); }
   function describe(trimId) {
     var t = getTrim(trimId); if (!t) return null;
     var l = getLineup(t.lineupId) || {}, m = getModel(l.modelId) || {}, b = getBrand(m.brandId) || {};
@@ -252,6 +259,35 @@
   //   · Vehicle Master 사용: 브랜드·모델명, 이미지(세대 단위 검증), 그리고 연식이 같을 때만 선택옵션·공식 옵션가·색상 목록·기본품목·제원
   //   · 연식이 다르면(yearMatch=false): 1년 이내 차이는 VM(공식 가격표) 옵션·색상을 "기준 연식" 표기와 함께 참고로 노출, 2년 이상 차이는 노출하지 않음
   var QIX = null;
+  /** 차량 카드 차명 두 줄 나눔: [브랜드 + 기본 모델, 세부 모델] — 같은 계열(familyKey·브랜드)의 더 짧은 모델명이 앞부분이면 그 뒤를 세부 모델로 (예: 현대 싼타페 / 하이브리드) */
+  function nameParts(rec) {
+    var d = rec && rec.trimId ? describe(rec.trimId) : null;
+    if (!d) { var bn0 = dispName((rec && rec.brand) || ""), mn0 = dispName((rec && rec.model) || ""); return [bn0 || mn0, bn0 ? mn0 : ""]; }
+    var b = d.brand, m = d.model, full = d.fullName, bn = b.nameKo || "", mn = m.nameKo || "";
+    var head = full.indexOf(mn) >= 0 ? full.slice(0, full.length - mn.length).trim() : bn;   // '폴스타 2' 처럼 모델명에 브랜드가 들어간 경우 head = ''
+    var base = null;
+    (IX.modelsByBrand[m.brandId] || []).forEach(function (x) { var xn = x.nameKo || ""; if (x.id !== m.id && xn && mn.indexOf(xn + " ") === 0 && (!base || xn.length > base.length)) base = xn; });
+    if (!base) { var mm = mn.match(/^(.*\S)\s+((?:플러그인\s+)?하이브리드|일렉트릭|전기|EV|롱레인지|퍼포먼스|쿠페|카브리올레|해치백|스포츠백|LWB|블랙|PHEV|HEV)$/); if (mm) base = mm[1]; }
+    if (base) return [[head, base].filter(Boolean).join(" "), mn.slice(base.length).trim()];
+    return head ? [head, mn] : [mn, ""];
+  }
+  /** 카드용 차명 HTML: 두 덩어리(각각 줄바꿈 없음) — 한 줄에 안 들어가면 덩어리 사이에서만 줄바꿈 */
+  function carNameHtml(rec) {
+    var p = nameParts(rec), e = function (x) { return String(x || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+    return '<span class="cn_part">' + e(p[0]) + '</span>' + (p[1] ? ' <span class="cn_part">' + e(p[1]) + '</span>' : '');
+  }
+  /** 견적 옵션명 → 차량 데이터 공식 옵션가 (이름 일치 → 포함 관계 → '+·&' 묶음은 각 항목 합계). 못 찾으면 null */
+  var ROMAN = { "Ⅰ": "1", "Ⅱ": "2", "Ⅲ": "3", "Ⅳ": "4", "ⅰ": "1", "ⅱ": "2", "ⅲ": "3", "ⅳ": "4" };
+  function optKey(x) { return String(x || "").replace(/[ⅠⅡⅢⅣⅰⅱⅲⅳ]/g, function (c) { return ROMAN[c]; }).toLowerCase().replace(/\b(iv|iii|ii|i)\b/g, function (m) { return { i: "1", ii: "2", iii: "3", iv: "4" }[m]; }).replace(/\(.*?\)|\[.*?\]|[\s·\-_\/,.'"]+/g, "").replace(/^(현대|기아|제네시스)/, ""); }
+  function optionPriceByName(trimId, name) {
+    if (!trimId || !name) return null;
+    var list = getTrimOptions(trimId).filter(function (o) { return o.price != null; }); if (!list.length) return null;
+    function find(q) { q = optKey(q); if (!q) return null; var i, c; for (i = 0; i < list.length; i++) if (optKey(list[i].name) === q) return list[i]; for (i = 0; i < list.length; i++) { c = optKey(list[i].name); if (c && c.length >= 3 && (c.indexOf(q) >= 0 || q.indexOf(c) >= 0)) return list[i]; } return null; }
+    var h = find(name); if (h) return h.price;
+    var parts = String(name).split(/\s*(?:&|\+|,|\.\s|\||\s및\s)\s*/).filter(Boolean); if (parts.length < 2) return null;
+    var sum = 0; for (var k = 0; k < parts.length; k++) { var x = find(parts[k]); if (!x) return null; sum += x.price; }
+    return sum;
+  }
   function quoteIndex(Q) {
     Q = Q || root.CHAQ || {}; if (QIX && QIX.src === Q) return QIX;
     QIX = { src: Q, byTrim: {} };
@@ -285,11 +321,11 @@
     var qColors = [rec.ext, rec["int"]].filter(Boolean);
     var v = {
       trimId: rec.trimId || null, matched: !!d, sameYear: sameYear, vmUsable: vmUsable, vmModelYear: link.vmModelYear || (d ? d.lineup.modelYear : null), confidence: link.confidence || "NONE",
-      name: d ? d.fullName : [rec.brand, rec.model].filter(Boolean).join(" "),
-      yearLabel: rec.year || null, trimLabel: rec.trim || (d ? d.trimName : null),
+      name: d ? d.fullName : dispName([rec.brand, rec.model].filter(Boolean).join(" ")),
+      yearLabel: rec.year || null, trimLabel: dispName(rec.trim) || (d ? d.trimName : null),
       modelYear: link.quoteModelYear || (d && sameYear ? d.lineup.modelYear : null),
       vehiclePrice: rec.vehiclePrice != null ? rec.vehiclePrice : (rec.base != null ? rec.base : null),
-      quoteOptions: (rec.opts || []).map(function (o) { return { name: o.n, price: o.p != null ? o.p : null }; }),
+      quoteOptions: (rec.opts || []).map(function (o) { var vp = o.p == null && rec.trimId ? optionPriceByName(rec.trimId, o.n) : null; return { name: o.n, price: o.p != null ? o.p : vp, priceSrc: o.p != null ? "QUOTE" : (vp != null ? "VM" : null) }; }),
       quoteColors: qColors,
       vmOptions: vmUsable ? getTrimOptions(rec.trimId, "SELECTABLE") : [],
       vmColors: vmUsable ? getTrimColors(rec.trimId) : [],
@@ -361,6 +397,7 @@
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
     addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
+    dispName: dispName, nameParts: nameParts, carNameHtml: carNameHtml, optionPriceByName: optionPriceByName,
     getSources: getSources, fromQuote: fromQuote, getQuotes: getQuotes, pickQuote: pickQuote, quoteView: quoteView, validate: validate
   };
   load(root.CHAQ_VEHICLE_MASTER || {});
