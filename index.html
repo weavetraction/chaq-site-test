@@ -253,7 +253,7 @@
       // B) '재고특가' — 전체 stock 데이터 중 일부 선택 렌더링(가격그룹별 최대 6)
       var PH='assets/icons/car-placeholder.svg';
       function carNm(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명
-  function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true)) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+  function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
       function monthly(r){ try{ return r.cost['2']['60']['0']; }catch(e){ return null; } }
       function pg(m){ return m<500000?'30':(m<800000?'50':'80'); }
       var perGroup={'30':0,'50':0,'80':0}, picks=[];

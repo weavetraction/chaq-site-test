@@ -76,7 +76,7 @@
             var C = window.CHAQ || {stock:[],fast:[],estimate:[]};
             var M = window.CHAQ_MYPAGE || {};
             var PH = "../assets/icons/car-placeholder.svg";
-            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true)) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
             var ALL = (C.stock||[]).concat(C.fast||[], C.estimate||[]);
             function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
             function car(id){ for(var i=0;i<ALL.length;i++){ if(ALL[i].id===id) return ALL[i]; } return null; }

@@ -198,6 +198,18 @@
   function colorKeyOf(c) { if (!c) return null; if (typeof c === "string") c = IX.color[c] || { id: c }; var k = c.manufacturerCode ? c.manufacturerCode : String(c.id || c.colorId || "").replace(/^[a-z-]+?-color-/, ""); return String(k).toLowerCase().replace(/[^a-z0-9-]+/g, "-") || null; }
   /** 견적(재고 실차)의 외장색 이름 → 이 트림 외장색의 colorKey. 공백·괄호 무시 정확 일치 → 포함 관계. 없으면 null (추정 금지) */
   function colorKeyByName(trimId, name) { if (!name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null; var cs = getTrimColors(trimId, "EXTERIOR"), i; for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return colorKeyOf(cs[i].colorId); for (i = 0; i < cs.length; i++) { var c = n(cs[i].name); if (c && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) return colorKeyOf(cs[i].colorId); } return null; }
+  /** 목록 카드용: 재고 외장색 이름 → colorKey. 상세본(트림 색상)이 있으면 그것으로, 없으면 공통본 이미지의 색상명(colorNames)으로. 못 찾으면 null(→ 대표 이미지) */
+  function colorKeyForQuote(trimId, name) {
+    if (!trimId || !name) return null; var k = null; try { k = colorKeyByName(trimId, name); } catch (e) {} if (k) return k;
+    var t = getTrim(trimId); if (!t) return null;
+    var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }, q = n(name); if (!q) return null;
+    var arr = (IX.imagesByTrim[trimId] || []).concat(IX.imagesByLineup[t.lineupId] || []), i, j;
+    var sl = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");   // 영문 색상명 = 색상키 (예: Diamond Black → diamond-black)
+    for (i = 0; i < arr.length; i++) if (sl && arr[i].colorKey === sl) return sl;
+    for (i = 0; i < arr.length; i++) for (j = 0; j < (arr[i].colorNames || []).length; j++) if (arr[i].colorKey && n(arr[i].colorNames[j]) === q) return arr[i].colorKey;
+    for (i = 0; i < arr.length; i++) for (j = 0; j < (arr[i].colorNames || []).length; j++) { var c = n(arr[i].colorNames[j]); if (arr[i].colorKey && c && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) return arr[i].colorKey; }
+    return null;
+  }
   function getImageKey(trimId) { var t = getTrim(trimId); var l = t && IX.lineup[t.lineupId]; return (l && l.imageKey) || null; }
   /** 이미지 선택: trim → lineup 순, 각 단계에서 colorKey 일치 → 대표(default, colorKey 없음) → 첫 이미지. view 기본 side. 미검증 이미지는 자동 노출 안 함 */
   function pickByColor(arr, colorKey, view) { if (!arr.length) return null; view = view || "side"; var v = arr.filter(function (im) { return (im.view || "side") === view; }); if (!v.length) v = arr; var i; if (colorKey) for (i = 0; i < v.length; i++) if (v[i].colorKey === colorKey) return v[i]; for (i = 0; i < v.length; i++) if (!v[i].colorKey) return v[i]; return v[0]; }
@@ -337,7 +349,7 @@
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
-    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
+    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
     getSources: getSources, fromQuote: fromQuote, getQuotes: getQuotes, pickQuote: pickQuote, quoteView: quoteView, validate: validate
   };
   load(root.CHAQ_VEHICLE_MASTER || {});

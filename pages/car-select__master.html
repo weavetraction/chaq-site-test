@@ -123,7 +123,7 @@
             document.title = '차큐 ' + T.title;
 
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
-            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true)) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
 
             var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / VM: brandId, modelId, 등급 묶음 key(data/trim-groups.js) · all = '전체 보기'
             var TG = window.CHAQ_TRIM_GROUPS; if (!TG) USE_VM = false;

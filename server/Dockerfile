@@ -23,6 +23,8 @@ COPY pages/data/vehicle-master.js pages/data/quotes.js ./site-data/
 COPY pages/data/vm ./site-data/vm
 # FAQ·후기·아티클/이벤트 — DB 첫 가져오기용
 COPY pages/data/faq.js pages/data/reviews.js pages/data/content.js ./site-data/
+# 배포 때 한 번만 실행하는 차량 데이터 전체 교체 (vm-reset)
+COPY server/seed ./seed
 USER node
 EXPOSE 8080
 CMD ["node", "dist/index.js"]

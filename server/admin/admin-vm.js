@@ -62,7 +62,7 @@
       $("#vmReleases").innerHTML = '<tr><th>반영본</th><th>시각</th><th>담당</th><th>내용</th><th class="num">트림</th><th></th></tr>' + r[0].map(function (x) {
         return '<tr><td>#' + x.id + (x.is_current ? ' <span class="pill live">사이트</span>' : '') + '</td><td>' + dt(x.created_at) + '</td><td>' + esc(x.by || "") + '</td><td>' + esc(x.note) + '</td><td class="num">' + won((x.counts || {}).trims) + '</td><td>' + (x.is_current ? '' : '<button class="btn sm" data-rb="' + x.id + '">이 반영본으로 되돌리기</button>') + '</td></tr>';
       }).join("");
-      var ACT = { create: "추가", update: "수정", delete: "삭제", import: "엑셀 적용", replace: "전체 교체", publish: "사이트 반영", rollback: "되돌리기" };
+      var ACT = { create: "추가", update: "수정", delete: "삭제", import: "엑셀 적용", replace: "전체 교체", reset_blocked: "초기화 보류", publish: "사이트 반영", rollback: "되돌리기" };
       $("#vmChanges").innerHTML = '<tr><th>시각</th><th>담당</th><th>작업</th><th>항목</th><th>내용</th></tr>' + r[1].map(function (x) {
         return '<tr><td>' + dt(x.at) + '</td><td>' + esc(x.by || "") + '</td><td>' + (ACT[x.action] || x.action) + '</td><td>' + esc(x.kindKo || "") + ' <small class="hint">' + esc(x.item_id || "") + '</small></td><td>' + esc(x.summary) + '</td></tr>';
       }).join("");

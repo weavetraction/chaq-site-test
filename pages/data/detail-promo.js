@@ -35,7 +35,7 @@
   function monthlyLoose(r, c) { var d = r.cost && r.cost[c.dist]; if (!d) return null; var t = d[c.term] || d[Object.keys(d)[0]]; if (!t) return null; if (t[c.plan] != null) return t[c.plan]; for (var p in t) return t[p]; return null; }   // 페이지 표시값과 동일
   function familyOf(r) { var VM = root.CHAQ_VM; if (VM && r.trimId) { var d = VM.describe(r.trimId); if (d) return d.model.familyKey || d.model.id; } return norm(r.brand) + "|" + norm(r.model); }
   function vmName(r) { var VM = root.CHAQ_VM; if (!VM || !r.trimId) return null; var d = VM.describe(r.trimId); return d ? (d.brandName + " " + d.modelName) : null; }   // 짧은 차명(모델 단위)
-  function carImg(r) { var VM = root.CHAQ_VM; return (VM && r.trimId && VM.resolveImageUrl) ? (VM.resolveImageUrl(r.trimId, [PH], true) || PH) : PH; }
+  function carImg(r) { var VM = root.CHAQ_VM; return (VM && r.trimId && VM.resolveImageUrl) ? (VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote ? VM.colorKeyForQuote(r.trimId, r.ext) : null) || PH) : PH; }
 
   /** 같은 조건 · 같은 월 납입금대(10만원 단위) 다른 차량. 없으면 월 납입금이 가까운 차량 */
   function sameCondCars(cur, c, max) {

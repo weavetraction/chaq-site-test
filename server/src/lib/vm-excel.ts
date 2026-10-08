@@ -197,21 +197,19 @@ function defaultsFor(kind: VmKind, o: any) {
   return o;
 }
 
-export async function planVmReplace(buf: Buffer) {
-  const M0 = await loadDraft(true);
-  const baseVersion = String((await q(`SELECT value FROM app_state WHERE key = 'vm_draft_version'`)).rows[0]?.value || "0");
+export type ReplaceRows = { rows: Partial<Record<VmKind, { label: string; key: string; vals: Record<string, unknown> }[]>>; errors: string[]; skippedDel: Record<string, number> };
+/** 엑셀 9개 시트 → 행 값 (DB 와 무관한 읽기만 — 배포용 초기화 파일도 이 결과를 그대로 저장) */
+export async function readReplaceSheets(buf: Buffer): Promise<ReplaceRows> {
   const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf as any);
   const missing = SHEETS.filter((sh) => !wb.getWorksheet(sh.name)).map((sh) => sh.name);
   if (missing.length) throw new VmError(`전체 교체는 9개 시트가 모두 있어야 합니다 — 없는 시트: ${missing.join(", ")}`);
-  const N = { meta: M0.meta || {} } as VM; for (const k of VM_KINDS) N[k] = [];
-  const errors: string[] = []; const skippedDel: Record<string, number> = {};
+  const out: ReplaceRows = { rows: {}, errors: [], skippedDel: {} }; const errors = out.errors;
   for (const sh of SHEETS) {
-    const ws = wb.getWorksheet(sh.name)!;
+    const ws = wb.getWorksheet(sh.name)!; const list: { label: string; key: string; vals: Record<string, unknown> }[] = (out.rows[sh.kind] = []);
     const H: string[] = []; ws.getRow(1).eachCell((c, i) => { H[i] = String(cv(c.value) ?? "").trim(); });
     const keyCols = sh.key.map((k) => sh.cols.find((c) => c.f === k)!);
     const noKey = keyCols.filter((c) => !H.includes(c.h)).map((c) => c.h);
     if (noKey.length) { errors.push(`${sh.name} 시트: '${noKey.join(", ")}' 열이 없습니다`); continue; }
-    const cur = new Map((M0[sh.kind] || []).map((o) => [idOf(sh.kind, o), o]));
     const seen = new Set<string>();
     const editable = sh.cols.filter((c) => !c.ref);
     ws.eachRow((row, n) => {
@@ -219,7 +217,7 @@ export async function planVmReplace(buf: Buffer) {
       const raw: Record<string, unknown> = {}; H.forEach((h, i) => { if (h) raw[h] = cv(row.getCell(i).value) ?? null; });
       if (!Object.values(raw).some((v) => v !== null && v !== undefined && String(v).trim() !== "")) return;
       const label = `${sh.name} ${n}행`;
-      if (/^y/i.test(String(raw[DEL] ?? "").trim())) { skippedDel[sh.name] = (skippedDel[sh.name] || 0) + 1; return; }   // 삭제 표시 행 = 빼고 올림
+      if (/^y/i.test(String(raw[DEL] ?? "").trim())) { out.skippedDel[sh.name] = (out.skippedDel[sh.name] || 0) + 1; return; }   // 삭제 표시 행 = 빼고 올림
       const vals: Record<string, unknown> = {};
       for (const c of editable) if (c.h in raw) {
         const v = norm(c, raw[c.h]);
@@ -231,12 +229,29 @@ export async function planVmReplace(buf: Buffer) {
       const key = sh.key.length === 1 ? String(keyObj.id) : idOf(sh.kind, keyObj);
       if (seen.has(key)) { errors.push(`${label}: 같은 항목이 파일에 두 번 있습니다 (${key})`); return; }
       seen.add(key);
-      const old = cur.get(key);
-      if (!old && sh.key.length === 1 && !ID_RE.test(key)) { errors.push(`${label}: ID '${key}' 형식 오류 (영문 소문자·숫자·-·_·. 만)`); return; }
-      const o = defaultsFor(sh.kind, { ...(old ? JSON.parse(JSON.stringify(old)) : {}), ...vals });
-      for (const f of REQUIRED[sh.kind] || []) if (o[f] === undefined || o[f] === null || o[f] === "") { errors.push(`${label}: ${sh.cols.find((c) => c.f === f)?.h || f} 필수`); return; }
-      N[sh.kind].push(o);
+      list.push({ label, key, vals });
     });
+  }
+  return out;
+}
+
+/** 전체 교체 미리보기: 엑셀 파일 또는 미리 읽어 둔 행 값(배포용 초기화) → 지금 작업본과 합쳐 새 전체 데이터 + 영향 */
+export async function planVmReplace(input: Buffer | ReplaceRows) {
+  const R = Buffer.isBuffer(input) ? await readReplaceSheets(input) : input;
+  const M0 = await loadDraft(true);
+  const baseVersion = String((await q(`SELECT value FROM app_state WHERE key = 'vm_draft_version'`)).rows[0]?.value || "0");
+  const N = { meta: M0.meta || {} } as VM; for (const k of VM_KINDS) N[k] = [];
+  const errors: string[] = [...R.errors]; const skippedDel = R.skippedDel;
+  for (const sh of SHEETS) {
+    const cur = new Map((M0[sh.kind] || []).map((o) => [idOf(sh.kind, o), o]));
+    for (const { label, key, vals } of R.rows[sh.kind] || []) {
+      const old = cur.get(key);
+      if (!old && sh.key.length === 1 && !ID_RE.test(key)) { errors.push(`${label}: ID '${key}' 형식 오류 (영문 소문자·숫자·-·_·. 만)`); continue; }
+      const o = defaultsFor(sh.kind, { ...(old ? JSON.parse(JSON.stringify(old)) : {}), ...vals });
+      const miss = (REQUIRED[sh.kind] || []).find((f) => o[f] === undefined || o[f] === null || o[f] === "");
+      if (miss) { errors.push(`${label}: ${sh.cols.find((c) => c.f === miss)?.h || miss} 필수`); continue; }
+      N[sh.kind].push(o);
+    }
   }
   // 엑셀에 없는 종류: 유지하되 없어진 트림·색상·라인업을 가리키는 것만 정리
   const T = new Set(N.trims.map((t) => t.id)), C = new Set(N.colors.map((c) => c.id)), L = new Set(N.lineups.map((l) => l.id));

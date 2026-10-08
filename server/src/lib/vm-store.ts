@@ -349,7 +349,13 @@ export function buildSplit(M: VM, releaseId: number | null = null) {
   const L = new Map(M.lineups.map((l) => [l.id, l]));
   const modelOfTrim = new Map(M.trims.map((t) => [t.id, L.get(t.lineupId)?.modelId]));
   const optCount: Record<string, number> = {}; M.trimOptions.forEach((x) => { optCount[x.trimId] = (optCount[x.trimId] || 0) + 1; });
-  const core: any = { ...M, trims: M.trims.map((t) => { const c = { ...t }; delete c.standardItems; c.optCount = optCount[t.id] || 0; c.stdCount = (t.standardItems || []).length; return c; }), options: [], trimOptions: [], colors: [], trimColors: [], colorRules: [], vehicleSpecs: [] };
+  // 목록 카드(재고특가·빠른인도)가 상세본 없이도 재고 외장색 → 색상 이미지를 고를 수 있게, 색상 이미지에 색상명을 붙임
+  const brandOfLineup = new Map(M.lineups.map((l) => [l.id, M.models.find((m) => m.id === l.modelId)?.brandId]));
+  const ck = (c: any) => String(c.manufacturerCode ? c.manufacturerCode : String(c.id || "").replace(/^[a-z-]+?-color-/, "")).toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+  const namesByKey = new Map<string, string[]>();
+  M.colors.forEach((c) => { const k = `${c.brandId}|${ck(c)}`; const a = namesByKey.get(k) || []; [c.name, c.nameEn].forEach((x) => { if (x && !a.includes(x)) a.push(x); }); namesByKey.set(k, a); });
+  const images = M.vehicleImages.map((im) => { if (!im.colorKey) return im; const a = namesByKey.get(`${brandOfLineup.get(im.lineupId)}|${im.colorKey}`); return a ? { ...im, colorNames: a } : im; });
+  const core: any = { ...M, vehicleImages: images, trims: M.trims.map((t) => { const c = { ...t }; delete c.standardItems; c.optCount = optCount[t.id] || 0; c.stdCount = (t.standardItems || []).length; return c; }), options: [], trimOptions: [], colors: [], trimColors: [], colorRules: [], vehicleSpecs: [] };
   core.meta = { ...(M.meta || {}), releaseId, generatedAt: new Date().toISOString().slice(0, 10), split: { at: new Date().toISOString().slice(0, 10), detailDir: "vm/", note: "상세(옵션·색상·기본품목)는 모델별 상세본 — CHAQ_VM.addDetail" } };
   const per = new Map<string, any>();
   const get = (mid: string | undefined) => { const k = mid || "_"; if (!per.has(k)) per.set(k, { modelId: k, options: [], trimOptions: [], colors: [], trimColors: [], colorRules: [], standardItems: {} }); return per.get(k); };
