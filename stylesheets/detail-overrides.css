@@ -146,15 +146,10 @@ body.local-car-detail {
     background: #f4f4f4;
 }
 
-.local-car-detail .detail_card:last-of-type {
-    margin-bottom: 110px;
-}
-
 .local-car-detail .detail_monthly {
     display: flex;
     flex-direction: column;
     gap: 3px;
-    margin-top: 16px;
 }
 
 .local-car-detail .detail_monthly small {
@@ -174,13 +169,6 @@ body.local-car-detail {
     font-size: 16px;
     font-weight: 700;
     font-style: normal;
-}
-
-.local-car-detail .detail_conds {
-    margin: 0 16px 12px;
-    padding: 8px 18px 18px;
-    border-radius: 16px;
-    background: #f4f4f4;
 }
 
 .local-car-detail .cond_group {
@@ -207,8 +195,6 @@ body.local-car-detail {
 .local-car-detail .cond_row[data-k="type"] {
     grid-template-columns: 1fr 1fr;
 }
-
-
 
 .local-car-detail .detail_price_row.total {
     margin-top: 6px;
@@ -277,7 +263,6 @@ body.local-car-detail {
 .local-car-detail .detail_tags span {
     padding: 5px 8px;
     border-radius: 5px;
-    background: #e3e3e3;
     color: #8b8b8b;
     font-size: 11px;
 }
@@ -302,15 +287,6 @@ body.local-car-detail {
 }
 
 .local-car-detail .option_check_button {
-    width: 100%;
-    height: 44px;
-    margin-top: 10px;
-    border: 1px solid var(--detail-green);
-    border-radius: 8px;
-    background: #fff;
-    color: var(--detail-green);
-    font-size: 13px;
-    font-weight: 700;
     cursor: pointer;
 }
 
@@ -331,28 +307,12 @@ body.local-car-detail {
     background: #fff;
 }
 
-.local-car-detail .detail_like {
-    flex: 0 0 58px;
-    height: 52px;
-    border: 0;
-    background: transparent;
-    color: #5d636a;
-    font-size: 11px;
-}
-
-.local-car-detail .detail_like span {
-    display: block;
-    font-size: 22px;
-}
-
 .local-car-detail .detail_inquiry {
     flex: 1 1 auto;
     height: 54px;
     border: 0;
     border-radius: 9px;
-    background: var(--detail-green);
     color: #fff;
-    font-size: 16px;
     font-weight: 800;
     cursor: pointer;
 }
@@ -362,7 +322,6 @@ body.local-car-detail {
     margin-top: 10px;
     padding: 14px;
     border-radius: 8px;
-    background: var(--detail-green-soft);
     color: #4d555d;
     font-size: 13px;
     line-height: 1.7;
@@ -427,19 +386,12 @@ body.local-special-list {
 
 .local-special-list .special_header h1 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 500;
 }
 
 .local-special-list .filter_panel {
     padding: 18px 18px 22px;
     border-bottom: 1px solid #e4e7ea;
     background: #fff;
-}
-
-.local-special-list .filter_panel h2 {
-    margin: 20px 0 10px;
-    font-size: 15px;
 }
 
 .local-special-list .filter_row {
@@ -492,7 +444,6 @@ body.local-special-list {
 
 .local-special-list .filter_chip {
     min-height: 38px;
-    font-size: 13px;
 }
 
 .local-special-list .filter_row.one {
@@ -501,28 +452,11 @@ body.local-special-list {
 
 .local-special-list .filter_select {
     min-width: 0;
-    width: 100%;
-    min-height: 45px;
-    padding: 0 26px 0 10px;
-    border:1px solid #e2e2e2;
-    border-radius: 8px;
-    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238b9198' stroke-width='1.5'/></svg>") no-repeat right 9px center;
-    color: #767c83;
-    font-size: 13px;
-    text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-    overflow: hidden;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    cursor: pointer;
-}
-
-.local-special-list .filter_select.is-selected {
-    color: var(--detail-green);
-    border-color: var(--detail-green);
-    font-weight: 600;
 }
 
 .local-special-list .fpop {
@@ -632,7 +566,6 @@ body.local-special-list {
     padding: 0 16px;
     border: 0;
     border-radius: 12px;
-    background: #f4f4f4;
     text-align: left;
     cursor: pointer;
 }
@@ -649,8 +582,8 @@ body.local-special-list {
 
 .local-special-list .fpop_row .blogo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-.local-special-list .fpop_row .bname { flex: 1; font-size: 14px; font-weight: 700; color: #232733; }
-.local-special-list .fpop_row .bcount { color: var(--detail-green); font-size: 14px; font-weight: 700; }
+.local-special-list .fpop_row .bname { flex: 1; }
+.local-special-list .fpop_row .bcount { color: var(--detail-green); font-weight: 700; }
 
 .local-special-list .fpop_foot { flex: 0 0 auto; padding: 12px 16px 20px; }
 
@@ -661,7 +594,6 @@ body.local-special-list {
     border-radius: 12px;
     background: var(--detail-green);
     color: #fff;
-    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
 }
@@ -682,7 +614,6 @@ body.local-special-list {
     border-radius: 6px;
     background: #fff;
     color: #656b72;
-    font-size: 11px;
     box-shadow: 0 2px 6px rgba(32,71,47,.055);
 }
 
@@ -715,7 +646,6 @@ body.local-special-list {
 
 .local-special-list .result_header p {
     margin: 0;
-    font-size: 13px;
 }
 
 .local-special-list .result_header p strong {
@@ -757,7 +687,6 @@ body.local-special-list {
     grid-template-columns: 105px 1fr auto;
     grid-template-rows: 1fr;
     border-radius: 12px;
-    background: #f4f4f4;
     color: inherit;
     text-decoration: none;
 }
@@ -784,15 +713,12 @@ body.local-special-list {
 
 .local-special-list .stock-copy small {
     overflow: hidden;
-    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .local-special-list .stock-copy strong {
     margin-top: 4px;
-    font-size: 18px;
-    font-weight: 800;
     letter-spacing: -.7px;
     white-space: nowrap;
 }
@@ -812,7 +738,6 @@ body.local-special-list {
 .local-special-list .opt-tag {
     padding: 2.375px 5px;
     border-radius: 5px;
-    background: #e3e3e3;
     color: #8b8b8b;
     font-size: 11px;
     font-weight: 400;
@@ -834,8 +759,6 @@ body.local-special-list {
     border-radius: 7px;
     background: transparent;
     color: var(--detail-green);
-    font-size: 12.5px;
-    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
     transform: translateX(10%);
@@ -906,7 +829,6 @@ body.local-special-list {
 
 .local-special-list .special_footer span {
     margin-top: 5px;
-    font-size: 11px;
 }
 
 .local-special-list .special_footer b {
@@ -960,9 +882,6 @@ body.local-special-list {
     }
     .local-special-list .stock-card > img {
         width: 84px;
-    }
-    .local-special-list .stock-copy strong {
-        font-size: 16px;
     }
 }
 
@@ -1029,7 +948,6 @@ body.local-sub {
     align-items: center;
     justify-content: center;
     color: #8a8f96;
-    font-size: 15px;
     font-weight: 600;
     text-decoration: none;
     border-bottom: 2px solid transparent;
@@ -1099,8 +1017,8 @@ body.local-sub {
     padding: 40px 28px;
     text-align: center;
 }
-.local-sub .login_hero .login_logo { width: 116px; margin-bottom: 26px; }
-.local-sub .login_hero h2 { margin: 0 0 8px; font-size: 21px; font-weight: 800; line-height: 1.4; }
+.local-sub .login_hero .login_logo { margin-bottom: 26px; }
+.local-sub .login_hero h2 { margin: 0 0 8px; line-height: 1.4; }
 .local-sub .login_hero h2 em { color: var(--detail-green); font-style: normal; }
 .local-sub .login_hero p { margin: 0 0 34px; color: #8a8f96; font-size: 14px; }
 .local-sub .kakao_button {
@@ -1115,14 +1033,12 @@ body.local-sub {
     border-radius: 10px;
     background: #fee500;
     color: #191600;
-    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
 }
 .local-sub .browse_link {
     margin-top: 18px;
     color: #8a8f96;
-    font-size: 14px;
     text-decoration: underline;
     background: none;
     border: 0;
@@ -1226,13 +1142,6 @@ body.local-sub {
     }
 }
 
-/* v18: 상세페이지 - 첫 요약 카드(차량명·월납입금)는 회색 유지, 나머지 카드는 흰색 */
-.local-car-detail .detail_conds,
-.local-car-detail .detail_card:last-of-type {
-    background: #fff;
-    border:1px solid #e2e2e2;
-}
-
 /* v19: 상세페이지 조건 영역을 재고특가 '조건 설정' 섹션과 동일 구조/스타일로 */
 .local-car-detail .cond_title {
     margin: 4px 0 12px;
@@ -1315,13 +1224,9 @@ body.local-sub {
     display: block;
     width: fit-content;
     height: auto;
-    margin: 10px 0 0 auto;
     padding: 6px 10px;
     border:1px solid #e2e2e2;
     border-radius: 7px;
-    background: transparent;
-    color: #444;
-    font-size: 12.5px;
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
@@ -1403,15 +1308,14 @@ body.local-sub {
     margin: 0 16px;
     padding: 18px;
     border: 0;
-    border-top: 1px solid #f0f0f0;
     border-radius: 0;
     background: transparent;
+    border-top: 0;
 }
 .local-car-detail .detail_card:last-of-type {
     margin: 0 16px 110px;
     padding: 18px;
     border: 0;
-    border-top: 1px solid #f0f0f0;
     border-radius: 0;
     background: transparent;
 }
@@ -1422,40 +1326,17 @@ body.local-sub {
     padding: 14px 16px;
     border-top: 0;
     border-radius: 12px;
-    background: #f4f4f4;
 }
 
 /* 차량 이미지: 요약(차량정보) 회색 카드 우측 상단에 배치 */
 .local-car-detail .detail_card:first-of-type {
     position: relative;
-}
-.local-car-detail .detail_card .detail_car_visual {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 136px;
-    height: 92px;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-}
-.local-car-detail .detail_card .detail_car_visual img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    margin-top: 5vh;
 }
 
 /* v25: 전체 5% 하향 이동, 구분선 2개 제거, 확정 월납입금 라벨 스타일 */
 /* 1) 차량 정보 섹션부터 전체적으로 5% 아래로 */
-.local-car-detail .detail_card:first-of-type {
-    margin-top: 5vh;
-}
 /* 2) 차량 정보 섹션 아래 얇은 선 제거 (조건설정 위 구분선) */
-.local-car-detail .detail_conds {
-    border-top: 0;
-}
 /* 4) 확정 월납입금 박스 아래 얇은 선 제거 (차량가격 위 구분선) */
 .local-car-detail .detail_card:last-of-type {
     border-top: 0;
@@ -1470,66 +1351,37 @@ body.local-sub {
 /* v26: 차량 이미지 확대·좌측·차량명 위, 옵션상세 버튼 우측상단, 태그↔월납입금 간격 축소 */
 /* 차량 이미지: 확대 + 좌측 정렬 + 정상 흐름(차량명 위) */
 .local-car-detail .detail_card .detail_car_visual {
-    position: static;
-    width: 200px;
-    height: 128px;
-    margin: 0 0 4px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
     background: transparent;
-}
-.local-car-detail .detail_card .detail_car_visual img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: left center;
-}
-/* 옵션 상세 버튼: 차량 이미지와 수평(오른쪽 상단) */
-.local-car-detail .option_check_button {
     position: absolute;
-    top: 20px;
-    right: 18px;
-    margin: 0;
-}
-/* 태그와 월납입금 간격 50% 축소 (16px → 8px) */
-.local-car-detail .detail_monthly {
-    margin-top: 8px;
-}
-
-/* v27: 이미지 우측상단, 옵션상세 버튼 우측하단(월납입금과 수평), 태그↔월납입금 간격 +30% */
-/* 차량 이미지: 우측 상단으로 (절대배치) */
-.local-car-detail .detail_card .detail_car_visual {
-    position: absolute;
-    top: 16px;
     right: 16px;
     width: 150px;
     height: 100px;
     margin: 0;
     justify-content: flex-end;
+    top: 6px;
 }
 .local-car-detail .detail_card .detail_car_visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     object-position: right center;
 }
+
+/* v27: 이미지 우측상단, 옵션상세 버튼 우측하단(월납입금과 수평), 태그↔월납입금 간격 +30% */
+/* 차량 이미지: 우측 상단으로 (절대배치) */
 /* 옵션상세 버튼: 우측 하단, 월납입금과 수평 */
 .local-car-detail .option_check_button {
     position: absolute;
     top: auto;
-    right: 18px;
     bottom: 26px;
     margin: 0;
-}
-/* 태그와 월납입금 간격 30% 증가 (8px → 10px) */
-.local-car-detail .detail_monthly {
-    margin-top: 10px;
 }
 
 /* v28: 태그↔월납입금 간격 +30%, 차량 이미지 위로, 옵션상세 패널 배경 흰색 */
 .local-car-detail .detail_monthly {
     margin-top: 13px;
-}
-.local-car-detail .detail_card .detail_car_visual {
-    top: 6px;
 }
 .local-car-detail .detail_option_panel {
     background: #fff;
@@ -1542,9 +1394,6 @@ body.local-sub {
 }
 .local-car-detail .detail_like .like-ico svg {
     display: block;
-    width: 24px;
-    height: 24px;
-    margin: 0 auto 2px;
 }
 .local-car-detail .detail_like.is-on .like-ico svg {
     fill: rgba(24, 168, 92, .12);
@@ -1637,19 +1486,17 @@ body.local-sub {
     align-items: center;
     margin-bottom: 8px;
     padding: 0 14px;
-    border:1px solid #e2e2e2;
-    border-radius: 10px;
-    background: #fff;
     color: #4a4f55;
-    font-size: 14px;
     text-align: left;
     cursor: pointer;
 }
-.local-car-detail .opt_row span { flex: 1; }
+.local-car-detail .opt_row span { flex: 1;
+    font-weight: 400;
+    color: #8b9198; }
 .local-car-detail .opt_row em {
     font-style: normal;
-    color: #8a8f96;
-    font-size: 13px;
+    color: var(--detail-green);
+    font-weight: 700;
 }
 .local-car-detail .opt_row .color-chip {
     width: 16px;
@@ -1658,7 +1505,6 @@ body.local-sub {
 }
 .local-car-detail .opt_row.on {
     border-color: var(--detail-green);
-    background: var(--detail-green-soft);
     color: var(--detail-green);
     font-weight: 700;
 }
@@ -1674,7 +1520,6 @@ body.local-sub {
     border-radius: 12px;
     background: var(--detail-green);
     color: #fff;
-    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
 }
@@ -1702,14 +1547,6 @@ body.local-sub {
     border-radius: 12px;
     background: #fbfbfb;
 }
-.local-car-detail .opt_row span {
-    font-weight: 400;
-    color: #8b9198;
-}
-.local-car-detail .opt_row em {
-    color: var(--detail-green);
-    font-weight: 700;
-}
 .local-car-detail .opt_row.on {
     background: var(--detail-green-soft);
 }
@@ -1736,13 +1573,12 @@ body.local-sub {
 
 .local-special-list .est_card .est_visual {
     position: absolute;
-    top: 16px;
     right: 16px;
     width: 136px;
     height: 92px;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: flex-end; top: 10px;
 }
 .local-special-list .est_card .est_visual img {
     width: 100%;
@@ -1769,7 +1605,6 @@ body.local-sub {
 .local-special-list .est_card .est_monthly b em { margin-left: 2px; font-size: 16px; font-weight: 700; font-style: normal; }
 
 /* v42: 견적조회 단일 카드 - 이미지 살짝 위로, 3줄 텍스트 아래로, 태그 월비용 옆 우측정렬 */
-.local-special-list .est_card .est_visual { top: 10px; }
 .local-special-list .est_card .est_kicker { margin-top: 16px; }
 .local-special-list .est_card .est_bottom {
     display: flex;
@@ -1790,21 +1625,14 @@ body.local-sub {
     display: inline-flex;
     padding: 3px 8px;
     border-radius: 5px;
-    background: var(--detail-green-soft);
-    color: var(--detail-green);
     font-size: 11px;
     font-weight: 700;
     line-height: 1.3;
-}
-
-/* v49: 견적조회 카드 상품 구분 태그를 메인페이지 태그처럼 회색으로 */
-.local-special-list .est_card .est_type {
     background: #ececec;
     color: #8b8b8b;
 }
 
-/* v50: 견적조회 카드에서 '소형·가솔린' 제거 후 차량명이 좌측상단 태그와 겹치지 않도록 상단 여백 */
-.local-special-list .est_card .est_name { margin-top: 18px; }
+/* v49: 견적조회 카드 상품 구분 태그를 메인페이지 태그처럼 회색으로 */
 
 /* v51: 견적조회 카드 - 구분태그와 차량명 사이 간격 확대 */
 .local-special-list .est_card .est_name { margin-top: 30px; }
@@ -1813,10 +1641,9 @@ body.local-sub {
 /* sub-white: 콘텐츠 shell만 흰색, PC 여백(body)은 회색 통일 */
 .local-sub.sub-white .sub_shell { background: #fff; }
 /* 마이페이지 히어로 문구: 21px -> 18px(3px↓), 800 -> 720(10%↓) */
-.local-sub .login_hero h2 { font-size: 18px; font-weight: 720; }
+.local-sub .login_hero h2 { font-weight: 720; font-size: 19.5px; }
 
 /* v53: 마이페이지 히어로 문구 1.5px 확대, 로고 50% 축소 */
-.local-sub .login_hero h2 { font-size: 19.5px; }
 .local-sub .login_hero .login_logo { width: 58px; }
 
 /* v55: 모든 페이지 공통 사업자 정보 푸터 */
@@ -1829,7 +1656,6 @@ body.local-sub {
 /* car-detail: 고정 CTA바 위로 여백 확보 */
 .local-car-detail .detail_card:last-of-type{margin-bottom:18px}
 .local-car-detail .chaq-biz-footer{margin-bottom:104px}
-
 
 /* v60: 견적조회 - 차량 미선택 안내 카드(크기 유지·가운데 문구) + 필터 단계별 잠금 */
 .local-special-list .est_card.est-empty {
@@ -1844,17 +1670,11 @@ body.local-sub {
     font-size: 15px;
     font-weight: 600;
 }
-.local-special-list .filter_select.is-disabled {
-    opacity: .45;
-    cursor: not-allowed;
-}
 
 /* v66: '상세견적' 제외 모든 버튼 폰트 +1.5px */
-.local-car-detail .option_check_button{font-size:14px}
+.local-car-detail .option_check_button{font-size:14px; left: 18px; right: auto}
 .local-car-detail .detail_inquiry{font-size:17.5px}
-.local-car-detail .detail_like{font-size:12.5px}
 .local-special-list .filter_chip{font-size:14.5px}
-.local-special-list .filter_select{font-size:14.5px}
 .local-special-list .fpop_apply{font-size:17.5px}
 .local-special-list .fpop_row .bname,.local-special-list .fpop_row .bcount{font-size:15.5px}
 .local-car-detail .opt_apply{font-size:17.5px}
@@ -1872,8 +1692,6 @@ body.local-sub {
 .local-special-list .special_footer span{font-size:13px}                 /* GNB 라벨 11 → 13 */
 /* ② 페이지 제목 강화 16/500 → 18/700 */
 .local-special-list .special_header h1{font-size:18px;font-weight:700}
-/* ③ 15~16px 밀집 해소: 제목18 > 필터섹션16 > 견적안내14 로 계층 분리 */
-.local-special-list .filter_panel h2{font-size:16px;font-weight:700}
 .local-special-list .est_card .est_guide{font-size:14px;font-weight:600}
 /* ④ GNB 활성탭 강조: 활성 라벨 700 */
 .local-special-list .special_footer button.on span{font-weight:700}
@@ -1883,7 +1701,7 @@ body.local-sub {
 
 /* ===== v70: 특가차량 '차량 선택 필터' 디자인 개편 (첨부 시안 반영 / .local-special-list 한정) ===== */
 /* 섹션 제목 */
-.local-special-list .filter_panel h2{margin:24px 0 12px;font-size:19px;font-weight:800;color:#16181b}
+.local-special-list .filter_panel h2{margin:24px 0 12px;color:#16181b}
 .local-special-list .filter_panel h2:first-child{margin-top:2px}
 
 /* --- 차량 모델: 세로 스택 셀렉트 3상태 --- */
@@ -1913,7 +1731,7 @@ body.local-sub {
 /* 보증금/선납금 태그 + ⓘ 아이콘 + 숫자 */
 :is(.local-special-list,.local-car-detail) .cond_wrap .chip_col{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.05}
 :is(.local-special-list,.local-car-detail) .cond_wrap .chip_tag{display:inline-flex;align-items:center;gap:3px;font-style:normal;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:#e6e6e6;color:#8b8b8b}
-:is(.local-special-list,.local-car-detail) .cond_wrap .tag_info{flex:none;display:inline-block;width:12px;height:12px;background:currentColor;pointer-events:auto;cursor:pointer;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.2' fill='none' stroke='black' stroke-width='1.8'/><circle cx='12' cy='8.2' r='1.25' fill='black'/><rect x='11.05' y='10.7' width='1.9' height='7.1' rx='0.95' fill='black'/></svg>") no-repeat center/contain;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.2' fill='none' stroke='black' stroke-width='1.8'/><circle cx='12' cy='8.2' r='1.25' fill='black'/><rect x='11.05' y='10.7' width='1.9' height='7.1' rx='0.95' fill='black'/></svg>") no-repeat center/contain}
+:is(.local-special-list,.local-car-detail) .cond_wrap .tag_info{flex:none;display:inline-block;width:12px;height:12px;background:currentColor;cursor:pointer;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.2' fill='none' stroke='black' stroke-width='1.8'/><circle cx='12' cy='8.2' r='1.25' fill='black'/><rect x='11.05' y='10.7' width='1.9' height='7.1' rx='0.95' fill='black'/></svg>") no-repeat center/contain;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.2' fill='none' stroke='black' stroke-width='1.8'/><circle cx='12' cy='8.2' r='1.25' fill='black'/><rect x='11.05' y='10.7' width='1.9' height='7.1' rx='0.95' fill='black'/></svg>") no-repeat center/contain}
 :is(.local-special-list,.local-car-detail) .cond_wrap .chip_num{font-size:14px;font-weight:600}
 :is(.local-special-list,.local-car-detail) .cond_wrap:not(.is-locked) .filter_chip.on .chip_tag{background:#dcf3e5;color:#18a85c}
 /* 잠금 상태: 전부 회색·비활성 (하이라이트 없음) */
@@ -2155,18 +1973,11 @@ body.local-sub {
     position: fixed; top: 14px; right: 16px; width: 40px; height: 40px; border: 0; border-radius: 50%;
     background: rgba(255,255,255,.14); color: #fff; font-size: 26px; line-height: 1; cursor: pointer;
 }
-
-/* ==========================================================================
-   v132 · 마이페이지(mypage) — 회원 활동 데이터 + CRM/차량 마스터 연동 로그인 화면
-   ========================================================================== */
-body.local-sub.mypage.sub-white,
-.local-sub.mypage.sub-white .sub_shell { background: #f4f4f4; }
-.local-sub.mypage main { padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
+.local-sub.mypage main { flex-direction: column; gap: 12px; }
 
 /* --- 프로필 --------------------------------------------------------------- */
 .local-sub.mypage .mp_profile {
     display: flex; align-items: center; gap: 14px;
-    background: #fff; border-radius: 16px; padding: 18px 16px;
 }
 .local-sub.mypage .mp_pinfo { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
 .local-sub.mypage .mp_pinfo > strong { font-size: 18px; font-weight: 800; color: #1c1f23; letter-spacing: -.3px; }
@@ -2174,9 +1985,6 @@ body.local-sub.mypage.sub-white,
     width: 34px; height: 34px; flex: none; border: 0; cursor: pointer; border-radius: 10px; font-size: 0;
     background: #f4f5f6 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8f96' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'/%3E%3C/svg%3E") no-repeat center/18px;
 }
-
-/* --- 섹션 공통 ------------------------------------------------------------ */
-.local-sub.mypage .mp_sec { background: #fff; border-radius: 16px; padding: 16px; }
 .local-sub.mypage .mp_sec_head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 13px; }
 .local-sub.mypage .mp_sec_head h2 { margin: 0; font-size: 18px; font-weight: 800; color: #1c1f23; letter-spacing: -.35px; }
 .local-sub.mypage .mp_count { font-size: 13px; font-weight: 600; color: var(--detail-green); }
@@ -2194,8 +2002,7 @@ body.local-sub.mypage.sub-white,
 /* --- 진행 현황: 주문 카드 + 단계 스테퍼 ---------------------------------- */
 .local-sub.mypage .mp_orders { display: flex; flex-direction: column; gap: 10px; }
 .local-sub.mypage .mp_order {
-    display: block; text-decoration: none; color: inherit; background: #fff;
-    border: 1px solid #eceef0; border-radius: 14px; padding: 14px;
+    display: block; text-decoration: none; color: inherit; border-radius: 14px; padding: 14px;
 }
 .local-sub.mypage .mp_order_top { display: flex; align-items: flex-start; gap: 12px; position: relative; text-decoration: none; color: inherit; }
 .local-sub.mypage .mp_ocar {
@@ -2237,8 +2044,7 @@ body.local-sub.mypage.sub-white,
 /* --- 내가 저장한 견적 ----------------------------------------------------- */
 .local-sub.mypage .mp_saved { display: flex; flex-direction: column; gap: 10px; }
 .local-sub.mypage .mp_qcard {
-    display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; background: #fff;
-    border: 1px solid #eceef0; border-radius: 14px; padding: 12px;
+    display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; border-radius: 14px; padding: 12px;
 }
 .local-sub.mypage .mp_qcard img {
     width: 64px; height: 48px; flex: none; object-fit: contain;
@@ -2262,24 +2068,13 @@ body.local-sub.mypage.sub-white,
 }
 .local-sub.mypage .mp_recent_scroll::-webkit-scrollbar { display: none; }
 .local-sub.mypage .mp_recent {
-    flex: none; width: 122px; text-decoration: none; color: inherit; background: #fff;
-    border: 1px solid #eceef0; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 5px;
+    flex: none; width: 122px; text-decoration: none; color: inherit; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 5px;
 }
 .local-sub.mypage .mp_recent img { width: 100%; height: 56px; object-fit: contain; background: #f5f6f7; border-radius: 8px; }
 .local-sub.mypage .mp_recent small { font-size: 11.5px; color: #6b7178; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .local-sub.mypage .mp_recent strong { font-size: 13px; font-weight: 800; color: #1c1f23; }
-
-/* ==========================================================================
-   v133 · 개인정보 설정(settings) — 계정/소셜/휴대폰가입/지원금계좌/알림/로그아웃
-   ========================================================================== */
-body.local-sub.settings.sub-white,
-.local-sub.settings.sub-white .sub_shell { background: #f4f4f4; }
 .local-sub.settings .sub_shell { padding-bottom: 32px; }
-.local-sub.settings main { padding: 14px 14px 10px; display: flex; flex-direction: column; gap: 12px; }
-
-/* --- 그룹 카드 ------------------------------------------------------------ */
-.local-sub.settings .set_group { background: #fff; border-radius: 16px; padding: 6px 16px 16px; }
-.local-sub.settings .set_group.is-plain { background: transparent; padding: 0; }
+.local-sub.settings main { flex-direction: column; gap: 12px; }
 .local-sub.settings .set_group_title { margin: 14px 0 4px; font-size: 18px; font-weight: 800; color: #1c1f23; letter-spacing: -.35px; }
 .local-sub.settings .set_group_desc { margin: 0 0 12px; font-size: 12.5px; color: #9aa0a6; line-height: 1.5; }
 
@@ -2493,10 +2288,10 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 /* ==========================================================================
    v178 · 차량 상세 하단 — 이 차량 이용 후기 슬라이드 위젯 (data/review-link.js)
    ========================================================================== */
-.local-car-detail .detail_reviews{ margin: 0 0 18px; padding: 18px 0 4px; border-top: 1px solid #f0f0f0; overflow: hidden; }
+.local-car-detail .detail_reviews{ margin: 0 0 18px; padding: 18px 0 4px; overflow: hidden; border-top: 8px solid rgb(241, 243, 245); margin-top: 19.25px; padding-top: 37.25px; }
 .local-car-detail .detail_reviews .drv_head{ display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
-.local-car-detail .detail_reviews .drv_head .cond_label{ margin: 0; color: #2a2e33; font-size: 15px; font-weight: 700; }
-.local-car-detail .detail_reviews .drv_head .cond_label b{ margin-left: 3px; color: var(--detail-green); font-weight: 700; }
+.local-car-detail .detail_reviews .drv_head .cond_label{ margin: 0; }
+.local-car-detail .detail_reviews .drv_head .cond_label b{ margin-left: 3px; color: var(--detail-green); font-weight: 700; display: none; }
 .local-car-detail .detail_reviews .drv_more{ color: #6b7178; font-size: 13px; font-weight: 600; text-decoration: none; }
 .local-car-detail .detail_reviews .drv_more::after{ content: "›"; margin-left: 3px; font-size: 15px; }
 .local-car-detail .detail_reviews .drv_track{
@@ -2549,7 +2344,7 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 @supports not (width: 1cqw){ .local-car-detail .detail_promo .dp_in{ --u: calc(min(100vw, 500px) / 1080); } }
 .local-car-detail .detail_promo p, .local-car-detail .detail_promo h3, .local-car-detail .detail_promo ol{ margin: 0; padding: 0; }
 .local-car-detail .detail_promo img{ display: block; max-width: none; }
-.local-car-detail .detail_promo .dp_h{ padding-left: calc(var(--u) * 70); font-size: calc(var(--u) * 70); line-height: calc(var(--u) * 85); font-weight: 800; letter-spacing: -0.02em; color: #000; }
+.local-car-detail .detail_promo .dp_h{ padding-left: calc(var(--u) * 70); }
 .local-car-detail .detail_promo .dp_h em{ font-style: normal; color: var(--g); }
 
 /* ① 배너 */
@@ -2567,9 +2362,9 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 .local-car-detail .detail_promo .dp_tile--cond{ left: calc(var(--u) * 69); top: 0; width: calc(var(--u) * 458); height: calc(var(--u) * 432); }
 .local-car-detail .detail_promo .dp_tile--deal{ left: calc(var(--u) * 560); top: 0; width: calc(var(--u) * 458); height: calc(var(--u) * 432); }
 .local-car-detail .detail_promo .dp_tile--mgr{ left: calc(var(--u) * 72); top: calc(var(--u) * 461); width: calc(var(--u) * 946); height: calc(var(--u) * 395); }
-.local-car-detail .detail_promo .dp_tt{ position: absolute; z-index: 2; left: calc(var(--u) * 48); top: calc(var(--u) * 38); font-size: calc(var(--u) * 38); line-height: calc(var(--u) * 48); font-weight: 800; letter-spacing: -0.03em; color: #000; }
-.local-car-detail .detail_promo .dp_tile--mgr .dp_tt{ left: calc(var(--u) * 46); top: calc(var(--u) * 51); }
-.local-car-detail .detail_promo .dp_td{ position: absolute; z-index: 2; left: calc(var(--u) * 48); bottom: calc(var(--u) * 44); font-size: calc(var(--u) * 28); line-height: calc(var(--u) * 37); font-weight: 400; letter-spacing: -0.03em; color: #000; }
+.local-car-detail .detail_promo .dp_tt{ position: absolute; z-index: 2; left: calc(var(--u) * 48); top: calc(var(--u) * 38); }
+.local-car-detail .detail_promo .dp_tile--mgr .dp_tt{ left: calc(var(--u) * 46); top: calc(var(--u) * 38); }
+.local-car-detail .detail_promo .dp_td{ position: absolute; z-index: 2; left: calc(var(--u) * 48); bottom: calc(var(--u) * 44); }
 .local-car-detail .detail_promo .dp_shot{ position: absolute; width: calc(var(--u) * 204); height: auto; }
 .local-car-detail .detail_promo .dp_shot--back{ left: calc(var(--u) * 44); top: calc(var(--u) * 187); opacity: .58; }
 .local-car-detail .detail_promo .dp_shot--front{ left: calc(var(--u) * 206); top: calc(var(--u) * 168); filter: drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 10) rgba(0,0,0,.06)); }
@@ -2580,33 +2375,31 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 
 /* ③ 문의부터 인도까지 */
 .local-car-detail .detail_promo .dp_flow{ padding-top: calc(var(--u) * 205); }
-.local-car-detail .detail_promo .dp_sub{ margin-top: calc(var(--u) * 117); padding-left: calc(var(--u) * 70); font-size: calc(var(--u) * 50); line-height: calc(var(--u) * 60); font-weight: 800; letter-spacing: 0; }
+.local-car-detail .detail_promo .dp_sub{ margin-top: calc(var(--u) * 117); padding-left: calc(var(--u) * 70); }
 .local-car-detail .detail_promo .dp_steps{ list-style: none; margin-top: calc(var(--u) * 88); padding-left: calc(var(--u) * 70); }
 .local-car-detail .detail_promo .dp_steps li{ position: relative; min-height: calc(var(--u) * 214); padding-left: calc(var(--u) * 117); }
-.local-car-detail .detail_promo .dp_steps li:last-child{ min-height: calc(var(--u) * 114); }
-.local-car-detail .detail_promo .dp_steps li:not(:last-child)::after{ content: ""; position: absolute; left: calc(var(--u) * 33); top: calc(var(--u) * 82); width: calc(var(--u) * 4); height: calc(var(--u) * 116); background: repeating-linear-gradient(to bottom, #9a9a9a 0 calc(var(--u) * 4), transparent calc(var(--u) * 4) calc(var(--u) * 8)); }
-.local-car-detail .detail_promo .dp_num{ position: absolute; left: calc(var(--u) * 2); top: 0; width: calc(var(--u) * 66); height: calc(var(--u) * 66); border-radius: 50%; background: #2e2e2e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: calc(var(--u) * 36); font-weight: 800; letter-spacing: 0; }
+.local-car-detail .detail_promo .dp_steps li:last-child{ min-height: calc(var(--u) * 114); padding-bottom: 0; }
+.local-car-detail .detail_promo .dp_steps li:not(:last-child)::after{ content: ""; position: absolute; left: calc(var(--u) * 33); top: calc(var(--u) * 82); width: calc(var(--u) * 4); background: repeating-linear-gradient(to bottom, #9a9a9a 0 calc(var(--u) * 4), transparent calc(var(--u) * 4) calc(var(--u) * 8)); height: auto; bottom: calc(var(--u) * 16); }
+.local-car-detail .detail_promo .dp_num{ position: absolute; left: calc(var(--u) * 2); top: 0; width: calc(var(--u) * 66); height: calc(var(--u) * 66); border-radius: 50%; background: #2e2e2e; color: #fff; display: flex; align-items: center; justify-content: center; letter-spacing: 0; }
 .local-car-detail .detail_promo .dp_steps--mgr .dp_num{ background: var(--g); }
-.local-car-detail .detail_promo .dp_st{ display: flex; align-items: center; height: calc(var(--u) * 66); font-size: calc(var(--u) * 43); font-weight: 800; letter-spacing: 0; }
-.local-car-detail .detail_promo .dp_instant{ width: calc(var(--u) * 58); height: auto; margin-left: calc(var(--u) * 18); transform: translateY(calc(var(--u) * -4)); }
-.local-car-detail .detail_promo .dp_sd{ margin-top: calc(var(--u) * 8); font-size: calc(var(--u) * 33.5); line-height: calc(var(--u) * 40); letter-spacing: 0; color: #000; white-space: nowrap; }
-.local-car-detail .detail_promo .dp_pill{ display: inline-flex; align-items: center; height: calc(var(--u) * 89); margin: calc(var(--u) * 173) 0 0 calc(var(--u) * 44); padding: 0 calc(var(--u) * 33) 0 calc(var(--u) * 26); border-radius: calc(var(--u) * 26); background: #e7e7e7; color: var(--g); font-size: calc(var(--u) * 51); font-weight: 800; letter-spacing: 0; }
+.local-car-detail .detail_promo .dp_st{ display: flex; align-items: center; height: calc(var(--u) * 66); }
+.local-car-detail .detail_promo .dp_instant{ height: auto; }
+.local-car-detail .detail_promo .dp_sd{ margin-top: calc(var(--u) * 8); }
+.local-car-detail .detail_promo .dp_pill{ display: inline-flex; align-items: center; height: calc(var(--u) * 89); margin: calc(var(--u) * 173) 0 0 calc(var(--u) * 44); padding: 0 calc(var(--u) * 33) 0 calc(var(--u) * 26); border-radius: calc(var(--u) * 26); background: #e7e7e7; color: var(--g); }
 .local-car-detail .detail_promo .dp_steps--mgr{ margin-top: calc(var(--u) * 73); }
 
 /* ④ 같은 조건, 다른 차량 */
 .local-car-detail .detail_promo .dp_band{ height: calc(var(--u) * 23); margin-top: calc(var(--u) * 238); background: #eee; }
 .local-car-detail .detail_promo .dp_same{ padding: calc(var(--u) * 94) 0 calc(var(--u) * 211); }
-.local-car-detail .detail_promo .dp_same .dp_h{ line-height: calc(var(--u) * 80); }
-.local-car-detail .detail_promo .dp_chip{ display: inline-flex; align-items: center; height: calc(var(--u) * 66); margin: calc(var(--u) * 15) 0 0 calc(var(--u) * 62); padding: 0 calc(var(--u) * 36) 0 calc(var(--u) * 26); border-radius: calc(var(--u) * 18); background: #e8e8e8; font-size: calc(var(--u) * 33); letter-spacing: -0.01em; white-space: nowrap; }
-.local-car-detail .detail_promo .dp_chip b{ font-weight: 800; margin-right: calc(var(--u) * 33); }
-.local-car-detail .detail_promo .dp_blabel{ margin-top: calc(var(--u) * 47); padding-left: calc(var(--u) * 70); font-size: calc(var(--u) * 37); line-height: calc(var(--u) * 48); font-weight: 800; letter-spacing: -0.04em; }
+.local-car-detail .detail_promo .dp_chip{ display: inline-flex; align-items: center; height: calc(var(--u) * 66); margin: calc(var(--u) * 15) 0 0 calc(var(--u) * 62); padding: 0 calc(var(--u) * 36) 0 calc(var(--u) * 26); border-radius: calc(var(--u) * 18); background: #e8e8e8; white-space: nowrap; }
+.local-car-detail .detail_promo .dp_blabel{ margin-top: calc(var(--u) * 47); padding-left: calc(var(--u) * 70); }
 .local-car-detail .detail_promo .dp_ctrack{ display: flex; gap: calc(var(--u) * 41); margin-top: calc(var(--u) * 60); padding: 0 calc(var(--u) * 62); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 calc(var(--u) * 62); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .local-car-detail .detail_promo .dp_ctrack::-webkit-scrollbar{ display: none; }
-.local-car-detail .detail_promo .dp_card{ position: relative; flex: 0 0 calc(var(--u) * 434); height: calc(var(--u) * 518); border-radius: calc(var(--u) * 18); background: #e8e8e8; color: #000; text-decoration: none; scroll-snap-align: start; }
-.local-car-detail .detail_promo .dp_cname{ position: absolute; left: calc(var(--u) * 20); right: calc(var(--u) * 20); top: calc(var(--u) * 66); text-align: center; font-size: calc(var(--u) * 45); line-height: calc(var(--u) * 52); font-weight: 500; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.local-car-detail .detail_promo .dp_card img{ position: absolute; left: 50%; top: calc(var(--u) * 150); width: calc(var(--u) * 360); height: calc(var(--u) * 190); transform: translateX(-50%); object-fit: contain; }
-.local-car-detail .detail_promo .dp_ccond{ position: absolute; left: 0; right: 0; top: calc(var(--u) * 372); text-align: center; font-size: calc(var(--u) * 22); line-height: calc(var(--u) * 30); letter-spacing: -0.03em; color: #000; white-space: nowrap; }
-.local-car-detail .detail_promo .dp_cprice{ position: absolute; left: 0; right: 0; top: calc(var(--u) * 424); text-align: center; font-size: calc(var(--u) * 44); line-height: calc(var(--u) * 56); font-weight: 800; letter-spacing: -0.03em; }
+.local-car-detail .detail_promo .dp_card{ position: relative; flex: 0 0 calc(var(--u) * 434); border-radius: calc(var(--u) * 18); background: #e8e8e8; color: #000; text-decoration: none; scroll-snap-align: start; }
+.local-car-detail .detail_promo .dp_cname{ text-align: center; text-overflow: ellipsis; }
+.local-car-detail .detail_promo .dp_card img{ left: 50%; top: calc(var(--u) * 150); object-fit: contain; }
+.local-car-detail .detail_promo .dp_ccond{ text-align: center; }
+.local-car-detail .detail_promo .dp_cprice{ text-align: center; }
 
 /* ==========================================================================
    v181 · 차량 상세 하단 — '자주 묻는 질문' · 'ChaQ Guide' (메인 index.html 섹션 그대로)
@@ -2618,48 +2411,32 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 .local-car-detail .dfg button{ font: inherit; }
 .local-car-detail .dfg .content-pad{ padding-right: 20px; padding-left: 20px; }
 .local-car-detail .dfg .section-space{ padding-top: 28px; padding-bottom: 28px; }
-.local-car-detail .dfg .faq-section h2, .local-car-detail .dfg .guide-section h2{ margin: 0px; font-size: 18px; font-weight: 800; letter-spacing: -0.6px; }
-.local-car-detail .dfg .more-button{ display: flex; width: 100%; height: 43px; align-items: center; justify-content: center; margin-top: 14px; border: 1px solid rgb(226, 226, 226); border-radius: 7px; color: rgb(114, 119, 125); background: rgb(255, 255, 255); font-size: 13px; cursor: pointer; box-shadow: rgba(32, 71, 47, 0.055) 0px 2px 6px; }
+.local-car-detail .dfg .faq-section h2, .local-car-detail .dfg .guide-section h2{ margin: 0px; letter-spacing: -0.6px; font-size: 22px; font-weight: 700; }
+.local-car-detail .dfg .more-button{ display: flex; width: 100%; height: 43px; align-items: center; justify-content: center; margin-top: 14px; border: 1px solid rgb(226, 226, 226); border-radius: 7px; color: rgb(114, 119, 125); background: rgb(255, 255, 255); cursor: pointer; box-shadow: rgba(32, 71, 47, 0.055) 0px 2px 6px; }
 .local-car-detail .dfg .faq-section, .local-car-detail .dfg .guide-section{ background: rgb(255, 255, 255); }
 .local-car-detail .dfg .faq-section{ border-top: 0px; }
-.local-car-detail .dfg .faq-list{ display: grid; gap: 12px; margin-top: 15px; }
-.local-car-detail .dfg .faq-list details{ border: 0px; border-radius: 14px; background: rgb(244, 244, 244); }
-.local-car-detail .dfg .faq-list summary{ display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px; list-style: none; cursor: pointer; }
+.local-car-detail .dfg .faq-list{ display: grid; gap: 12px; }
+.local-car-detail .dfg .faq-list details{ border: 0px; border-radius: 14px; }
+.local-car-detail .dfg .faq-list summary{ display: flex; justify-content: space-between; padding: 18px; list-style: none; cursor: pointer; }
 .local-car-detail .dfg .faq-list summary::-webkit-details-marker{ display: none; }
-.local-car-detail .dfg .faq-cat{ align-self: flex-start; padding: 4px 10px; border-radius: 7px; background: rgb(227, 227, 227); color: rgb(139, 139, 139); font-size: 13px; }
-.local-car-detail .dfg .faq-q{ color: rgb(28, 31, 34); font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.35; }
+.local-car-detail .dfg .faq-cat{ align-self: flex-start; padding: 4px 10px; border-radius: 7px; color: rgb(139, 139, 139); background: rgb(236, 236, 236); }
+.local-car-detail .dfg .faq-q{ color: rgb(28, 31, 34); letter-spacing: -0.3px; line-height: 1.35; font-size: 18px; font-weight: 700; }
 .local-car-detail .dfg .faq-arrow{ flex: 0 0 auto; width: 11px; height: 11px; margin-top: -4px; border-right: 2px solid rgb(154, 160, 166); border-bottom: 2px solid rgb(154, 160, 166); transform: rotate(45deg); transition: transform 0.2s; }
 .local-car-detail .dfg .faq-list details[open] .faq-arrow{ margin-top: 4px; transform: rotate(-135deg); }
-.local-car-detail .dfg .faq-list p{ margin: 0px; padding: 2px 18px 20px; color: rgb(92, 97, 103); font-size: 13px; line-height: 1.7; }
+.local-car-detail .dfg .faq-list p{ margin: 0px; padding: 2px 18px 20px; color: rgb(92, 97, 103); line-height: 1.7; font-size: 14px; font-weight: 400; }
 .local-car-detail .dfg .guide-section{ padding-bottom: 35px; border-top: 0px; }
-.local-car-detail .dfg .guide-section > p{ margin: 3px 0px 15px; color: rgb(139, 145, 152); font-size: 11px; }
+.local-car-detail .dfg .guide-section > p{ margin: 3px 0px 15px; color: rgb(139, 145, 152); margin-bottom: 19.2px; font-size: 13px; font-weight: 400; }
 .local-car-detail .dfg .guide-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.local-car-detail .dfg .guide-grid button{ display: flex; min-height: 122px; overflow: hidden; padding: 0px; border: 0px; border-radius: 11px; flex-direction: column; color: rgb(25, 27, 30); background: rgb(244, 244, 244); text-align: left; cursor: pointer; }
-.local-car-detail .dfg .guide-grid button strong{ width: 100%; padding: 13px 12px; background: rgb(222, 223, 226); font-size: 13px; }
-.local-car-detail .dfg .guide-grid button span{ padding: 12px 12px 0px; color: rgb(141, 146, 152); font-size: 11px; line-height: 1.5; }
-.local-car-detail .dfg .guide-grid button b{ margin-top: auto; padding: 0px 12px 13px; font-size: 11px; }
+.local-car-detail .dfg .guide-grid button{ display: flex; overflow: hidden; padding: 0px; border: 0px; border-radius: 11px; flex-direction: column; color: rgb(25, 27, 30); text-align: left; cursor: pointer; min-height: 122px; }
+.local-car-detail .dfg .guide-grid button strong{ width: 100%; padding: 13px 12px; background: rgb(222, 223, 226); font-size: 16px; font-weight: 700; }
+.local-car-detail .dfg .guide-grid button span{ padding: 12px 12px 0px; color: rgb(141, 146, 152); line-height: 1.5; }
+.local-car-detail .dfg .guide-grid button b{ padding: 0px 12px 13px; margin-top: 20px; font-size: 14px; font-weight: 400; }
 @media (max-width: 360px){ .local-car-detail .dfg .content-pad{ padding-right: 16px; padding-left: 16px; } }
 .local-car-detail .dfg .faq-list details, .local-car-detail .dfg .guide-grid button{ background: rgb(245, 245, 245); }
-.local-car-detail .dfg .faq-cat{ background: rgb(236, 236, 236); }
-.local-car-detail .dfg .faq-list p, .local-car-detail .dfg .guide-section > p, .local-car-detail .dfg .guide-grid button span, .local-car-detail .dfg .guide-grid button b{ font-size: 12.5px; }
-.local-car-detail .dfg .faq-section h2, .local-car-detail .dfg .guide-section h2{ font-size: 21px; }
-.local-car-detail .dfg .faq-q{ font-size: 18px; }
-.local-car-detail .dfg .more-button{ font-size: 14.5px; }
 .local-car-detail .dfg .faq-list{ margin-top: 19.2px; }
-.local-car-detail .dfg .guide-section > p{ margin-bottom: 19.2px; }
-.local-car-detail .dfg .guide-grid button strong{ font-size: 16px; }
-.local-car-detail .dfg .guide-grid button{ min-height: 122px; }
-.local-car-detail .dfg .guide-grid button b{ margin-top: 20px; font-size: 14px; }
-.local-car-detail .dfg .faq-list p{ font-size: 14px; }
 .local-car-detail .dfg .faq-list summary{ flex-direction: column; align-items: stretch; gap: 9px; }
 .local-car-detail .dfg .faq-qrow{ display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.local-car-detail .dfg .faq-section h2, .local-car-detail .dfg .guide-section h2{ font-size: 22px; font-weight: 700; }
-.local-car-detail .dfg .faq-q{ font-size: 18px; font-weight: 700; }
-.local-car-detail .dfg .guide-grid button strong{ font-size: 16px; font-weight: 700; }
 .local-car-detail .dfg .more-button{ font-size: 14px; font-weight: 400; }
-.local-car-detail .dfg .faq-list p{ font-size: 14px; font-weight: 400; }
-.local-car-detail .dfg .guide-grid button b{ font-size: 14px; font-weight: 400; }
-.local-car-detail .dfg .guide-section > p{ font-size: 13px; font-weight: 400; }
 .local-car-detail .dfg .guide-grid button span{ font-size: 13px; font-weight: 400; }
 .local-car-detail .dfg .faq-cat{ font-size: 13px; font-weight: 400; }
 .local-car-detail .dfg .guide-section .guide-grid button strong, .local-car-detail .dfg .guide-section .guide-grid button span, .local-car-detail .dfg .guide-section .guide-grid button b{ transform: translateX(2%); }
@@ -2687,42 +2464,28 @@ body.local-sub.settings.sub-white { background: #f4f4f4; }
 .local-car-detail .detail_promo .dp_st{ font-size: 16px; font-weight: 700; letter-spacing: normal; color: rgb(32, 33, 36); }
 .local-car-detail .detail_promo .dp_instant{ width: 22px; margin-left: 6px; transform: translateY(-2px); }
 .local-car-detail .detail_promo .dp_sd{ font-size: 14px; line-height: 1.6; font-weight: 400; letter-spacing: normal; color: rgb(92, 97, 103); white-space: normal; word-break: keep-all; }
-.local-car-detail .detail_promo .dp_steps li{ padding-bottom: 14px; }
-.local-car-detail .detail_promo .dp_steps li:last-child{ padding-bottom: 0; }
-.local-car-detail .detail_promo .dp_steps li:not(:last-child)::after{ height: auto; bottom: calc(var(--u) * 16); }   /* 설명이 두 줄이 돼도 점선이 다음 번호까지 이어지도록 */
+.local-car-detail .detail_promo .dp_steps li{ padding-bottom: 14px; }   /* 설명이 두 줄이 돼도 점선이 다음 번호까지 이어지도록 */
 .local-car-detail .detail_promo .dp_pill{ font-size: 15px; font-weight: 700; letter-spacing: normal; }
 .local-car-detail .detail_promo .dp_chip{ font-size: 13px; letter-spacing: normal; }
 .local-car-detail .detail_promo .dp_chip b{ font-weight: 700; margin-right: 8px; }
 .local-car-detail .detail_promo .dp_blabel{ font-size: 15px; line-height: 1.4; font-weight: 700; letter-spacing: normal; color: rgb(32, 33, 36); }
-.local-car-detail .detail_promo .dp_cname{ font-size: 16px; line-height: 1.3; font-weight: 700; letter-spacing: normal; color: rgb(32, 33, 36); }
+.local-car-detail .detail_promo .dp_cname{ font-size: 16px; line-height: 1.3; font-weight: 700; letter-spacing: normal; color: rgb(32, 33, 36); width: 100%; white-space: normal; word-break: keep-all; overflow: visible; }
 .local-car-detail .detail_promo .dp_ccond{ font-size: 11px; line-height: 1.4; font-weight: 400; letter-spacing: normal; color: rgb(139, 139, 139); }
 .local-car-detail .detail_promo .dp_cprice{ font-size: 18px; line-height: 1.3; font-weight: 800; letter-spacing: normal; color: rgb(32, 33, 36); }
 /* 같은 조건 카드: 글자가 px 고정으로 커져 긴 차명·조건 문구가 잘리지 않도록 카드 내부를 위→아래 흐름으로 (카드 폭·간격·높이 하한은 그대로) */
 .local-car-detail .detail_promo .dp_card{ display: flex; flex-direction: column; align-items: center; height: auto; min-height: calc(var(--u) * 518); padding: 20px 12px 16px; text-align: center; }
 .local-car-detail .detail_promo .dp_cname, .local-car-detail .detail_promo .dp_ccond, .local-car-detail .detail_promo .dp_cprice{ position: static; left: auto; right: auto; top: auto; }
-.local-car-detail .detail_promo .dp_cname{ width: 100%; white-space: normal; word-break: keep-all; overflow: visible; }
 .local-car-detail .detail_promo .dp_card img{ position: static; transform: none; width: 100%; height: calc(var(--u) * 190); margin-top: 8px; }
 .local-car-detail .detail_promo .dp_ccond{ width: 100%; margin-top: auto; padding-top: 8px; white-space: normal; word-break: keep-all; }
 .local-car-detail .detail_promo .dp_cprice{ margin-top: 4px; }
 .local-car-detail .detail_promo .dp_steps{ padding-right: calc(var(--u) * 70); }   /* 설명 줄바꿈 시 오른쪽 여백 = 왼쪽 여백 */
-.local-car-detail .detail_promo .dp_tile--mgr .dp_td{ max-width: 58%; word-break: keep-all; }   /* 사진 인물 위로 글자가 겹치지 않게 */
-.local-car-detail .detail_promo .dp_tile--mgr .dp_tt{ top: calc(var(--u) * 38); }
-.local-car-detail .detail_promo .dp_tile--mgr .dp_td{ bottom: calc(var(--u) * 38); line-height: 1.45; }
-
-/* ==========================================================================
-   v184 · 후기 위젯 제목 = 아래 섹션 제목(22px·700·-0.6px) / '인수 시 총 비용' ↔ 후기 제목 간격 50% 확대
-   (기존 55px = 가격 줄→구분선 36px + 구분선→제목 19px → 각각 1.5배: 54px + 28.5px = 82.5px)
-   ========================================================================== */
-.local-car-detail .detail_reviews{ margin-top: 36px; padding-top: 27.5px; }   /* 위 가격 카드 margin-bottom 18px 과 상쇄(collapse)되므로 36px → 실제 +18px */
+.local-car-detail .detail_promo .dp_tile--mgr .dp_td{ max-width: 58%; word-break: keep-all; bottom: calc(var(--u) * 38); line-height: 1.45; }   /* 사진 인물 위로 글자가 겹치지 않게 */   /* 위 가격 카드 margin-bottom 18px 과 상쇄(collapse)되므로 36px → 실제 +18px */
 .local-car-detail .detail_reviews .drv_head .cond_label{ font-size: 22px; font-weight: 700; letter-spacing: -0.6px; line-height: normal; color: rgb(22, 24, 27); }
-.local-car-detail .detail_reviews .drv_head .cond_label b{ font-weight: 700; }
 
 /* ==========================================================================
    v185 · 후기 위젯: 제목 옆 개수 숨김 / 구분선 = 견적조회 섹션 구분선(8px · #f1f3f5, 화면 전체 폭)
    구분선을 '인수 시 총 비용' 줄과 후기 제목 사이 정중앙에 (전체 간격 82.5px 유지 → 위 37.25px · 선 8px · 아래 37.25px)
-   ========================================================================== */
-.local-car-detail .detail_reviews .drv_head .cond_label b{ display: none; }
-.local-car-detail .detail_reviews{ border-top: 8px solid rgb(241, 243, 245); margin-top: 19.25px; padding-top: 37.25px; }   /* 가격 카드 padding 18px + margin 19.25px(카드 margin 18px 과 상쇄) = 37.25px */
+   ========================================================================== */   /* 가격 카드 padding 18px + margin 19.25px(카드 margin 18px 과 상쇄) = 37.25px */
 
 /* v189 · 차량 상세 로딩 중 견본 차량(마크업 기본값) 깜빡임 방지 — 데이터 반영 전까지 본문 숨김 + 가운데 로딩 표시 */
 html.chaq-detail-loading .local-car-detail .detail_shell > :not(.detail_header),
@@ -2741,7 +2504,6 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-special-list .fpop_empty { margin: 36px 8px; color: #9aa0a6; font-size: 14px; line-height: 1.6; text-align: center; }
 .local-special-list .stock-copy strong.is-inquiry { color: #5c6169; }
 .local-special-list .est_card .est_monthly b.is-inquiry { color: #5c6169; }
-.local-car-detail .detail_trimsel { margin-top: 14px; }
 .local-car-detail .detail_trimsel .dts_head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; color: #232733; font-size: 14px; font-weight: 700; }
 .local-car-detail .detail_trimsel .dts_head small { overflow: hidden; color: #8a8f96; font-size: 12px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .local-car-detail .detail_trimsel .dts_row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -2761,13 +2523,13 @@ html.chaq-detail-loading .local-car-detail::after{
 /* 재고특가·빠른인도 카드: 옵션 옆 세부 등급 태그 */
 .local-special-list .stock-copy b .trim-tag { overflow: hidden; max-width: 9.5em; text-overflow: ellipsis; }
 /* v194: 상세 '세부 등급' 한 줄(트림명 · 트림 가격 · 기본옵션 N개 (i) · '>') + '같은 차량 다른 재고' */
-.local-car-detail .detail_trimsel .dts_bar { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px 10px 14px; border: 1px solid #e3e6ea; border-radius: 12px; background: #fff; }
+.local-car-detail .detail_trimsel .dts_bar { display: flex; align-items: center; min-height: 48px; border: 1px solid #e3e6ea; border-radius: 12px; }
 .local-car-detail .detail_trimsel .dts_bar.is-select { cursor: pointer; }
-.local-car-detail .detail_trimsel .dts_name { overflow: hidden; min-width: 0; flex: 0 1 auto; color: #232733; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.local-car-detail .detail_trimsel .dts_price { flex: none; color: #232733; font-size: 14px; font-weight: 600; white-space: nowrap; }
-.local-car-detail .detail_trimsel .dts_std { display: inline-flex; flex: none; align-items: center; gap: 4px; color: #8a8f96; font-size: 13px; white-space: nowrap; }
-.local-car-detail .detail_trimsel .dts_info { display: inline-flex; width: 17px; height: 17px; padding: 0; align-items: center; justify-content: center; border: 1.4px solid #9aa0a6; border-radius: 50%; background: transparent; color: #8a8f96; font: italic 700 11px/1 Georgia, serif; cursor: pointer; }
-.local-car-detail .detail_trimsel .dts_go { display: inline-flex; flex: none; margin-left: auto; color: #9aa0a6; }
+.local-car-detail .detail_trimsel .dts_name { overflow: hidden; min-width: 0; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_price { flex: none; font-weight: 600; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_std { display: inline-flex; flex: none; align-items: center; gap: 4px; white-space: nowrap; }
+.local-car-detail .detail_trimsel .dts_info { display: inline-flex; width: 17px; height: 17px; padding: 0; align-items: center; justify-content: center; border: 1.4px solid #9aa0a6; border-radius: 50%; font: italic 700 11px/1 Georgia, serif; cursor: pointer; }
+.local-car-detail .detail_trimsel .dts_go { display: inline-flex; flex: none; }
 .local-car-detail .detail_trimsel .dts_go svg { width: 20px; height: 20px; }
 .local-car-detail .detail_samestock { display: flex; width: 100%; min-height: 46px; margin-top: 8px; padding: 0 12px 0 14px; align-items: center; gap: 8px; border: 0; border-radius: 12px; background: var(--detail-green-soft); color: var(--detail-green); font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; }
 .local-car-detail .detail_samestock .dss_n { margin-left: auto; }
@@ -2783,11 +2545,10 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .dts_pop .dts_std_list li { padding: 11px 2px; border-bottom: 1px solid #f1f2f4; color: #4a4f55; font-size: 14px; line-height: 1.45; }
 .local-car-detail .dts_pop .dts_empty { margin: 40px 0; color: #9aa0a6; font-size: 14px; text-align: center; }
 .local-car-detail .detail_trimsel .dts_bar { gap: 8px; padding: 10px 10px 10px 12px; }
-.local-car-detail .detail_trimsel .dts_name { font-size: 14.5px; }
+.local-car-detail .detail_trimsel .dts_name { font-size: 14.5px; flex: 0 1 auto; }
 .local-car-detail .detail_trimsel .dts_price { font-size: 13.5px; }
 .local-car-detail .detail_trimsel .dts_std { font-size: 12.5px; }
 .local-car-detail .detail_trimsel .dts_go { margin-left: auto; }
-.local-car-detail .detail_trimsel .dts_name { flex: 0 1 auto; }
 .local-car-detail .detail_trimsel .dts_std { margin-left: auto; }
 .local-car-detail .detail_trimsel .dts_std + .dts_go { margin-left: 0; }
 /* v197: 재고특가·빠른인도 상세 — 색상·포함사항 위젯 (세부 등급 줄·같은 차량 다른 재고와 같은 둥근 사각형, 좌측 제목 · 우측 태그) */
@@ -2798,12 +2559,6 @@ html.chaq-detail-loading .local-car-detail::after{
 /* v198: 재고특가·빠른인도 상세 — 색상·포함사항 태그 배경 제거, 포함사항 위젯 ~ 월 납입금 간격 2배(13 → 26px) */
 .local-car-detail .detail_tags.detail_widget > span { background: transparent; padding-left: 4px; padding-right: 4px; }
 .local-car-detail .detail_includes.detail_widget ~ .detail_monthly { margin-top: 26px; }
-/* v198: 견적조회·재고특가·빠른인도 상세 공통 — 월 납입금(라벨·금액) 오른쪽으로 10% */
-.local-car-detail .detail_card .detail_monthly { padding-left: 10%; }
-/* v199: 월 납입금(라벨·금액) — v198 위치(10%)에서 왼쪽으로 20px */
-.local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 20px); }
-/* v200: 월 납입금(라벨·금액) — v199 위치에서 왼쪽으로 2px 더 */
-.local-car-detail .detail_card .detail_monthly { padding-left: calc(10% - 22px); }
 /* v201: 상세 조건 설정 — 상품(장기렌트·운용리스) 2개 버튼이 줄 끝까지 반반 */
 .local-car-detail .cond_wrap .filter_row.cond_type_row { grid-template-columns: repeat(2, 1fr); }
 /* v201: 재고특가·빠른인도 '옵션상세' 하단 팝업 (보기 전용 행) */
@@ -2816,7 +2571,6 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .opt_detail_pop .opt_row.opt_total span { color: #232733; font-weight: 700; }
 .local-car-detail .opt_detail_pop .opt_row.opt_total small { color: #8a8f96; font-size: 12px; font-weight: 400; }
 /* v203: 상단 차량 카드 — 월 납입금 ↔ 옵션상세/옵션선택 버튼 좌우 위치 교체 (버튼 왼쪽, 월 납입금 오른쪽 · 기존과 같은 여백으로 대칭) */
-.local-car-detail .option_check_button { left: 18px; right: auto; }
 .local-car-detail .detail_card .detail_monthly { align-items: flex-end; text-align: right; padding-left: 0; padding-right: calc(10% - 22px); }
 
 /* ===== 약관 페이지 (agreement.html) — 자체 스타일, 외부 파일 없음 ===== */
@@ -2842,11 +2596,10 @@ html.chaq-detail-loading .local-car-detail::after{
 /* ② 차량명 아래 연식·유종·구동 줄: 간격 70% 줄임(13px→4px) · 차량명·그 줄을 아래 정보 박스 안 글자와 같은 좌측선(박스 안쪽 15px) */
 .local-car-detail .detail_card > h2 { margin-bottom: 0; padding-left: 15px; }
 .local-car-detail .detail_card > .detail_year { margin-top: 4px; margin-bottom: 0; padding-left: 15px; }
-.local-car-detail .detail_trimsel .dts_bar { padding-left: 14px; }
+.local-car-detail .detail_trimsel .dts_bar { padding-left: 14px; background: #4f545b; border-color: #4f545b; }
 .local-car-detail .detail_samestock { padding-left: 15px; }
 /* ③ 트림 박스: 50% 아래로(13px→20px) · 진한 회색 */
 .local-car-detail .detail_card .detail_trimsel { margin-top: 20px; }
-.local-car-detail .detail_trimsel .dts_bar { background: #4f545b; border-color: #4f545b; }
 .local-car-detail .detail_trimsel .dts_name, .local-car-detail .detail_trimsel .dts_price { color: #fff; }
 .local-car-detail .detail_trimsel .dts_std { color: #d7dade; }
 .local-car-detail .detail_trimsel .dts_info { border-color: #d7dade; color: #d7dade; background: transparent; }

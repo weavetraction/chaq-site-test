@@ -10,12 +10,12 @@ img{display:block;max-width:100%}
 main{background:#fff}
 .content-pad{padding-right:20px;padding-left:20px}
 .section-space{padding-top:28px;padding-bottom:28px}
-.top-promo{position:relative;display:flex;min-height:34.5px;align-items:center;justify-content:center;padding:6px 36px 6px 14px;color:#fff;background:#3f965c;font-size:11px;text-align:center}
+.top-promo{position:relative;display:flex;min-height:34.5px;align-items:center;justify-content:center;padding:6px 36px 6px 14px;color:#fff;background:#3f965c;text-align:center}
 .top-promo button{position:absolute;right:10px;width:24px;height:24px;border:0;color:#fff;background:transparent;font-size:16px;cursor:pointer}
 .main-header{display:flex;height:55px;align-items:center;justify-content:space-between;padding:0 20px;background:#fff;border-bottom:1px solid #eceff0}
 .brand{display:flex;width:58px;height:24px;align-items:center;overflow:hidden}
 .brand img{width:100%;height:100%;max-width:none;object-fit:contain;object-position:left center}
-.coupon-button{width:82px;height:31px;padding:0;border:0;background:transparent;cursor:pointer}
+.coupon-button{padding:0;border:0;background:transparent;cursor:pointer}
 .coupon-button img{width:100%;height:100%;object-fit:contain}
 .hero{position:relative;overflow:hidden;background:#fff}
 .hero-track{position:relative;aspect-ratio:10/5.7;background:#278f4e}
@@ -24,38 +24,33 @@ main{background:#fff}
 .hero-slide img{width:100%;height:100%;object-fit:cover}
 .hero-count{position:absolute;right:15px;bottom:10px;z-index:2;padding:3px 8px;border-radius:12px;color:#fff;background:rgba(0,0,0,.48);font-size:11px}
 .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 10px;padding:33px 20px 20px;background:#fff}
-.quick-grid a{display:flex;min-width:0;align-items:center;flex-direction:column;gap:8px;color:#484d54;font-size:11px;text-align:center}
+.quick-grid a{display:flex;min-width:0;align-items:center;flex-direction:column;gap:8px;color:#484d54;text-align:center}
 .quick-grid img{width:31.5px;height:31.5px;object-fit:contain}
-.finder-wrap{padding-top:28px;padding-bottom:12px}
-.finder-card{position:relative;display:flex;min-height:92px;overflow:hidden;align-items:center;border:1px solid #e2e2e2;border-radius:12px;background:#f4f4f4;box-shadow:none}
+.finder-card{position:relative;display:flex;min-height:92px;overflow:hidden;align-items:center;border:1px solid #e2e2e2;border-radius:12px;box-shadow:none}
 .finder-copy{position:relative;z-index:4;display:flex;width:66%;padding:15px 0 15px 16px;flex-direction:column;transform:translateX(3%)}
-.finder-copy small{color:#8e949b;font-size:11px}
-.finder-copy strong{margin-top:2.94px;font-size:18px;font-weight:660;letter-spacing:-.8px}
-.finder-copy b{margin-top:8.64px;color:#6f757b;font-size:11px;font-weight:600}
+.finder-copy small{color:#8e949b}
+.finder-copy strong{margin-top:2.94px;letter-spacing:-.8px}
+.finder-copy b{margin-top:8.64px;color:#6f757b}
 .logo-chip-slider{position:absolute;top:0;right:0;width:42%;height:100%;overflow:hidden;transform:translateX(-7%)}
 .logo-chip-window{position:absolute;inset:0}
 .logo-chip-window::before,.logo-chip-window::after{position:absolute;top:0;bottom:0;width:33.6%;z-index:5;content:"";pointer-events:none}
-.logo-chip-window::before{left:0;background:linear-gradient(90deg,#f4f4f4 0%,rgba(244,244,244,.88) 34%,rgba(244,244,244,0) 100%)}
-.logo-chip-window::after{right:0;background:linear-gradient(90deg,rgba(244,244,244,0) 0%,rgba(244,244,244,.88) 66%,#f4f4f4 100%)}
 .logo-chip-card{position:absolute;top:50%;left:58%;width:53.5px;height:53.5px;opacity:0;transform:translate(-50%,-50%) scale(.72);filter:blur(.2px);transition:opacity .4s ease,transform .4s cubic-bezier(.22,.61,.36,1);z-index:1}
 .logo-chip-card img{width:100%;height:100%;object-fit:contain}
 .logo-chip-card.is-active{opacity:1;transform:translate(-50%,-50%) scale(1);filter:drop-shadow(0 8px 16px rgba(0,0,0,.07));z-index:6}
 .logo-chip-card.is-prev{opacity:.24;transform:translate(-135%,-50%) scale(.7);z-index:2}
 .logo-chip-card.is-next{opacity:.38;transform:translate(35%,-50%) scale(.7);z-index:2}
-.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.6px}
+.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{margin:0;letter-spacing:-.6px}
 .delivery-section h2{display:flex;align-items:center;gap:6px}
-.delivery-section h2 img{width:19px;height:19px;object-fit:contain}
-.delivery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
-.delivery-grid a{display:flex;min-height:111px;padding:17px 15px;border:1px solid #e2e2e2;border-radius:12px;flex-direction:column;background:#f4f4f4}
-.delivery-grid small{color:#6f8576;font-size:11px}
-.delivery-grid strong{margin-top:3px;color:#23a45c;font-size:16px}
-.delivery-grid b{margin-top:auto;color:#18a358;font-size:22px;line-height:1}
+.delivery-section h2 img{object-fit:contain}
+.delivery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.delivery-grid a{display:flex;padding:17px 15px;border:1px solid #e2e2e2;border-radius:12px;flex-direction:column}
+.delivery-grid small{color:#6f8576}
+.delivery-grid strong{margin-top:3px;color:#23a45c}
+.delivery-grid b{margin-top:auto;color:#18a358;line-height:1}
 .stock-section{border:0;background:#fff}
-.section-heading p{margin:3px 0 0;color:#8e949b;font-size:11px}
-.price-filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 14px}
-.price-filters button{height:34px;border:1px solid #e2e2e2;border-radius:6px;color:#656b72;background:#fff;font-size:11px;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
-.price-filters button.is-active{border-color:var(--green);color:#fff;background:var(--green);font-weight:700;box-shadow:0 3px 7px rgba(32,71,47,.1)}
-.stock-panel{padding:9px 16px 16px;border-radius:14px;background:#f4f4f4}
+.section-heading p{margin:3px 0 0;color:#8e949b}
+.price-filters{grid-template-columns:repeat(3,1fr);margin:16px 0 14px}
+.stock-panel{padding:9px 16px 16px;border-radius:14px}
 .stock-list{display:grid;gap:0}
 .stock-card{position:relative;display:grid;min-height:96px;padding:14.4px 0;grid-template-columns:105px 1fr auto;grid-template-rows:1fr;background:transparent}
 .stock-card[hidden]{display:none!important}
@@ -63,58 +58,57 @@ main{background:#fff}
 .stock-badge{display:none}
 .stock-card>img{align-self:center;width:98px;height:70px;object-fit:contain;transform:scale(1.18)}
 .stock-copy{display:flex;min-width:0;justify-content:center;flex-direction:column;padding-left:9px}
-.stock-copy small{overflow:hidden;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
-.stock-copy strong{margin-top:4px;font-size:18px;font-weight:800;letter-spacing:-.7px;white-space:nowrap}
+.stock-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-copy strong{margin-top:4px;letter-spacing:-.7px;white-space:nowrap}
 .stock-copy b{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;margin-top:5px;color:#666d74;font-size:11px;font-weight:500;white-space:nowrap}
-.opt-tag{padding:2.375px 5px;border-radius:5px;background:#e3e3e3;color:#8b8b8b;font-size:11px;font-weight:400;line-height:1;white-space:nowrap}
+.opt-tag{padding:2.375px 5px;border-radius:5px;color:#8b8b8b;font-size:11px;font-weight:400;line-height:1;white-space:nowrap}
 .opt-tag em{font-style:normal;font-weight:400}
-.stock-cta{align-self:center;margin-left:8px;margin-right:8px;padding:6px 10px;border:1px solid #e2e2e2;border-radius:7px;background:transparent;color:#20a65a;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;transform:translateX(10%)}
-.more-button{display:flex;width:100%;height:43px;align-items:center;justify-content:center;margin-top:14px;border:1px solid #e2e2e2;border-radius:7px;color:#72777d;background:#fff;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
+.stock-cta{align-self:center;margin-left:8px;margin-right:8px;padding:6px 10px;border:1px solid #e2e2e2;border-radius:7px;background:transparent;color:#20a65a;line-height:1;white-space:nowrap;transform:translateX(10%)}
+.more-button{display:flex;width:100%;height:43px;align-items:center;justify-content:center;margin-top:14px;border:1px solid #e2e2e2;border-radius:7px;color:#72777d;background:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
 .more-button span{margin-left:4px}
-.discount-card{margin-top:15px;padding:5px 16px 16px;border-radius:13px;background:#f4f4f4}
-.discount-live-tag{display:inline-block;margin-bottom:8px;padding:4px 9px;border-radius:6px;background:#e3e3e3;color:#8b8b8b;font-size:11px;font-weight:600;line-height:1}
-.discount-card a:not(.more-button){display:flex;min-height:64px;align-items:center;justify-content:space-between;border-top:.5px solid #f2f2f2}
+.discount-card{padding:5px 16px 16px;border-radius:13px}
+.discount-live-tag{display:inline-block;margin-bottom:8px;padding:4px 9px;border-radius:6px;color:#8b8b8b;font-size:11px;font-weight:600;line-height:1}
+.discount-card a:not(.more-button){display:flex;align-items:center;justify-content:space-between;border-top:.5px solid #f2f2f2;min-height:76.8px}
 .discount-card a:not(.more-button):first-of-type{border-top:0}
 .discount-card span{display:flex;align-items:center;gap:10px}
 .discount-card .brand-text{display:flex;flex-direction:column;font-style:normal}
-.discount-card small{color:#81878e;font-size:11px}
-.discount-card b{margin-top:3px;font-size:13px}
-.discount-card .brand-logo{width:28px;height:28px;padding:5px;border-radius:50%;background:#fff;object-fit:contain;box-sizing:border-box;flex:none}
+.discount-card small{color:#81878e}
+.discount-card b{margin-top:3px}
+.discount-card .brand-logo{background:#fff;object-fit:contain;box-sizing:border-box;flex:none}
 .discount-card strong{color:#777e84;font-size:11px;font-weight:500}
-.discount-card em{margin-left:5px;color:#36ab68;font-size:16px;font-style:normal;font-weight:800}
+.discount-card em{margin-left:5px;color:#36ab68;font-style:normal;font-weight:800}
 .cash-banner-wrap{padding-top:10px;padding-bottom:22px}
 .cash-banner{display:flex;min-height:107px;align-items:center;justify-content:space-between;padding:18px 20px;border-radius:12px;color:#fff;background:linear-gradient(112deg,#3c9a5d,#217d45)}
 .cash-banner span{display:flex;flex-direction:column}
-.cash-banner small{font-size:11px}
-.cash-banner strong{margin-top:3px;font-size:22px;font-weight:800;letter-spacing:-.7px}
-.cash-banner b{margin-top:15px;color:rgba(255,255,255,.7);font-size:11px;font-weight:500}
+.cash-banner strong{margin-top:3px;letter-spacing:-.7px}
+.cash-banner b{margin-top:15px;color:rgba(255,255,255,.7)}
 .cash-banner img{width:68px;height:68px;object-fit:contain;filter:brightness(0) invert(1)}
 .review-section,.faq-section,.guide-section{background:#fff}
-.review-scroll{display:grid;grid-auto-columns:calc(100%/2.1);grid-auto-flow:column;gap:10px;overflow-x:auto;margin:15px -20px 0;padding:0 20px 5px;scrollbar-width:none}
+.review-scroll{display:grid;grid-auto-flow:column;gap:10px;overflow-x:auto;margin:15px -20px 0;padding:0 20px 5px;scrollbar-width:none}
 .review-scroll::-webkit-scrollbar{display:none}
-.review-scroll article{display:flex;aspect-ratio:4/5;padding:18px 16px;border-radius:12px;flex-direction:column;background:#f4f4f4}
-.review-scroll article small{color:#74a384;font-size:11px}
-.stars{margin-top:8px;color:#f5c84b;font-size:13px;letter-spacing:1px}
-.review-scroll p{margin:12px 0;color:#4c5258;font-size:11px;line-height:1.65}
+.review-scroll article{display:flex;padding:18px 16px;border-radius:12px;flex-direction:column;aspect-ratio:auto;scroll-snap-align:center}
+.review-scroll article small{color:#74a384}
+.stars{margin-top:8px;color:#f5c84b;letter-spacing:1px}
+.review-scroll p{color:#4c5258;line-height:1.65;-webkit-box-orient:vertical}
 .review-scroll b{margin-top:auto;color:#55a871;font-size:11px}
 .faq-section{border-top:0}
-.faq-list{display:grid;gap:12px;margin-top:15px}
-.faq-list details{border:0;border-radius:14px;background:#f4f4f4}
-.faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;list-style:none;cursor:pointer}
+.faq-list{display:grid;gap:12px}
+.faq-list details{border:0;border-radius:14px}
+.faq-list summary{display:flex;justify-content:space-between;padding:18px;list-style:none;cursor:pointer}
 .faq-list summary::-webkit-details-marker{display:none}
 .faq-head{display:flex;min-width:0;flex-direction:column;gap:9px}
-.faq-cat{align-self:flex-start;padding:4px 10px;border-radius:7px;background:#e3e3e3;color:#8b8b8b;font-size:13px}
-.faq-q{color:#1c1f22;font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.35}
+.faq-cat{align-self:flex-start;padding:4px 10px;border-radius:7px;color:#8b8b8b}
+.faq-q{color:#1c1f22;letter-spacing:-.3px;line-height:1.35}
 .faq-arrow{flex:none;width:11px;height:11px;margin-top:-4px;border-right:2px solid #9aa0a6;border-bottom:2px solid #9aa0a6;transform:rotate(45deg);transition:transform .2s}
 .faq-list details[open] .faq-arrow{margin-top:4px;transform:rotate(-135deg)}
-.faq-list p{margin:0;padding:2px 18px 20px;color:#5c6167;font-size:13px;line-height:1.7}
+.faq-list p{margin:0;padding:2px 18px 20px;color:#5c6167;line-height:1.7}
 .guide-section{padding-bottom:35px;border-top:0}
-.guide-section>p{margin:3px 0 15px;color:#8b9198;font-size:11px}
+.guide-section>p{margin:3px 0 15px;color:#8b9198}
 .guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.guide-grid button{display:flex;min-height:122px;overflow:hidden;padding:0;border:0;border-radius:11px;flex-direction:column;color:#191b1e;background:#f4f4f4;text-align:left;cursor:pointer}
-.guide-grid button strong{width:100%;padding:13px 12px;background:#dedfe2;font-size:13px}
-.guide-grid button span{padding:12px 12px 0;color:#8d9298;font-size:11px;line-height:1.5}
-.guide-grid button b{margin-top:auto;padding:0 12px 13px;font-size:11px}
+.guide-grid button{display:flex;overflow:hidden;padding:0;border:0;border-radius:11px;flex-direction:column;color:#191b1e;text-align:left;cursor:pointer}
+.guide-grid button strong{width:100%;padding:13px 12px;background:#dedfe2}
+.guide-grid button span{padding:12px 12px 0;color:#8d9298;line-height:1.5}
+.guide-grid button b{padding:0 12px 13px}
 .company-footer{min-height:120px;padding-top:25px;color:#8a9097;background:#f4f4f4;font-size:11px}
 .company-footer img{width:58px;height:20px;object-fit:contain;object-position:left center}
 .company-footer details{margin-top:10px}
@@ -150,8 +144,7 @@ main{background:#fff}
 .menu-links a{display:grid;min-height:66.56px;align-items:center;grid-template-columns:72px 1fr;border-bottom:.5px solid #f4f4f4}
 .menu-links img{width:32.5px;height:32.5px;margin-left:14px;object-fit:contain}
 .menu-links span{display:flex;flex-direction:column}
-.menu-links strong{font-size:17px;font-weight:630}
-.menu-links small{margin-top:3px;color:#8b9198;font-size:12px}
+.menu-links small{margin-top:3px;color:#8b9198}
 .menu-cash{margin-top:38px}
 .toast{position:fixed;left:50%;bottom:92px;z-index:120;visibility:hidden;padding:11px 16px;transform:translate(-50%,12px);border-radius:22px;color:#fff;background:rgba(23,27,31,.9);font-size:11px;opacity:0;transition:.2s;white-space:nowrap}
 .toast.is-show{visibility:visible;transform:translate(-50%,0);opacity:1}
@@ -163,7 +156,7 @@ main{background:#fff}
   .bottom-nav{bottom:22px;border-radius:0 0 18px 18px}
   .full-menu-inner{box-shadow:0 0 24px rgba(20,30,40,.12)}
 }
-@media(max-width:360px){.content-pad{padding-right:16px;padding-left:16px}.stock-card{grid-template-columns:88px 1fr auto}.stock-card>img{width:84px}.stock-copy strong{font-size:16px}.finder-copy strong{font-size:16px}.cash-banner strong{font-size:18px}.menu-intro p{font-size:18px}.menu-intro h2{font-size:28px}}
+@media(max-width:360px){.content-pad{padding-right:16px;padding-left:16px}.stock-card{grid-template-columns:88px 1fr auto}.stock-card>img{width:84px}.menu-intro p{font-size:18px}.menu-intro h2{font-size:28px}}
 
 /* v31: 로고칩 좌/우 그라데이션 오른쪽 10% 이동 + 메뉴 팝업 헤더 좌우여백 본문과 통일(28px) */
 .logo-chip-window::before{left:10%}
@@ -182,15 +175,14 @@ main{background:#fff}
 .logo-chip-card svg{width:100%;height:100%;display:block;object-fit:contain}
 
 /* v44: 고객후기 카드 내 리뷰사진·차량명·트림 미니 흰색 카드 (후기내용과 이름 사이) */
-.review-scroll .review-mini{display:flex;align-items:center;gap:9px;margin-top:auto;margin-bottom:8px;padding:7px 9px;border-radius:9px;background:#fff;border:1px solid #e2e2e2}
+.review-scroll .review-mini{display:flex;align-items:center;gap:9px;margin-bottom:8px;padding:7px 9px;border-radius:9px;background:#fff;border:1px solid #e2e2e2;transform:translateY(10%);flex-wrap:nowrap}
 .review-scroll .review-mini img{width:40px;height:40px;border-radius:7px;object-fit:cover;background:#f2f2f2;flex:none}
 .review-scroll .review-mini .rm-info{display:flex;flex-direction:column;min-width:0}
-.review-scroll .review-mini .rm-info strong{font-size:12px;font-weight:700;color:#2a2e33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.review-scroll .review-mini .rm-info em{margin-top:1px;color:#8a8f96;font-size:10.5px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.review-scroll .review-mini .rm-info strong{color:#2a2e33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:400}
+.review-scroll .review-mini .rm-info em{margin-top:1px;color:#8a8f96;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:400}
 .review-scroll .review-mini+b{margin-top:0}
 
 /* v47: 고객후기 미니 흰색 카드 위치 약 10% 아래로 */
-.review-scroll .review-mini{transform:translateY(10%)}
 
 /* v55: 모든 페이지 공통 사업자 정보 푸터 */
 .chaq-biz-footer{padding:24px 20px 28px;background:#fff;border-top:1px solid #f0f0f0;color:#9aa0a6;font-size:11px;line-height:1.9;text-align:left}
@@ -202,10 +194,6 @@ main{background:#fff}
 /* car-detail: 고정 CTA바 위로 여백 확보 */
 .local-car-detail .detail_card:last-of-type{margin-bottom:18px}
 .local-car-detail .chaq-biz-footer{margin-bottom:104px}
-
-
-/* v62: 메인 8개 바로가기 메뉴 글자 1.5px 확대 (11 -> 12.5px) */
-.quick-grid a{font-size:12.5px}
 
 /* v63: 메인 지정 문구 12.5px 통일 */
 .finder-copy small,
@@ -221,24 +209,7 @@ main{background:#fff}
 .guide-section>p,
 .guide-grid button span,
 .guide-grid button b{font-size:12.5px}
-
-/* v64: '기다림 없는 신차 장기렌트' 섹션 제목 1.5px 확대 (18 -> 19.5px) */
-.delivery-section h2{font-size:19.5px}
-
-/* v65: 섹션 제목·재고특가 월비용·수입차 할인율 → 21px 통일 */
-.delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{font-size:21px}
-.stock-copy strong{font-size:21px}
 .discount-card em{font-size:21px}
-/* 차큐가 찾아드릴게요·빠른인도/즉시출고 차량·수입차 프로모션명·FAQ 질문 → 18px 통일 */
-.finder-copy strong,.delivery-grid strong,.discount-card b,.faq-q{font-size:18px}
-/* 차큐가 찾아드릴게요 카드: 두 문장 굵기 스왑 */
-.finder-copy small{font-weight:600}
-.finder-copy b{font-weight:400}
-
-/* v66: 수입차 프로모션명 16px 복귀 + '상세견적' 제외 버튼 폰트 +1.5px */
-.discount-card b{font-size:16px}
-.more-button{font-size:14.5px}
-.price-filters button{font-size:12.5px}
 
 /* ===== v67 ===== */
 /* 1) 8개 메뉴 ↔ 차큐가 찾아드릴게요 간격 +10% (48→52.8px), 그 아래 delivery와의 간격도 동일하게 */
@@ -248,7 +219,7 @@ main{background:#fff}
 .price-filters{margin-top:19.2px}
 .delivery-grid{margin-top:19.2px}
 .discount-card{margin-top:19.2px}
-.review-scroll{margin-top:19.2px}
+.review-scroll{margin-top:19.2px;grid-auto-columns:calc(100% - 40px);scroll-snap-type:x mandatory}
 .faq-list{margin-top:19.2px}
 .guide-section>p{margin-bottom:19.2px}
 
@@ -258,52 +229,36 @@ main{background:#fff}
 /* 4) 수입차 할인 '최대 N%' 정렬 — '최대'·'%' 세로 고정, 숫자 가운데, '%' 16px */
 .discount-card strong{display:grid;grid-template-columns:auto 44px auto;align-items:baseline;column-gap:1px}
 .discount-card .dc-max{margin-right:4px;color:#777e84;font-size:11px;font-weight:500}
-.discount-card .dc-num{text-align:center;color:#36ab68;font-size:21px;font-weight:800}
-.discount-card .dc-pct{color:#36ab68;font-size:16px;font-weight:800}
-
-/* 5) 가이드 카드 제목 16px */
-.guide-grid button strong{font-size:16px}
+.discount-card .dc-num{text-align:center;color:#36ab68;font-size:22px;font-weight:700}
+.discount-card .dc-pct{color:#36ab68;font-size:16px;font-weight:700}
 
 /* 6) 가이드 카드 CTA(무엇이든 물어보세요 등) ↔ 위 문장 간격 30px */
 .guide-grid button{min-height:122px}
-.guide-grid button b{margin-top:20px;font-size:14px}
+.guide-grid button b{margin-top:20px}
 
 /* 7) '기다림 없는 신차 장기렌트' 옆 초록 아이콘 +20% (19→22.8px) */
 .delivery-section h2 img{width:22.8px;height:22.8px}
 
 /* ===== v69 ===== */
 /* 수입차 할인 브랜드 로고: 원 → 둥근 사각형, 로고 15% 더 크게 (padding 5→3.7px) */
-.discount-card .brand-logo{border-radius:9px;padding:4.1px}
+.discount-card .brand-logo{border-radius:9px;padding:4.1px;width:30.8px;height:30.8px}
 
 /* ===== v70 ===== */
 /* 브랜드 로고 흰색 둥근 사각형 +10% (28→30.8px), 브랜드 할인 카드 높이 간격 +20% (64→76.8px) */
-.discount-card .brand-logo{width:30.8px;height:30.8px}
-.discount-card a:not(.more-button){min-height:76.8px}
 
 /* ===== v71 ===== */
 /* 상단 채널추가쿠폰 아이콘 +20% (82x31 → 98.4x37.2) */
 .coupon-button{width:98.4px;height:37.2px}
-/* 이용후기 본문 · FAQ 답변 본문 → 14px 통일 */
-.review-scroll p,.faq-list p{font-size:14px}
 
 /* ===== v72 ===== */
 
-/* 이용 후기 카드: 본문 길이와 무관하게 높이 고정, 본문은 넘치면 말줄임(...) */
-.review-scroll article{overflow:hidden}
-.review-scroll p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
-
 /* ===== v74 ===== */
 /* 이용 후기 카드 1개씩 보이게 (가로 폭 꽉 채움 + 스냅), 높이는 고정 유지 */
-.review-scroll{grid-auto-columns:calc(100% - 40px);scroll-snap-type:x mandatory}
-.review-scroll article{aspect-ratio:auto;height:622px;scroll-snap-align:center}
 
 /* ===== v76 ===== */
-/* 후기 본문 전체 노출(말줄임 해제) */
-.review-scroll p{display:block;-webkit-line-clamp:none;overflow:visible;text-overflow:clip}
 /* 후기 사진 최대 5장 겹쳐 노출 */
-.review-scroll .review-mini{flex-wrap:nowrap}
 .review-scroll .rm-photos{display:flex;flex:none;align-items:center}
-.review-scroll .rm-photos img{width:38px;height:38px;border-radius:9px;border:2px solid #fff;object-fit:cover;background:#f2f2f2;margin-left:-13px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.review-scroll .rm-photos img{width:38px;height:38px;border-radius:9px;border:2px solid #fff;object-fit:cover;background:#f2f2f2;margin-left:-13px;box-shadow:none}
 .review-scroll .rm-photos img:first-child{margin-left:0}
 
 /* ===== v77 ===== */
@@ -312,34 +267,18 @@ main{background:#fff}
 .review-scroll p{flex:1 1 0;min-height:0;margin:12px 0 0;overflow:hidden;display:block;-webkit-line-clamp:none;text-overflow:clip}
 .review-scroll .review-mini{margin-top:12px}
 /* 하단 흰색 카드 내 사진 그림자 제거 */
-.review-scroll .rm-photos img{box-shadow:none}
-
-/* ===== v78 ===== */
-/* 고객명 + 흰색 차량정보 카드(차량명·트림) 폰트 14px 통일 */
-.review-scroll article small{font-size:14px}
-.review-scroll .review-mini .rm-info strong{font-size:14px}
-.review-scroll .review-mini .rm-info em{font-size:14px}
-/* 별점 크기 2배 (13→26px) */
-.stars{font-size:26px}
 
 /* ===== v79 ===== */
 /* 빠른인도/즉시출고 카드 우측 하단 메뉴 아이콘 */
-.delivery-grid a{position:relative}
+.delivery-grid a{position:relative;min-height:141px}
 .delivery-grid .dg-icon{position:absolute;right:14px;bottom:14px;width:30px;height:30px;object-fit:contain}
 
 /* ===== v80 ===== */
-/* 빠른인도 카드(첫 번째)의 아이콘만 15% 확대 (30→34.5px) */
-.delivery-grid a:first-child .dg-icon{width:34.5px;height:34.5px}
 
 /* ===== v82 ===== */
-/* 상단 프로모 배너 문구 13px */
-.top-promo{font-size:13px}
 
 /* ===== v83 ===== */
-/* GNB 라벨 폰트 = 메인 8개 메뉴와 동일(12.5px) */
-.bottom-nav span{font-size:12.5px}
 /* 빠른인도/즉시출고 카드 대수 30px 아래로 (카드 높이 +30) */
-.delivery-grid a{min-height:141px}
 /* FAQ 화살표를 질문 문장과 수평 정렬 */
 .faq-list summary{flex-direction:column;align-items:stretch;gap:9px}
 .faq-qrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -358,7 +297,6 @@ main{background:#fff}
 .delivery-grid b{font-size:22px;font-weight:700}
 .delivery-section h2,.stock-section h2,.discount-section h2,.review-section h2,.faq-section h2,.guide-section h2{font-size:22px;font-weight:700}
 .stock-copy strong{font-size:22px;font-weight:700}
-.discount-card .dc-num{font-size:22px;font-weight:700}
 
 /* 18px / 700 */
 .finder-copy strong{font-size:18px;font-weight:700}
@@ -369,14 +307,11 @@ main{background:#fff}
 /* 16px / 700 */
 .discount-card b{font-size:16px;font-weight:700}
 .guide-grid button strong{font-size:16px;font-weight:700}
-.discount-card .dc-pct{font-size:16px;font-weight:700}
 
 /* 14px / 400 */
 .more-button{font-size:14px;font-weight:400}
 .review-scroll p{font-size:14px;font-weight:400}
 .review-scroll article small{font-size:14px;font-weight:400}
-.review-scroll .review-mini .rm-info strong{font-size:14px;font-weight:400}
-.review-scroll .review-mini .rm-info em{font-size:14px;font-weight:400}
 .faq-list p{font-size:14px;font-weight:400}
 .guide-grid button b{font-size:14px;font-weight:400}
 
@@ -387,13 +322,11 @@ main{background:#fff}
 .finder-copy small{font-size:13px;font-weight:400}
 .finder-copy b{font-size:13px;font-weight:400}
 .section-heading p{font-size:13px;font-weight:400}
-.price-filters button{font-size:13px;font-weight:400}
 .discount-card small{font-size:13px;font-weight:400}
 .cash-banner small{font-size:13px;font-weight:400}
 .cash-banner b{font-size:13px;font-weight:400}
 .guide-section>p{font-size:13px;font-weight:400}
 .guide-grid button span{font-size:13px;font-weight:400}
-.stock-copy small{font-size:13px;font-weight:400}
 .faq-cat{font-size:13px;font-weight:400}
 .stock-cta{font-size:13px;font-weight:500}
 .menu-links small{font-size:13px;font-weight:400}
