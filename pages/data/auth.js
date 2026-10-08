@@ -26,21 +26,19 @@
   function me(force) {
     if (!BASE) return Promise.resolve(null);
     if (loading && !force) return loading;
-    loading = api("/api/me").then(function (j) { state = j; ss(SS_ME, j); bootChannel(j); return j.member; }).catch(function () { return state ? state.member : null; });
+    loading = api("/api/me").then(function (j) { state = j; ss(SS_ME, j); bootChannel(); return j.member; }).catch(function () { return state ? state.member : null; });
     return loading;
   }
   function member() { return state && state.member; }
   function required() { return !!(state && state.auth && state.auth.required); }
 
-  // 채널톡: 회원이면 같은 고객으로 묶어서 부팅 (키는 관리자 '외부 연동' 또는 사이트 설정)
+  // 채널톡 버튼(사이트 설정에 플러그인 키가 있을 때만 — 기본은 사용 안 함, 상담은 카카오톡 채널)
   var booted = false;
-  function bootChannel(j) {
-    var key = (j && j.channel && j.channel.pluginKey) || C.channelPluginKey; if (!key || booted) return; booted = true;
+  function bootChannel() {
+    var key = C.channelPluginKey; if (!key || booted) return; booted = true;
     var w = window; if (!w.ChannelIO) { var ch = function () { ch.c(arguments); }; ch.q = []; ch.c = function (a) { ch.q.push(a); }; w.ChannelIO = ch;
       var s = document.createElement("script"); s.async = true; s.src = "https://cdn.channel.io/plugin/ch-plugin-web.js"; (document.head || document.body).appendChild(s); }
-    var o = { pluginKey: key, hideChannelButtonOnBoot: !C.channelButton, language: "ko" };
-    if (j.channel.memberId) { o.memberId = j.channel.memberId; if (j.channel.memberHash) o.memberHash = j.channel.memberHash; if (j.channel.profile) o.profile = j.channel.profile; }
-    try { w.ChannelIO("boot", o); } catch (e) {}
+    try { w.ChannelIO("boot", { pluginKey: key, hideChannelButtonOnBoot: !C.channelButton, language: "ko" }); } catch (e) {}
   }
 
   // ---------------------------------------------------------------- 가입·로그인 시트
@@ -166,7 +164,7 @@
       return openSheet(opts.reason || "mypage", opts.pending, "join").then(function (mm) { return mm && !mm.hasPhone ? openSheet(opts.reason, opts.pending, "phone") : mm; });
     });
   }
-  function logout() { return api("/api/auth/logout", { method: "POST" }).catch(function () {}).then(function () { state = null; ss(SS_ME, null); try { window.ChannelIO && window.ChannelIO("shutdown"); } catch (e) {} return me(true); }); }
+  function logout() { return api("/api/auth/logout", { method: "POST" }).catch(function () {}).then(function () { state = null; ss(SS_ME, null); return me(true); }); }
 
   // ---------------------------------------------------------------- 비회원 조건 변경 제한 (목록 5회 · 상세 2회)
   var bypass = false;

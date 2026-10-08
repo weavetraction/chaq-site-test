@@ -5,7 +5,6 @@ import { wrap, HttpError } from "../lib/http.js";
 import { config } from "../config.js";
 import { q } from "../db.js";
 import { integrations, kakaoLoginOn, smsOn, loginAvailable } from "../lib/integrations.js";
-import { channelMemberHash } from "../lib/messaging.js";
 import { Agree, currentMember, publicMember, issueMember, clearMember, sendCode, verifyPhone, kakaoState, readKakaoState, kakaoExchange, kakaoLogin, withdraw, setMarketing } from "../lib/members.js";
 import { reportView } from "../lib/inquiries.js";
 
@@ -33,11 +32,9 @@ const back = (ret: string, tag: string) => ret + (ret.includes("#") ? "&" : "#")
 // ---------------------------------------------------------------- 내 정보 (+ 로그인 수단·채널톡 연결값)
 memberRouter.get("/api/me", wrap(async (req, res) => {
   const m = await currentMember(req), i = await integrations();
-  const memberId = m ? "m" + m.id : null;
   res.json({
     member: publicMember(m),
     auth: { kakao: kakaoLoginOn(i), sms: smsOn(i) || (!config.isProd && process.env.DEV_SMS === "1"), required: loginAvailable(i) },
-    channel: { pluginKey: i.channelPluginKey || "", memberId, memberHash: memberId ? await channelMemberHash(memberId) : null, profile: m ? { name: m.name || m.nickname || "", mobileNumber: m.phone ? "+82" + m.phone.slice(1) : undefined } : null },
     kakaoChannel: i.kakaoChannelId ? { chat: `https://pf.kakao.com/${i.kakaoChannelId}/chat`, home: `https://pf.kakao.com/${i.kakaoChannelId}` } : null,
   });
 }));

@@ -5,7 +5,7 @@ import { getPublicPayload } from "../lib/quotes-store.js";
 import { InquiryInput, createInquiry, channelMessage } from "../lib/inquiries.js";
 import { currentMember } from "../lib/members.js";
 import { integrations, loginAvailable } from "../lib/integrations.js";
-import { pushQuoteToChannel } from "../lib/kakao-flow.js";
+import { sendQuoteAlimtalk } from "../lib/kakao-flow.js";
 import { config } from "../config.js";
 import { q } from "../db.js";
 import { getPublicVm } from "../lib/vm-store.js";
@@ -112,7 +112,7 @@ publicRouter.post("/api/inquiries", inquiryLimit, async (req, res, next) => {
     if (!member && parsed.data.source === "FORM" && !ph) return res.status(400).json({ error: "연락처를 입력해 주세요" });
     if (!member && ph && parsed.data.privacyAgreed !== true) return res.status(400).json({ error: "개인정보 수집·이용에 동의해 주세요" });
     const r = await createInquiry(parsed.data, { ip: req.ip || "", ua: String(req.headers["user-agent"] || ""), member });
-    const kakao = member ? await pushQuoteToChannel(r as any, member, parsed.data) : null;   // 채널톡 → 알림톡(견적 내용) 발송 계기
+    const kakao = member ? await sendQuoteAlimtalk(r as any, member, parsed.data) : null;   // 카카오톡 알림톡으로 견적서 (실패 시 문자)
     res.status(201).json({ id: r.id, createdAt: r.created_at, message: channelMessage(parsed.data, r.id), report: r.report_token, kakao: kakao ? { sent: kakao.ok } : null });
   } catch (e) { next(e); }
 });

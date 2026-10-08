@@ -1,4 +1,4 @@
-/* 상담 문의 — 회원 로그인 수단(카카오·휴대폰)이 켜져 있으면: 로그인 → 견적 그대로 접수 → 카카오톡(알림톡)으로 견적서 → 카카오 상담 (data/auth.js)
+/* 상담 문의 — 회원 로그인 수단(카카오·휴대폰)이 켜져 있으면: 로그인 → 견적 그대로 접수 → 카카오톡 알림톡으로 견적서 → 카카오톡 채널 채팅방에서 상담 (data/auth.js)
    로그인 수단이 없으면 기존 방식: 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식(이름·연락처·동의)
    · '이 조건 그대로 문의하기'(차량 상세): 차량·등급·사양·조건·월 납입금·옵션·색상을 함께 접수
    · 그 밖의 상담 버튼([data-pending-link][data-action="inquiry"]): 일반 상담 (버튼 제목을 상담 주제로)
@@ -97,7 +97,6 @@
     AU.api("/api/inquiries", { method: "POST", json: body }).then(function (j) {
       sending = false;
       try { if (T) T.lead(j.id, c); } catch (x) {}
-      try { if (window.ChannelIO) window.ChannelIO("track", "견적문의", { quoteNo: j.id, car: (c.carName + " " + (c.trimName || "")).trim(), monthly: c.monthly || 0 }); } catch (x) {}
       var list = lsGet(LS_INQ); list.unshift({ id: j.id, at: new Date().toISOString(), car: (c.carName + " " + (c.trimName || "")).trim(), cond: condLine(c), topic: c.topic || "", recId: c.recId || null, report: j.report || null }); lsSet(LS_INQ, list.slice(0, 20));
       showDone(c, j);
     }).catch(function (e) {

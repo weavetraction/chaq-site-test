@@ -1,6 +1,5 @@
-// 외부 발송: 인증문자(NHN Cloud SMS) · 채널톡 고객 정보(알림톡 캠페인 변수)
-import crypto from "node:crypto";
-import { integrations, smsOn, channelApiOn } from "./integrations.js";
+// 외부 발송 (NHN Cloud): 인증문자(SMS) · 카카오톡 알림톡(KakaoTalk Bizmessage)
+import { integrations, smsOn, alimtalkOn } from "./integrations.js";
 import { log } from "./log.js";
 
 const TIMEOUT = 6000;
@@ -27,20 +26,19 @@ export async function sendSms(to: string, text: string) {
   return { ...r, ok };
 }
 
-/** 채널톡 회원 해시 (사이트 채널톡 버튼을 같은 고객으로 묶을 때) */
-export async function channelMemberHash(memberId: string) {
+/** 알림톡 (NHN Cloud KakaoTalk Bizmessage · 템플릿 치환 발송). 카카오톡이 없거나 실패하면 LMS 로 대체 발송(문자 발신번호 필요) */
+export async function sendAlimtalk(to: string, params: Record<string, string>, fallback?: { title: string; text: string }) {
   const i = await integrations();
-  return i.channelMemberHashSecret ? crypto.createHmac("sha256", i.channelMemberHashSecret).update(memberId).digest("hex") : null;
-}
-
-/** 채널톡 고객 정보 갱신 (memberId 기준, 없으면 생성) — 알림톡 캠페인이 이 값을 변수로 씀 */
-export async function channelUpsertUser(memberId: string, profile: Record<string, unknown>) {
-  const i = await integrations();
-  if (!channelApiOn(i)) return { ok: false, status: 0, text: "채널톡 API 연동 전" };
-  const headers = { "content-type": "application/json", "x-access-key": i.channelAccessKey, "x-access-secret": i.channelAccessSecret };
-  const body = JSON.stringify({ profile });
-  let r = await call(`https://api.channel.io/open/v5/users/@${encodeURIComponent(memberId)}`, { method: "PUT", headers, body });
-  if (r.status === 404) r = await call(`https://api.channel.io/open/v4/users/@${encodeURIComponent(memberId)}`, { method: "PUT", headers, body });
-  if (!r.ok) log.warn({ status: r.status, text: r.text }, "[channel] 고객 정보 갱신 실패");
-  return r;
+  if (!alimtalkOn(i)) return { ok: false, status: 0, text: "알림톡 연동 전" };
+  const rcpt: any = { recipientNo: to, templateParameter: params };
+  if (fallback && i.smsSender) rcpt.resendParameter = { isResend: true, resendType: "LMS", resendTitle: fallback.title.slice(0, 20), resendContent: fallback.text.slice(0, 1000), resendSendNo: i.smsSender };
+  const r = await call(`https://kakaotalk-bizmessage.api.nhncloudservice.com/alimtalk/v2.3/appkeys/${encodeURIComponent(i.alimtalkAppKey)}/messages`, {
+    method: "POST",
+    headers: { "content-type": "application/json;charset=UTF-8", "X-Secret-Key": i.alimtalkSecretKey },
+    body: JSON.stringify({ senderKey: i.alimtalkSenderKey, templateCode: i.alimtalkTemplateCode, recipientList: [rcpt] }),
+  });
+  let ok = r.ok;
+  try { const j = JSON.parse(r.text); const res = j?.message?.sendResults?.[0]; ok = r.ok && j?.header?.isSuccessful === true && (!res || res.resultCode === 0); } catch { ok = false; }
+  if (!ok) log.warn({ status: r.status, text: r.text }, "[alimtalk] 발송 실패");
+  return { ...r, ok };
 }

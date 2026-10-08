@@ -1,38 +1,41 @@
-// 견적 문의 → 채널톡 고객 정보(견적 내용) 갱신 → 채널톡 캠페인(이벤트 '견적문의')이 알림톡 발송
-//  · 알림톡 문구의 변수 = 아래 profile 키 (채널톡 고객 정보 '프로필'에 같은 이름으로 들어감)
-//  · 사이트에서도 같은 회원(memberId)으로 ChannelIO('track', '견적문의') 를 보냄 (inquiry.js)
+// 견적 문의 → 카카오톡 알림톡(NHN Cloud)으로 견적서 → 고객은 카카오톡 채널 채팅방에서 상담 이어감 (카카오톡 채널 관리자센터 1:1 채팅)
+//  · 템플릿 변수(#{…}) = 아래 params 키. 템플릿 버튼 '견적서 보기' 주소: https://chaq.co.kr/pages/quote-report.html?t=#{견적서코드}
+//  · 카카오톡이 없거나 받을 수 없으면 같은 내용 문자(LMS)로 대체 발송
 import { q } from "../db.js";
 import { config } from "../config.js";
-import { channelUpsertUser } from "./messaging.js";
-import { fmtPhone, type InquiryInputT } from "./inquiries.js";
+import { sendAlimtalk } from "./messaging.js";
+import type { InquiryInputT } from "./inquiries.js";
 
-const PLAN: Record<string, string> = { "0": "0%", b: "보증금 30%", s: "선납금 30%" };
+const PLAN: Record<string, string> = { "0": "초기비용 0원", b: "보증금 30%", s: "선납금 30%" };
 export function reportUrl(token: string, pageUrl = "") {
   let origin = config.siteOrigins[0] || "";
   if (!origin) { try { origin = new URL(pageUrl).origin; } catch { origin = ""; } }
   return `${origin}/pages/quote-report.html?t=${token}`;
 }
-export async function pushQuoteToChannel(row: { id: number; report_token: string; page_url?: string }, m: { id: number; name: string; nickname: string; phone: string | null }, i: InquiryInputT) {
+/** 알림톡 변수 값 (빈 값이면 카카오가 거절하므로 기본 문구로 채움) */
+export function quoteParams(id: number, token: string, m: { name: string; nickname: string }, i: InquiryInputT) {
   const s = i.snapshot || {}, c = i.conditions || {};
-  const profile: Record<string, unknown> = {
-    name: m.name || m.nickname || undefined,
-    mobileNumber: m.phone ? "+82" + m.phone.slice(1) : undefined,
-    quoteNo: String(row.id),
-    quoteCar: [i.carName, i.trimName].filter(Boolean).join(" ").slice(0, 80),
-    quoteSpec: (i.spec || "").slice(0, 80),
-    quoteProduct: s.product || c.product || "",
-    quoteTerm: s.term || (c.term ? (Number(c.term) % 12 === 0 ? Number(c.term) / 12 + "년" : c.term + "개월") : ""),
-    quotePlan: s.plan || PLAN[c.plan || ""] || "",
-    quoteDist: s.dist || (c.dist && Number(c.dist) ? (Number(c.dist) * 10000).toLocaleString("ko-KR") + "km" : ""),
-    quoteMonthly: i.monthly ? i.monthly.toLocaleString("ko-KR") + "원" : "상담 시 안내",
-    quoteDelivery: s.delivery || "상담 시 안내",
-    quoteUrl: reportUrl(row.report_token, i.pageUrl),
-    quoteToken: row.report_token,                 // 알림톡 버튼 주소: https://chaq.co.kr/pages/quote-report.html?t=#{quoteToken} (도메인은 고정, 뒤만 변수)
-    quotePhone: m.phone ? fmtPhone(m.phone) : "",
-  };
-  for (const k of Object.keys(profile)) if (profile[k] === undefined || profile[k] === "") delete profile[k];
-  const r = await channelUpsertUser("m" + m.id, profile);
+  const v = (x: unknown, d = "상담 시 안내") => (String(x ?? "").trim() || d).slice(0, 60);
+  return {
+    고객명: v(m.name || m.nickname, "고객"),
+    차량: v([i.carName, i.trimName].filter(Boolean).join(" "), "상담 차량"),
+    상품구분: v(s.product || c.product, "장기렌트"),
+    이용기간: v(s.term || (c.term ? (Number(c.term) % 12 === 0 ? Number(c.term) / 12 + "년" : c.term + "개월") : "")),
+    초기비용: v(s.plan || PLAN[c.plan || ""]),
+    주행거리: v(s.dist || (c.dist && Number(c.dist) ? "연 " + (Number(c.dist) * 10000).toLocaleString("ko-KR") + "km" : "")),
+    월납입금: v(i.monthly ? i.monthly.toLocaleString("ko-KR") + "원" : ""),
+    출고: v(s.delivery),
+    접수번호: String(id),
+    견적서코드: token,
+  } as Record<string, string>;
+}
+export async function sendQuoteAlimtalk(row: { id: number; report_token: string }, m: { id: number; name: string; nickname: string; phone: string | null }, i: InquiryInputT) {
+  if (!m.phone) return { ok: false, status: 0, text: "휴대폰 번호 없음" };
+  const p = quoteParams(row.id, row.report_token, m, i);
+  const url = reportUrl(row.report_token, i.pageUrl);
+  const lms = `[차큐] 견적서가 도착했어요\n\n- 차량: ${p.차량}\n- 상품구분: ${p.상품구분}\n- 이용기간: ${p.이용기간}\n- 초기비용: ${p.초기비용}\n- 연간주행거리: ${p.주행거리}\n- 월 납입금: ${p.월납입금}\n- 출고: ${p.출고}\n\n견적서 보기: ${url}\n문의 1533-5663 (접수번호 ${row.id})`;
+  const r = await sendAlimtalk(m.phone, p, { title: "차큐 견적서", text: lms });
   if (r.ok) await q(`UPDATE inquiries SET kakao_sent_at = now() WHERE id = $1`, [row.id]);
-  await q(`UPDATE inquiries SET conv_log = conv_log || $2::jsonb WHERE id = $1`, [row.id, JSON.stringify([{ to: "channel", event: "profile", ok: r.ok, status: r.status, text: r.ok ? "" : r.text, at: new Date().toISOString() }])]);
+  await q(`UPDATE inquiries SET conv_log = conv_log || $2::jsonb WHERE id = $1`, [row.id, JSON.stringify([{ to: "alimtalk", event: "quote", ok: r.ok, status: r.status, text: r.ok ? "" : r.text, at: new Date().toISOString() }])]);
   return r;
 }
