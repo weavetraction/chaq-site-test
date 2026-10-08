@@ -1,4 +1,4 @@
-// 외부 발송: 인증문자(솔라피) · 채널톡 고객 정보(알림톡 캠페인 변수)
+// 외부 발송: 인증문자(NHN Cloud SMS) · 채널톡 고객 정보(알림톡 캠페인 변수)
 import crypto from "node:crypto";
 import { integrations, smsOn, channelApiOn } from "./integrations.js";
 import { log } from "./log.js";
@@ -11,19 +11,20 @@ async function call(url: string, init: RequestInit) {
   finally { clearTimeout(t); }
 }
 
-/** 인증문자 (솔라피 SMS) — 성공 여부만 */
+/** 인증문자 (NHN Cloud Notification SMS · 인증용 발송) — 본문에 '인증' 포함 */
 export async function sendSms(to: string, text: string) {
   const i = await integrations();
   if (!smsOn(i)) return { ok: false, status: 0, text: "인증문자 연동 전" };
-  const date = new Date().toISOString(), salt = crypto.randomBytes(16).toString("hex");
-  const signature = crypto.createHmac("sha256", i.smsApiSecret).update(date + salt).digest("hex");
-  const r = await call("https://api.solapi.com/messages/v4/send", {
+  const r = await call(`https://api-sms.cloud.toast.com/sms/v3.0/appKeys/${encodeURIComponent(i.smsAppKey)}/sender/auth/sms`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `HMAC-SHA256 apiKey=${i.smsApiKey}, date=${date}, salt=${salt}, signature=${signature}` },
-    body: JSON.stringify({ message: { to, from: i.smsSender, text } }),
+    headers: { "content-type": "application/json;charset=UTF-8", "X-Secret-Key": i.smsSecretKey },
+    body: JSON.stringify({ body: text, sendNo: i.smsSender, recipientList: [{ recipientNo: to }] }),
   });
-  if (!r.ok) log.warn({ status: r.status, text: r.text }, "[sms] 발송 실패");
-  return r;
+  // HTTP 200 이어도 header.isSuccessful · 수신자별 resultCode(0) 로 성공 판단
+  let ok = r.ok;
+  try { const j = JSON.parse(r.text); const res = j?.body?.data?.sendResultList?.[0]; ok = r.ok && j?.header?.isSuccessful === true && (!res || res.resultCode === 0); } catch { ok = false; }
+  if (!ok) log.warn({ status: r.status, text: r.text }, "[sms] 발송 실패");
+  return { ...r, ok };
 }
 
 /** 채널톡 회원 해시 (사이트 채널톡 버튼을 같은 고객으로 묶을 때) */

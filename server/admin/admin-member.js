@@ -6,7 +6,7 @@
     ["카카오 로그인", [["kakaoRestApiKey", "REST API 키", "카카오 디벨로퍼스 > 내 애플리케이션 > 앱 키"], ["kakaoClientSecret", "Client Secret", "카카오 로그인 > 보안 (사용 설정한 경우만)"]]],
     ["카카오톡 채널", [["kakaoChannelId", "채널 ID", "채널 홈 주소 pf.kakao.com/ 뒤의 _로 시작하는 값 (예: _AbCdE)"]]],
     ["채널톡 (카카오 상담·알림톡)", [["channelPluginKey", "플러그인 키", "채널톡 > 설정 > 채널 설정 > 버튼 설치"], ["channelAccessKey", "API Access Key", "채널톡 > 설정 > API 키 관리"], ["channelAccessSecret", "API Access Secret", ""], ["channelMemberHashSecret", "회원 해시 비밀값", "채널톡 > 설정 > 보안 > 회원 해시 (켠 경우만)"]]],
-    ["휴대폰 인증문자 (솔라피)", [["smsApiKey", "API Key", "솔라피 > 개발/연동 > API Key 관리"], ["smsApiSecret", "API Secret", ""], ["smsSender", "발신번호", "솔라피에 등록·승인된 번호 (예: 1533-5663)"]]],
+    ["휴대폰 인증문자 (NHN Cloud)", [["smsAppKey", "Appkey", "NHN Cloud 콘솔 > Notification > SMS > URL & Appkey"], ["smsSecretKey", "Secret Key", "같은 화면"], ["smsSender", "발신번호", "SMS > 발신번호 관리에 등록·승인된 번호 (예: 1533-5663)"]]],
   ];
   var cur = null;
   function render(d) {

@@ -1,4 +1,4 @@
-// 외부 연동 키 (카카오 로그인 · 채널톡 · 인증문자) — 관리자 화면 '외부 연동'에서 입력, DB(app_state)에 암호화 저장
+// 외부 연동 키 (카카오 로그인 · 채널톡 · 인증문자 NHN Cloud) — 관리자 화면 '외부 연동'에서 입력, DB(app_state)에 암호화 저장
 //  · 환경변수가 있으면 환경변수가 우선 (KAKAO_REST_API_KEY 등)
 //  · 비밀값은 관리자 화면에도 끝 4자리만 보임
 import crypto from "node:crypto";
@@ -14,18 +14,18 @@ export const IntegrationsInput = z.object({
   channelAccessKey: z.string().trim().max(100),         // 채널톡 > 설정 > API 키 관리
   channelAccessSecret: z.string().trim().max(200),
   channelMemberHashSecret: z.string().trim().max(200),  // 채널톡 > 설정 > 보안 > 회원 해시 (사용 시)
-  smsApiKey: z.string().trim().max(100),                // 인증문자(솔라피) API Key
-  smsApiSecret: z.string().trim().max(200),
+  smsAppKey: z.string().trim().max(100),                // 인증문자(NHN Cloud SMS) 앱키 — 콘솔 > Notification > SMS > URL & Appkey
+  smsSecretKey: z.string().trim().max(200),             // 같은 화면의 Secret Key
   smsSender: z.string().trim().max(20).transform((v) => v.replace(/\D/g, "")),   // 등록된 발신번호 (예: 15335663)
 }).partial();
 export type Integrations = { [K in keyof z.infer<typeof IntegrationsInput>]-?: string };
 
-const KEYS: (keyof Integrations)[] = ["kakaoRestApiKey", "kakaoClientSecret", "kakaoChannelId", "channelPluginKey", "channelAccessKey", "channelAccessSecret", "channelMemberHashSecret", "smsApiKey", "smsApiSecret", "smsSender"];
-const SECRET: (keyof Integrations)[] = ["kakaoClientSecret", "channelAccessSecret", "channelMemberHashSecret", "smsApiSecret"];
+const KEYS: (keyof Integrations)[] = ["kakaoRestApiKey", "kakaoClientSecret", "kakaoChannelId", "channelPluginKey", "channelAccessKey", "channelAccessSecret", "channelMemberHashSecret", "smsAppKey", "smsSecretKey", "smsSender"];
+const SECRET: (keyof Integrations)[] = ["kakaoClientSecret", "channelAccessSecret", "channelMemberHashSecret", "smsSecretKey"];
 const ENV: Record<keyof Integrations, string> = {
   kakaoRestApiKey: "KAKAO_REST_API_KEY", kakaoClientSecret: "KAKAO_CLIENT_SECRET", kakaoChannelId: "KAKAO_CHANNEL_ID",
   channelPluginKey: "CHANNEL_PLUGIN_KEY", channelAccessKey: "CHANNEL_ACCESS_KEY", channelAccessSecret: "CHANNEL_ACCESS_SECRET", channelMemberHashSecret: "CHANNEL_MEMBER_HASH_SECRET",
-  smsApiKey: "SMS_API_KEY", smsApiSecret: "SMS_API_SECRET", smsSender: "SMS_SENDER",
+  smsAppKey: "NHN_SMS_APP_KEY", smsSecretKey: "NHN_SMS_SECRET_KEY", smsSender: "SMS_SENDER",
 };
 const STATE_KEY = "integrations_v1";
 
@@ -54,7 +54,7 @@ export async function integrations(): Promise<Integrations> {
   return v;
 }
 export const kakaoLoginOn = (i: Integrations) => !!i.kakaoRestApiKey;
-export const smsOn = (i: Integrations) => !!(i.smsApiKey && i.smsApiSecret && i.smsSender);
+export const smsOn = (i: Integrations) => !!(i.smsAppKey && i.smsSecretKey && i.smsSender);
 export const channelApiOn = (i: Integrations) => !!(i.channelAccessKey && i.channelAccessSecret);
 /** 로그인 수단이 하나라도 있으면 문의는 회원만 (없으면 기존 상담 신청 양식으로 받음 — 사이트가 막히지 않게) */
 export const loginAvailable = (i: Integrations) => kakaoLoginOn(i) || smsOn(i) || (!config.isProd && process.env.DEV_SMS === "1");
