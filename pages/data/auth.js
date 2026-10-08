@@ -100,7 +100,7 @@
         (phoneOnly ? '' : '<div class="au_agree"><label class="all"><input type="checkbox" data-all>전체 동의</label>' +
           '<label><input type="checkbox" data-req="age">[필수] 만 14세 이상입니다</label>' +
           '<label><input type="checkbox" data-req="terms">[필수] 이용약관 동의<a href="' + agreementsHref() + '#terms" target="_blank" rel="noopener">보기</a></label>' +
-          '<label><input type="checkbox" data-req="privacy"><span>[필수] 개인정보 수집·이용 동의<small>휴대폰 번호·이름(카카오 가입 시 카카오 회원번호·닉네임), 상담 차량·조건 / 회원 관리·견적 상담·알림톡 안내 / 회원 탈퇴 시까지 (상담 기록은 상담 종료 후 1년)</small></span><a href="' + agreementsHref() + '#privacy" target="_blank" rel="noopener">보기</a></label>' +
+          '<label><input type="checkbox" data-req="privacy"><span>[필수] 개인정보 수집·이용 동의<small>휴대전화번호·이름(카카오 가입 시 카카오 계정의 이름·휴대전화번호·회원번호·닉네임), 상담 차량·조건 / 회원 관리·견적 상담·알림톡 안내 / 회원 탈퇴 시까지 (상담 기록은 상담 종료 후 1년)</small></span><a href="' + agreementsHref() + '#privacy" target="_blank" rel="noopener">보기</a></label>' +
           '<label><input type="checkbox" data-opt="marketing">[선택] 혜택·이벤트 소식 받기 (카카오톡·문자)</label>' +
           '<p class="au_agree_hint">[필수] 항목에 모두 동의해야 시작할 수 있어요</p></div>') +
         '<p class="au_err" role="alert"></p>' +
