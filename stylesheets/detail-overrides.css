@@ -2595,10 +2595,11 @@ html.chaq-detail-loading .local-car-detail::after{
 /* ===================================================================== 261008 대표 수정 (차량 상세) */
 /* ② 차량명 아래 연식·유종·구동 줄: 간격 70% 줄임(13px→4px) · 차량명·그 줄을 아래 정보 박스 안 글자와 같은 좌측선(박스 안쪽 15px) */
 .local-car-detail .detail_card > h2 { margin-bottom: 0; padding-left: 15px; }
+.local-car-detail .detail_card > h2, .local-car-detail .detail_card > .detail_year { word-break: keep-all; }   /* 좁은 화면에서 차명·단어가 글자 중간에서 끊기지 않게 */
 .local-car-detail .detail_card > .detail_year { margin-top: 4px; margin-bottom: 0; padding-left: 15px; }
-.local-car-detail .detail_trimsel .dts_bar { padding-left: 14px; background: #4f545b; border-color: #4f545b; }
+.local-car-detail .detail_trimsel .dts_bar { padding-left: 14px; background: #000; border-color: #000; }
 .local-car-detail .detail_samestock { padding-left: 15px; }
-/* ③ 트림 박스: 50% 아래로(13px→20px) · 진한 회색 */
+/* ③ 트림 박스: 50% 아래로(13px→20px) · 검정 */
 .local-car-detail .detail_card .detail_trimsel { margin-top: 20px; }
 .local-car-detail .detail_trimsel .dts_name, .local-car-detail .detail_trimsel .dts_price { color: #fff; }
 .local-car-detail .detail_trimsel .dts_std { color: #d7dade; }
@@ -2606,8 +2607,10 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_trimsel .dts_go { color: #fff; }
 /* ④ 색상: 외장·내장 구분 표기 */
 .local-car-detail .detail_colors .color-tag .ct_kind { margin-right: 5px; color: #8a8f96; font-size: 12px; font-style: normal; font-weight: 600; }
-/* ⑤ 옵션상세 버튼: 트림 박스와 같은 진한 회색 */
-.local-car-detail .option_check_button, .local-car-detail .detail_card .option_check_button { background: #4f545b; border-color: #4f545b; color: #fff; }
+/* ⑤ 옵션 버튼: 글자 버튼 '옵션 N개 >' (배경·테두리 없음, 차량명과 같은 좌측선) */
+.local-car-detail .option_check_button, .local-car-detail .detail_card .option_check_button { display: inline-flex; align-items: center; gap: 1px; left: 33px; padding: 6px 0; border: 0; border-radius: 0; background: transparent; color: #1d1f22; font-size: 15px; font-weight: 600; line-height: 1; }
+.local-car-detail .option_check_button b { font-weight: 700; }
+.local-car-detail .option_check_button svg { width: 18px; height: 18px; margin-top: 1px; color: #8a8f96; }
 /* ⑦ 이 차량 이용 후기 ↔ 아래 슬라이드 간격 60% 늘림(45px→72px) */
 .local-car-detail .detail_reviews + .detail_promo .dp_banner { margin-top: 27px; }
 /* ⑨ 차량 카드 차명 두 줄 (redesign.css 와 같은 규칙 — 목록 페이지용) */
