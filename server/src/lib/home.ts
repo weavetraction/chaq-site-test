@@ -2,6 +2,7 @@
 //  · 관리자 저장 → 바로 반영 (사이트는 /api/pub/home.js 의 window.CHAQ_HOME 을 읽음, 캐시 1분)
 //  · 설정이 없거나 API 를 못 읽으면 사이트는 지금 모습(자동 규칙·기본 배너) 그대로
 import { q } from "../db.js";
+import { setState, getState } from "./state.js";
 
 export class HomeError extends Error { constructor(msg: string, public status = 400) { super(msg); } }
 export const SECTIONS = ["stock", "fast", "review", "faq"] as const;
@@ -56,7 +57,7 @@ export async function getConfig(): Promise<HomeConfig & { updatedAt?: string }> 
 export async function saveConfig(inp: any, adminId: number | null) {
   const cfg = cleanConfig(inp);
   await q(`INSERT INTO site_settings (key, value, updated_at, updated_by) VALUES ('home', $1, now(), $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now(), updated_by = EXCLUDED.updated_by`, [cfg, adminId]);
-  await q(`INSERT INTO app_state (key, value, updated_at) VALUES ('home_version', $1, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [String(Date.now())]);
+  await setState("home_version");
   pub = null;
   return cfg;
 }
@@ -68,7 +69,7 @@ const today = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 1
 export async function publicHome() {
   const day = today();
   if (pub && pub.day === day && Date.now() - checkedAt < 10_000) return pub;
-  const version = String((await q(`SELECT value FROM app_state WHERE key = 'home_version'`)).rows[0]?.value || "0"); checkedAt = Date.now();
+  const version = String((await getState("home_version")) || "0"); checkedAt = Date.now();
   if (pub && pub.version === version && pub.day === day) return pub;
   const cfg = await getConfig();
   const live = (b: Banner) => b.visible && (!b.start || b.start <= day) && (!b.end || b.end >= day);

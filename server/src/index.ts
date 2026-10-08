@@ -30,7 +30,6 @@ app.use(cookieParser());
 
 // 공개 API: 사이트 도메인에서 호출 (SITE_ORIGINS). 견적 데이터 스크립트는 어디서든 읽기 허용
 const allow = (origin?: string) => !origin || config.siteOrigins.length === 0 || config.siteOrigins.includes(origin) || (!config.isProd && origin === "null");   // null = 내 컴퓨터 파일로 열었을 때 (개발용)
-app.use("/api/quotes", cors());
 app.use("/api/inquiries", cors({ origin: (o, cb) => cb(null, allow(o)), methods: ["POST", "OPTIONS"] }));
 app.use("/api/health", cors());
 

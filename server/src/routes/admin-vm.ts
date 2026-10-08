@@ -2,6 +2,7 @@
 //  · 수정은 작업본에 바로 저장, '사이트 반영' 을 눌러야 사이트에 나감 (반영 이력에서 되돌리기 가능)
 import { Router } from "express";
 import multer from "multer";
+import { wrap, intParam, excelUpload as upload } from "../lib/http.js";
 import { q } from "../db.js";
 import { adminOf } from "../middleware/auth.js";
 import {
@@ -13,9 +14,7 @@ import { saveMedia, listMedia, MEDIA_PURPOSES } from "../lib/media.js";
 import { tx } from "../db.js";
 
 export const adminVmRouter = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 const imgUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 20 } });
-const wrap = (fn: (req: any, res: any) => Promise<unknown>) => (req: any, res: any, next: any) => fn(req, res).catch(next);
 const kindOf = (k: unknown): VmKind => { if (!VM_KINDS.includes(k as VmKind)) throw new VmError("종류 오류"); return k as VmKind; };
 const by = (a: any, b: any) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || String(a.nameKo || a.shortLabel || a.name || "").localeCompare(String(b.nameKo || b.shortLabel || b.name || ""), "ko");
 
@@ -103,19 +102,19 @@ adminVmRouter.post("/api/admin/vm/import", upload.single("file"), wrap(async (re
   try { res.json(await planVmImport(req.file.buffer)); }
   catch (e: any) { if (e instanceof VmError) throw e; throw new VmError("엑셀 파일을 읽을 수 없습니다: " + (e.message || e)); }
 }));
-adminVmRouter.post("/api/admin/vm/import/:id/apply", wrap(async (req, res) => res.json(await applyVmImport(Number(req.params.id), adminOf(req).id))));
+adminVmRouter.post("/api/admin/vm/import/:id/apply", wrap(async (req, res) => res.json(await applyVmImport(intParam(req.params.id), adminOf(req).id))));
 /** 엑셀로 전체 교체: 미리보기(건수·끊길 연결) → 확인 문구 입력 후 적용 (적용 전 작업본은 자동 백업) */
 adminVmRouter.post("/api/admin/vm/replace", upload.single("file"), wrap(async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "파일이 없습니다" });
   try { res.json(await planVmReplace(req.file.buffer)); }
   catch (e: any) { if (e instanceof VmError) throw e; throw new VmError("엑셀 파일을 읽을 수 없습니다: " + (e.message || e)); }
 }));
-adminVmRouter.post("/api/admin/vm/replace/:id/apply", wrap(async (req, res) => res.json(await applyVmReplace(Number(req.params.id), String(req.body?.confirm || ""), adminOf(req).id))));
+adminVmRouter.post("/api/admin/vm/replace/:id/apply", wrap(async (req, res) => res.json(await applyVmReplace(intParam(req.params.id), String(req.body?.confirm || ""), adminOf(req).id))));
 
 // ---------------------------------------------------------------- 사이트 반영 · 이력
 adminVmRouter.post("/api/admin/vm/publish", wrap(async (req, res) => res.json(await publishDraft(adminOf(req).id, String(req.body?.note || "").slice(0, 200)))));
 adminVmRouter.get("/api/admin/vm/releases", wrap(async (_req, res) => res.json(await releases())));
-adminVmRouter.post("/api/admin/vm/releases/:id/rollback", wrap(async (req, res) => { await rollbackTo(Number(req.params.id), adminOf(req).id); res.json({ ok: true }); }));
+adminVmRouter.post("/api/admin/vm/releases/:id/rollback", wrap(async (req, res) => { await rollbackTo(intParam(req.params.id), adminOf(req).id); res.json({ ok: true }); }));
 adminVmRouter.get("/api/admin/vm/changes", wrap(async (_req, res) => {
   const { rows } = await q(`SELECT c.id, c.at, c.action, c.kind, c.item_id, c.summary, a.name AS by FROM vm_changes c LEFT JOIN admins a ON a.id = c.admin_id ORDER BY c.id DESC LIMIT 100`);
   res.json(rows.map((r) => ({ ...r, kindKo: r.kind ? KIND_KO[r.kind as VmKind] : "" })));

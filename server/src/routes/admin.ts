@@ -1,8 +1,9 @@
 // 관리자 API (/api/admin/*) — 로그인 쿠키 필요 (login 제외)
 import { Router } from "express";
-import multer from "multer";
 import bcrypt from "bcryptjs";
 import { limiter } from "../lib/limits.js";
+import { wrap, intParam, excelUpload as upload } from "../lib/http.js";
+import { loadDraft } from "../lib/vm-store.js";
 import { q } from "../db.js";
 import { issue, clear, requireAdmin, adminOf } from "../middleware/auth.js";
 import { buildWorkbook, parseWorkbook } from "../lib/excel.js";
@@ -15,9 +16,7 @@ import { vm } from "../lib/vm.js";
 import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
 
 export const adminRouter = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 const loginLimit = limiter("login", { windowMs: 15 * 60_000, limit: 20, message: { error: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요" } });
-const wrap = (fn: (req: any, res: any) => Promise<unknown>) => (req: any, res: any, next: any) => fn(req, res).catch(next);
 
 adminRouter.post("/api/admin/login", loginLimit, wrap(async (req, res) => {
   const { email, password } = req.body || {};
@@ -32,6 +31,8 @@ adminRouter.post("/api/admin/logout", (_req, res) => { clear(res); res.json({ ok
 
 adminRouter.use("/api/admin", requireAdmin);
 adminRouter.get("/api/admin/me", (req, res) => res.json(adminOf(req)));
+// 견적·트림 검색·메인 화면은 차량 데이터 트림 색인을 씀 → 다른 서버에서 바뀐 작업본도 바로 반영 (10초 버전 확인)
+adminRouter.use(["/api/admin/quotes", "/api/admin/batches", "/api/admin/trims", "/api/admin/home"], (_req, _res, next) => { loadDraft().then(() => next(), next); });
 
 // ---------------------------------------------------------------- 견적 데이터
 adminRouter.get("/api/admin/quotes/status", wrap(async (_req, res) => res.json({ published: await publishedStatus(), vmTrims: vm.count() })));
@@ -68,7 +69,7 @@ adminRouter.get("/api/admin/batches", wrap(async (_req, res) => {
 
 /** batch 상세: 요약 + 행 목록 (?unlinked=1 이면 트림 미연결만) */
 adminRouter.get("/api/admin/batches/:id", wrap(async (req, res) => {
-  const id = Number(req.params.id);
+  const id = intParam(req.params.id);
   const b = (await q(`SELECT * FROM quote_batches WHERE id = $1`, [id])).rows[0];
   if (!b) return res.status(404).json({ error: "없음" });
   const where = req.query.unlinked ? "AND trim_id IS NULL" : "";
@@ -83,7 +84,7 @@ adminRouter.get("/api/admin/batches/:id", wrap(async (req, res) => {
 adminRouter.patch("/api/admin/batches/:id/rows", wrap(async (req, res) => {
   const { kind, recId, trimId, applySame } = req.body || {};
   if (!KINDS.includes(kind)) return res.status(400).json({ error: "kind 오류" });
-  const id = Number(req.params.id);
+  const id = intParam(req.params.id);
   const rec = await setRowTrim(id, kind, String(recId), trimId ? String(trimId) : null);
   let applied = 1;
   if (applySame && trimId) {   // 같은 브랜드·모델·연식·등급의 미연결 행에 같이 적용
@@ -94,21 +95,21 @@ adminRouter.patch("/api/admin/batches/:id/rows", wrap(async (req, res) => {
   res.json({ ok: true, applied, summary, trimLabel: vm.get(trimId)?.label || null });
 }));
 
-adminRouter.post("/api/admin/batches/:id/publish", wrap(async (req, res) => { await publishBatch(Number(req.params.id), adminOf(req).id); res.json({ ok: true, published: await publishedStatus() }); }));
-adminRouter.post("/api/admin/batches/:id/discard", wrap(async (req, res) => { await discardBatch(Number(req.params.id)); res.json({ ok: true }); }));
+adminRouter.post("/api/admin/batches/:id/publish", wrap(async (req, res) => { await publishBatch(intParam(req.params.id), adminOf(req).id); res.json({ ok: true, published: await publishedStatus() }); }));
+adminRouter.post("/api/admin/batches/:id/discard", wrap(async (req, res) => { await discardBatch(intParam(req.params.id)); res.json({ ok: true }); }));
 
 // 화면 수정: 페이지별 작업본 (현재 사이트 데이터 복사) → 행 추가·수정·삭제 → 반영
 const kindParam = (k: unknown): Kind => { if (!KINDS.includes(k as Kind)) throw Object.assign(new Error("페이지 구분 오류"), { status: 400 }); return k as Kind; };
 adminRouter.post("/api/admin/quotes/:kind/draft", wrap(async (req, res) => res.json(await openEditDraft(kindParam(req.params.kind), adminOf(req).id, { reset: !!req.body?.reset }))));
 adminRouter.get("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => {
-  const r = await getRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId));
+  const r = await getRow(intParam(req.params.id), kindParam(req.params.kind), String(req.params.recId));
   if (!r) return res.status(404).json({ error: "없음" });
   res.json({ ...r, trimLabel: vm.get(r.trim_id)?.label || null });
 }));
-adminRouter.post("/api/admin/batches/:id/rows/:kind", wrap(async (req, res) => res.status(201).json(await saveDraftRow(Number(req.params.id), kindParam(req.params.kind), null, req.body || {}))));
-adminRouter.put("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json(await saveDraftRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId), req.body || {}))));
-adminRouter.delete("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json({ ok: true, summary: await deleteDraftRow(Number(req.params.id), kindParam(req.params.kind), String(req.params.recId)) })));
-adminRouter.post("/api/admin/batches/:id/reorder", wrap(async (req, res) => { await reorderDraftRows(Number(req.params.id), kindParam(req.body?.kind), (req.body?.recIds || []).map(String)); res.json({ ok: true }); }));
+adminRouter.post("/api/admin/batches/:id/rows/:kind", wrap(async (req, res) => res.status(201).json(await saveDraftRow(intParam(req.params.id), kindParam(req.params.kind), null, req.body || {}))));
+adminRouter.put("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json(await saveDraftRow(intParam(req.params.id), kindParam(req.params.kind), String(req.params.recId), req.body || {}))));
+adminRouter.delete("/api/admin/batches/:id/rows/:kind/:recId", wrap(async (req, res) => res.json({ ok: true, summary: await deleteDraftRow(intParam(req.params.id), kindParam(req.params.kind), String(req.params.recId)) })));
+adminRouter.post("/api/admin/batches/:id/reorder", wrap(async (req, res) => { await reorderDraftRows(intParam(req.params.id), kindParam(req.body?.kind), (req.body?.recIds || []).map(String)); res.json({ ok: true }); }));
 
 adminRouter.get("/api/admin/trims", wrap(async (req, res) => res.json(vm.search(String(req.query.q || ""), 30))));
 
@@ -119,13 +120,13 @@ adminRouter.get("/api/admin/inquiries", wrap(async (req, res) => {
 adminRouter.patch("/api/admin/inquiries/:id", wrap(async (req, res) => {
   const p = InquiryPatch.safeParse(req.body || {});
   if (!p.success) return res.status(400).json({ error: "입력 형식 오류" });
-  const r = await updateInquiry(Number(req.params.id), p.data);
+  const r = await updateInquiry(intParam(req.params.id), p.data);
   if (!r) return res.status(404).json({ error: "없음" });
   res.json(r);
 }));
 adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
   const { rows } = await q(`SELECT id, created_at, status, source, kind, rec_id, car_name, trim_name, spec, conditions, monthly, options, color, memo, assignee, page_url, first_touch, last_touch FROM inquiries ORDER BY id DESC LIMIT 10000`);
-  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };   // 엑셀 수식 실행 방지(= + - @ 로 시작하면 ' 붙임)
   const head = ["번호", "접수일시", "상태", "유입", "구분", "견적ID", "차량", "등급", "사양", "조건", "월납입금", "옵션", "색상", "메모", "담당", "페이지",
     "유입_source", "유입_medium", "유입_campaign", "유입_term", "유입_content", "처음유입_source", "처음유입_medium", "처음유입_campaign", "광고클릭ID", "랜딩"];
   const clk = (t: any) => t.gclid ? "gclid" : t.fbclid ? "fbclid" : t.n_media || t.n_ad ? "naver" : t.kclid ? "kakao" : "";

@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { q, pool } from "../db.js";
+import { setState, getState } from "./state.js";
 import { ROOT } from "../config.js";
 import { log } from "./log.js";
 import { publishDraft } from "./vm-store.js";
@@ -21,7 +22,7 @@ export async function runPendingVmResets() {
     await lock.query("SELECT pg_advisory_lock(727004)");
     for (const R of RESETS) {
       const key = `vm_reset_${R.tag}`;
-      if ((await q(`SELECT 1 FROM app_state WHERE key = $1`, [key])).rowCount) continue;
+      if ((await getState(key)) !== undefined) continue;
       const file = path.join(process.env.SEED_DIR || path.join(ROOT, "seed"), R.file);
       if (!fs.existsSync(file)) { log.warn({ file }, "[vm-reset] 파일 없음 — 건너뜀"); continue; }
       const rows = JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString("utf8")) as ReplaceRows;
@@ -30,7 +31,7 @@ export async function runPendingVmResets() {
         : p.impact.quotes.missing ? `트림이 없어져 끊기는 사이트 견적 ${p.impact.quotes.missing}건: ${p.impact.quotes.missingTrims.slice(0, 5).join(", ")}`
         : p.impact.reviews.missing ? `차종 연결이 끊기는 이용후기 ${p.impact.reviews.missing}건: ${p.impact.reviews.sample.slice(0, 5).join(", ")}`
         : null;
-      const set = (v: unknown) => q(`INSERT INTO app_state (key, value, updated_at) VALUES ($1, $2, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [key, JSON.stringify(v)]);
+      const set = (v: unknown) => setState(key, JSON.stringify(v));
       if (blocked) {
         await q(`INSERT INTO vm_changes (action, summary) VALUES ('reset_blocked', $1)`, [`${R.note} — 보류: ${blocked}`.slice(0, 1000)]);
         await set({ status: "blocked", reason: blocked, importId: p.importId, at: new Date().toISOString() });

@@ -9,7 +9,7 @@
   var S = { cfg: null, cand: {}, dirty: false };
   var toast = function (m, bad) { var t = $("#vmToast"); t.textContent = m; t.className = "toast show" + (bad ? " bad" : ""); clearTimeout(t._t); t._t = setTimeout(function () { t.className = "toast"; }, 2600); };
   var fail = function (er) { toast(er.message || String(er), true); };
-  var imgSrc = function (u) { return !u ? "" : /^(https?:|\/|data:)/.test(u) ? u : "/" + String(u).replace(/^(\.\.\/)+/, ""); };
+  var imgSrc = A.imgSrc;   // 공통 (admin.js)
   var dirty = function () { S.dirty = true; $("#hmSave").classList.add("primary"); $("#hmState").innerHTML = '<b class="down">저장 안 된 변경이 있습니다</b>'; };
 
   function load() {

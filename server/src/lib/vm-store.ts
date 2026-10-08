@@ -7,6 +7,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 import type pg from "pg";
 import { q, tx, pool } from "../db.js";
+import { setState, getState } from "./state.js";
 import { config } from "../config.js";
 import { log } from "./log.js";
 import { setVmSource } from "./vm.js";
@@ -74,11 +75,7 @@ export function loadVmFromSiteFiles(coreFile = config.vehicleMasterPath): VM {
 // ---------------------------------------------------------------- 작업본 (DB) ↔ 메모리
 let draft: { M: VM; version: string; at: number } | null = null;
 let draftCheckedAt = 0;
-async function stateGet(key: string) { const r = await q(`SELECT value FROM app_state WHERE key = $1`, [key]); return r.rows[0]?.value as string | undefined; }
-async function stateSet(key: string, value: string, c?: pg.PoolClient) {
-  const sql = `INSERT INTO app_state (key, value, updated_at) VALUES ($1, $2, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`;
-  if (c) await c.query(sql, [key, value]); else await q(sql, [key, value]);
-}
+const stateGet = getState, stateSet = (key: string, value: string, c?: pg.PoolClient) => setState(key, value, c);
 
 function modelIndex(M: VM) {
   const lineupModel = new Map(M.lineups.map((l) => [l.id, l.modelId]));
@@ -451,10 +448,4 @@ export async function getPublicVm() {
   const { coreJs, details } = buildSplit(M, r.rows[0].id);
   pub = { version, coreJs, details, modelIds: new Set(M.models.map((m) => m.id)), etag: `"vm${r.rows[0].id}-${version}"`, releaseId: r.rows[0].id };
   return pub;
-}
-/** 현재 반영본 전체 (견적 반영 시 트림 확인용) */
-export async function publishedTrimIds(): Promise<Set<string>> {
-  const r = await q(`SELECT payload FROM vm_releases WHERE is_current`);
-  if (!r.rowCount) return new Set();
-  return new Set(gunzipVm(r.rows[0].payload).trims.map((t) => t.id));
 }

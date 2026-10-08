@@ -22,12 +22,12 @@ export const InquiryInput = z.object({
   monthly: z.number().int().positive().max(100_000_000).nullable().optional(),
   options: z.array(z.string().max(120)).max(40).default([]),
   color: z.string().max(120).default(""),
-  pageUrl: z.string().max(500).default(""),
+  pageUrl: z.string().max(500).default("").transform((v) => (/^https?:\/\//i.test(v) ? v : "")),   // http(s) 주소만 저장
   channelMemberId: z.string().max(100).nullable().optional(),
   // 광고 유입 (analytics.js 가 저장해 둔 처음/마지막 유입) + 매체 식별값
   firstTouch: Touch.optional(), lastTouch: Touch.optional(),
   gaClientId: z.string().max(100).nullable().optional(), fbp: z.string().max(200).nullable().optional(), fbc: z.string().max(300).nullable().optional(),
-  website: z.string().max(0).optional(),           // 스팸 방지용 숨은 칸 (사람은 비워둠)
+  website: z.string().max(200).optional(),         // 스팸 방지용 숨은 칸 (사람은 비워둠 — 채워져 있으면 저장하지 않고 조용히 200)
 });
 export type InquiryInputT = z.infer<typeof InquiryInput>;
 
@@ -67,10 +67,13 @@ export async function updateInquiry(id: number, p: z.infer<typeof InquiryPatch>)
   const sets: string[] = [], params: unknown[] = [id];
   for (const [k, v] of Object.entries(p)) { if (v === undefined) continue; params.push(v); sets.push(`${k} = $${params.length}`); }
   if (!sets.length) return null;
-  const prev = (await q(`SELECT status FROM inquiries WHERE id = $1`, [id])).rows[0]?.status;
-  const { rows } = await q(`UPDATE inquiries SET ${sets.join(", ")}, updated_at = now() WHERE id = $1 RETURNING *`, params);
-  if (rows[0] && p.status && prev) onLeadStatus(rows[0], prev);
-  return rows[0] || null;
+  // 이전 상태는 같은 문장에서 행 잠금으로 읽음 → 동시에 같은 상태로 바꿔도 전환 이벤트는 한 번만
+  const { rows } = await q(`WITH old AS (SELECT id, status FROM inquiries WHERE id = $1 FOR UPDATE)
+    UPDATE inquiries i SET ${sets.join(", ")}, updated_at = now() FROM old WHERE i.id = old.id RETURNING i.*, old.status AS prev_status`, params);
+  const row = rows[0]; if (!row) return null;
+  const prev = row.prev_status; delete row.prev_status;
+  if (p.status && prev) onLeadStatus(row, prev);
+  return row;
 }
 
 /** 채널톡 첫 메시지 (고객이 보내는 문장으로 미리 채움) */

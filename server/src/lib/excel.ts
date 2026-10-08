@@ -1,6 +1,6 @@
 // 견적 데이터 엑셀 양식 만들기·읽기 (exceljs)
 import ExcelJS from "exceljs";
-import { ALL_HEADERS, BASE_COLUMNS, COST_COLUMNS, RESID_COLUMNS, KINDS, KIND_KO, Kind, QuoteRecord, recordToRow, rowToRecord, ParsedRow } from "./quotes-format.js";
+import { ALL_HEADERS, BASE_COLUMNS, COST_COLUMNS, RESID_COLUMNS, KINDS, Kind, QuoteRecord, recordToRow, rowToRecord, ParsedRow } from "./quotes-format.js";
 
 export const SHEET = "견적데이터";
 
@@ -58,7 +58,8 @@ export async function parseWorkbook(buf: Buffer): Promise<{ rows: ParsedRow[]; m
   return { rows, missingHeaders };
 }
 
-function cellValue(v: ExcelJS.CellValue): unknown {
+/** 엑셀 칸 값 (수식 결과·서식 글자·링크 글자·날짜 → 값) — 차량 데이터 엑셀(vm-excel)도 같이 씀 */
+export function cellValue(v: ExcelJS.CellValue): unknown {
   if (v && typeof v === "object") {
     if ("result" in v) return (v as any).result;          // 수식
     if ("richText" in v) return (v as any).richText.map((t: any) => t.text).join("");
@@ -68,4 +69,3 @@ function cellValue(v: ExcelJS.CellValue): unknown {
   return v;
 }
 
-export const kindLabel = (k: Kind) => KIND_KO[k];

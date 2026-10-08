@@ -5,6 +5,7 @@
 import ExcelJS from "exceljs";
 import type pg from "pg";
 import { q, tx } from "../db.js";
+import { cellValue } from "./excel.js";
 import { VmKind, VM, VM_KINDS, idOf, saveItem, deleteItem, loadDraft, VmError, KIND_KO, REQUIRED, replaceDraft, validateVm, countsOf, gz, gunzipVm } from "./vm-store.js";
 
 type Col = { h: string; f: string; t?: "int" | "strArr" | "status"; w?: number; note?: string; ref?: (o: any, X: Lookup) => unknown };
@@ -105,10 +106,7 @@ export async function buildVmWorkbook(opts: { brandId?: string } = {}) {
 
 // ---------------------------------------------------------------- 올리기: 미리보기 → 적용
 type Op = { op: "create" | "update" | "delete"; kind: VmKind; id: string | null; createId?: string; patch: Record<string, unknown>; sheet: string; rowNo: number; label: string };
-const cv = (v: ExcelJS.CellValue): unknown => {
-  if (v && typeof v === "object") { if ("result" in v) return (v as any).result; if ("richText" in v) return (v as any).richText.map((t: any) => t.text).join(""); if ("text" in v) return (v as any).text; if (v instanceof Date) return v.toISOString().slice(0, 10); }
-  return v;
-};
+const cv = cellValue;
 const norm = (c: Col, v: unknown) => {
   if (v === undefined || v === null || v === "") return c.t === "strArr" ? [] : c.t === "status" ? "ACTIVE" : null;
   if (c.t === "int") { const n = typeof v === "number" ? v : Number(String(v).replace(/[,\s원]/g, "")); return Number.isFinite(n) ? Math.round(n) : String(v); }
@@ -160,12 +158,15 @@ export async function planVmImport(buf: Buffer) {
 
 const ORDER: VmKind[] = ["brands", "models", "lineups", "trims", "options", "colors", "trimOptions", "trimColors", "vehicleImages"];
 export async function applyVmImport(importId: number, adminId: number | null) {
-  const r = await q(`SELECT ops, applied_at FROM vm_imports WHERE id = $1`, [importId]);
+  const r = await q(`SELECT applied_at FROM vm_imports WHERE id = $1`, [importId]);
   if (!r.rowCount) throw new VmError("미리보기가 없습니다", 404);
   if (r.rows[0].applied_at) throw new VmError("이미 적용된 파일입니다");
-  const ops = r.rows[0].ops as Op[];
   let done = 0;
   await tx(async (c: pg.PoolClient) => {
+    // 두 번 눌러도 한 번만 적용: 적용 표시를 먼저 (트랜잭션 안에서 잠금)
+    const claim = await c.query(`UPDATE vm_imports SET applied_at = now(), applied_by = $2 WHERE id = $1 AND applied_at IS NULL RETURNING ops`, [importId, adminId]);
+    if (!claim.rowCount) throw new VmError("이미 적용된 파일입니다");
+    const ops = claim.rows[0].ops as Op[];
     const run = async (o: Op) => {
       try {
         if (o.op === "delete") await deleteItem(o.kind, o.id!, adminId, c);
@@ -175,7 +176,6 @@ export async function applyVmImport(importId: number, adminId: number | null) {
     };
     for (const k of ORDER) for (const o of ops.filter((x) => x.kind === k && x.op !== "delete")) await run(o);
     for (const k of [...ORDER].reverse()) for (const o of ops.filter((x) => x.kind === k && x.op === "delete")) await run(o);
-    await c.query(`UPDATE vm_imports SET applied_at = now(), applied_by = $2 WHERE id = $1`, [importId, adminId]);
     await c.query(`INSERT INTO vm_changes (admin_id, action, summary) VALUES ($1,'import',$2)`, [adminId, `엑셀 적용 ${done}건`]);
   });
   await loadDraft(true);
@@ -304,9 +304,13 @@ export async function applyVmReplace(importId: number, confirm: string, adminId:
   const N = gunzipVm(Buffer.from(ops.gz, "base64"));
   const M0 = await loadDraft(true);
   const backupId = await tx(async (c: pg.PoolClient) => {
+    // 두 번 눌러도 한 번만 · 그 사이 다른 사람이 작업본을 고쳤으면 중단 (버전 행 잠금 후 다시 확인)
+    const claim = await c.query(`UPDATE vm_imports SET applied_at = now(), applied_by = $2 WHERE id = $1 AND applied_at IS NULL RETURNING id`, [importId, adminId]);
+    if (!claim.rowCount) throw new VmError("이미 적용된 파일입니다");
+    const v2 = String((await c.query(`SELECT value FROM app_state WHERE key = 'vm_draft_version' FOR UPDATE`)).rows[0]?.value || "0");
+    if (v2 !== ops.baseVersion) throw new VmError("미리보기 이후 작업본이 바뀌었습니다 — 파일을 다시 올려 미리보기부터 해 주세요", 409);
     const b = await c.query(`INSERT INTO vm_releases (created_by, note, counts, payload, is_current) VALUES ($1,$2,$3,$4,false) RETURNING id`, [adminId, `전체 교체 전 작업본 자동 백업 (엑셀 #${importId})`, countsOf(M0), gz(M0)]);
     await replaceDraft(N, adminId, "replace", `엑셀 전체 교체 #${importId} (백업 #${b.rows[0].id})`, c);
-    await c.query(`UPDATE vm_imports SET applied_at = now(), applied_by = $2 WHERE id = $1`, [importId, adminId]);
     return b.rows[0].id as number;
   });
   await loadDraft(true);

@@ -6,7 +6,6 @@ import sharp from "sharp";
 import { q } from "../db.js";
 
 export const MEDIA_PURPOSES = ["vehicle", "banner", "review", "event", "article", "etc"] as const;
-export type MediaPurpose = (typeof MEDIA_PURPOSES)[number];
 const EXT: Record<string, string> = { "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/svg+xml": "svg" };
 export class MediaError extends Error { status = 400; }
 
@@ -18,19 +17,20 @@ export async function saveMedia(buf: Buffer, fileName: string, purpose: string, 
   let mime: string, out: Buffer, thumb: Buffer | null = null, width: number | null = null, height: number | null = null;
   if (/<svg[\s>]/i.test(head) || /\.svg$/i.test(fileName)) {
     const s = buf.toString("utf8");
-    if (/<script|on\w+\s*=|javascript:/i.test(s)) throw new MediaError("SVG 안에 스크립트가 있어 올릴 수 없습니다");
+    if (/<script|on\w+\s*=|javascript:|<!ENTITY|<!DOCTYPE|<foreignObject/i.test(s)) throw new MediaError("SVG 안에 스크립트·외부 정의가 있어 올릴 수 없습니다");
     mime = "image/svg+xml"; out = buf;
   } else {
     let meta: Awaited<ReturnType<ReturnType<typeof sharp>["metadata"]>>;
-    try { meta = await sharp(buf).metadata(); } catch { throw new MediaError("이미지 파일이 아닙니다 (jpg·png·webp·gif·svg)"); }
+    const src = sharp(buf, { limitInputPixels: 40_000_000 });   // 4천만 화소 초과는 거부 (메모리 보호)
+    try { meta = await src.metadata(); } catch { throw new MediaError("이미지 파일이 아니거나 너무 큽니다 (jpg·png·webp·gif·svg, 4천만 화소 이하)"); }
     if (!meta.width || !meta.height) throw new MediaError("이미지 크기를 읽을 수 없습니다");
     if (meta.format === "gif" && (meta.pages || 1) > 1) { mime = "image/gif"; out = buf; width = meta.width; height = meta.pageHeight || meta.height; }
     else {
       const max = opts.maxSide || 2000;
-      const img = sharp(buf).rotate().resize({ width: max, height: max, fit: "inside", withoutEnlargement: true });
+      const img = src.clone().rotate().resize({ width: max, height: max, fit: "inside", withoutEnlargement: true });
       const r = await img.webp({ quality: 86, alphaQuality: 90 }).toBuffer({ resolveWithObject: true });
       out = r.data; width = r.info.width; height = r.info.height; mime = "image/webp";
-      thumb = await sharp(buf).rotate().resize({ width: 480, height: 480, fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
+      thumb = await src.clone().rotate().resize({ width: 480, height: 480, fit: "inside", withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
     }
   }
   const id = crypto.randomBytes(9).toString("base64url").toLowerCase().replace(/[^a-z0-9]/g, "x");

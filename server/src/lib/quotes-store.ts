@@ -1,18 +1,21 @@
 // 견적 데이터 저장소: 업로드 묶음(batch) 생성·트림 연결·사이트 반영(publish)·공개 데이터 캐시
 import type pg from "pg";
 import { q, tx } from "../db.js";
+import { setState, getState } from "./state.js";
 import { vm } from "./vm.js";
-import { KINDS, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl } from "./quotes-format.js";
+import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl } from "./quotes-format.js";
 
 type Published = Record<Kind, QuoteRecord[]>;
+/** 견적ID 의 번호 부분 (s15 → 15, 형식이 다르면 NULL) */
+const REC_NO = `NULLIF(substring(rec_id from '^\\D*(\\d+)$'), '')::bigint`;
 // 공개 데이터 캐시: 서버가 여러 대여도 DB 의 quotes_version 이 바뀌면 각 서버가 5초 안에 새로 읽음
 let publicCache: { at: number; version: string; data: Published; js: string; json: string; etag: string } | null = null;
 let checkedAt = 0;
 export async function invalidatePublic() {
   publicCache = null;
-  await q(`INSERT INTO app_state (key, value, updated_at) VALUES ('quotes_version', $1, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [String(Date.now())]);
+  await setState("quotes_version");
 }
-async function quotesVersion() { const r = await q(`SELECT value FROM app_state WHERE key = 'quotes_version'`); return String(r.rows[0]?.value || "0"); }
+async function quotesVersion() { return String((await getState("quotes_version")) || "0"); }
 
 /** 사이트에 나가는 현재 견적 (종류별 최근 반영 batch) */
 export async function getPublished(): Promise<Published> {
@@ -58,9 +61,8 @@ export async function createBatch(parsed: ParsedRow[], meta: { fileName: string;
   const maps = await linkMaps();
   const kinds = [...new Set(parsed.map((p) => p.kind))] as Kind[];
   // 견적ID 자동 부여: 종류별 접두어 + (기존 최대 번호 + 1)
-  const { rows: maxRows } = await q(`SELECT kind, rec_id FROM quote_rows`);
   const maxNo: Record<string, number> = { stock: 0, fast: 0, estimate: 0 };
-  for (const r of maxRows) { const n = Number(String(r.rec_id).replace(/^\D+/, "")); if (n > maxNo[r.kind]) maxNo[r.kind] = n; }
+  for (const r of (await q(`SELECT kind, MAX(${REC_NO}) AS n FROM quote_rows GROUP BY kind`)).rows) maxNo[r.kind] = Number(r.n) || 0;
   const seen = new Set<string>(); const rows: { kind: Kind; rec: QuoteRecord; link: LinkResult; order: number }[] = [];
   const problems: { rowNo: number; errors: string[] }[] = [];
   parsed.forEach((p, i) => {
@@ -178,9 +180,12 @@ export async function publishBatch(batchId: number, adminId: number | null) {
 }
 
 export async function discardBatch(batchId: number) {
-  const inUse = await q(`SELECT 1 FROM published_sets WHERE batch_id = $1`, [batchId]);
-  if (inUse.rowCount) throw Object.assign(new Error("사이트에 나가고 있는 데이터는 폐기할 수 없습니다"), { status: 400 });
-  await q(`UPDATE quote_batches SET status = 'DISCARDED' WHERE id = $1`, [batchId]);
+  // 확인과 변경을 한 문장으로 (그 사이 반영돼도 '반영 중 + 폐기' 상태가 생기지 않게)
+  const r = await q(`UPDATE quote_batches SET status = 'DISCARDED' WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM published_sets WHERE batch_id = $1) RETURNING id`, [batchId]);
+  if (!r.rowCount) {
+    const inUse = await q(`SELECT 1 FROM published_sets WHERE batch_id = $1`, [batchId]);
+    if (inUse.rowCount) throw Object.assign(new Error("사이트에 나가고 있는 데이터는 폐기할 수 없습니다"), { status: 400 });
+  }
 }
 
 export async function publishedStatus() {
@@ -201,7 +206,7 @@ export async function openEditDraft(kind: Kind, adminId: number | null, opts: { 
     const cur = await c.query(`SELECT id FROM quote_batches WHERE status = 'DRAFT' AND source = 'EDIT' AND kinds = ARRAY[$1]::text[] ORDER BY id DESC LIMIT 1`, [kind]);
     if (cur.rows[0] && !opts.reset) return { batchId: cur.rows[0].id as number, created: false };
     if (cur.rows[0]) await c.query(`UPDATE quote_batches SET status = 'DISCARDED' WHERE id = $1`, [cur.rows[0].id]);
-    const b = await c.query(`INSERT INTO quote_batches (status, source, file_name, kinds, created_by, strict_master) VALUES ('DRAFT','EDIT',$1,ARRAY[$2]::text[],$3,true) RETURNING id`, [`화면 수정 (${KIND_KO_[kind]})`, kind, adminId]);
+    const b = await c.query(`INSERT INTO quote_batches (status, source, file_name, kinds, created_by, strict_master) VALUES ('DRAFT','EDIT',$1,ARRAY[$2]::text[],$3,true) RETURNING id`, [`화면 수정 (${KIND_KO[kind]})`, kind, adminId]);
     const batchId = b.rows[0].id as number;
     const pub = await c.query(`SELECT r.* FROM published_sets p JOIN quote_rows r ON r.batch_id = p.batch_id AND r.kind = p.kind WHERE p.kind = $1 ORDER BY r.sort_order`, [kind]);
     for (const r of pub.rows) {
@@ -213,7 +218,6 @@ export async function openEditDraft(kind: Kind, adminId: number | null, opts: { 
     return { batchId, created: true };
   });
 }
-const KIND_KO_: Record<Kind, string> = { stock: "재고특가", fast: "빠른인도", estimate: "견적조회" };
 
 async function draftBatch(batchId: number) {
   const b = (await q(`SELECT id, status, kinds, strict_master FROM quote_batches WHERE id = $1`, [batchId])).rows[0];
@@ -276,8 +280,8 @@ export async function saveDraftRow(batchId: number, kind: Kind, recId: string | 
   applyLink(rec, link, prev && prev.trim_id === trimId ? prev.data.vmLink : undefined, b.strict_master);
   return tx(async (c) => {
     if (!recId) {
-      const { rows } = await c.query(`SELECT rec_id FROM quote_rows WHERE kind = $1`, [kind]);
-      let max = 0; for (const r of rows) { const n = Number(String(r.rec_id).replace(/^\D+/, "")); if (n > max) max = n; }
+      await c.query(`SELECT pg_advisory_xact_lock(727011, hashtext($1))`, [kind]);   // 동시에 새 행을 만들어도 번호가 겹치지 않게
+      const max = Number((await c.query(`SELECT MAX(${REC_NO}) AS n FROM quote_rows WHERE kind = $1`, [kind])).rows[0].n) || 0;
       rec.id = KIND_PREFIX[kind] + (max + 1);
       const so = (await c.query(`SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM quote_rows WHERE batch_id = $1 AND kind = $2`, [batchId, kind])).rows[0].n;
       await insertRow(c, batchId, kind, rec, link, so);

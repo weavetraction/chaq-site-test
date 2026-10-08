@@ -9,7 +9,7 @@
   var S = { kind: "faq", items: [], cats: [], catFilter: "" };
   var toast = function (m, bad) { var t = $("#vmToast"); t.textContent = m; t.className = "toast show" + (bad ? " bad" : ""); clearTimeout(t._t); t._t = setTimeout(function () { t.className = "toast"; }, 2600); };
   var fail = function (er) { toast(er.message || String(er), true); };
-  var imgSrc = function (u) { return !u ? "" : /^(https?:|\/|data:)/.test(u) ? u : "/" + String(u).replace(/^(\.\.\/)+/, ""); };   // 관리자 화면 미리보기용 (사이트 경로 → 절대 경로)
+  var imgSrc = A.imgSrc;   // 공통 (admin.js)
   var strip = function (h) { var d = document.createElement("div"); d.innerHTML = h || ""; return (d.textContent || "").replace(/\s+/g, " ").trim(); };
 
   $("#ctTabs").addEventListener("click", function (e) {

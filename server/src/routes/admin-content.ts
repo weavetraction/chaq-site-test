@@ -1,10 +1,10 @@
 // 관리자 API — 자주 묻는 질문 · 이용후기 · 이벤트 · 아티클 (저장하면 1분 안에 사이트 반영)
 import { Router } from "express";
+import { wrap } from "../lib/http.js";
 import { adminOf } from "../middleware/auth.js";
 import { CONTENT_KINDS, ContentKind, CAT_KINDS, CatKind, ContentError, list, getOne, save, remove, reorder, setVisible, cats, saveCat, removeCat, reorderCats } from "../lib/content.js";
 
 export const adminContentRouter = Router();
-const wrap = (fn: (req: any, res: any) => Promise<unknown>) => (req: any, res: any, next: any) => fn(req, res).catch(next);
 const kindOf = (k: unknown): ContentKind => { if (!CONTENT_KINDS.includes(k as ContentKind)) throw new ContentError("종류 오류"); return k as ContentKind; };
 const catKindOf = (k: unknown): CatKind => { if (!CAT_KINDS.includes(k as CatKind)) throw new ContentError("종류 오류"); return k as CatKind; };
 

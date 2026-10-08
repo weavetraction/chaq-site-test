@@ -52,7 +52,7 @@ async function notify(l: LeadForConv) {
   const url = env("NOTIFY_WEBHOOK_URL"); if (!url) return null;
   const PLAN: Record<string, string> = { "0": "0원", b: "보증금30%", s: "선납금30%" };
   const c = l.conditions || {};
-  const text = `🚗 새 상담 문의 #${l.id}\n${l.car_name || "일반 상담"} ${l.trim_name || ""}\n${[c.product, c.term && c.term + "개월", PLAN[c.plan], c.dist && c.dist + "만km"].filter(Boolean).join(" · ")}${l.monthly ? `\n월 ${l.monthly.toLocaleString("ko-KR")}원` : ""}\n${env("ADMIN_URL") ? env("ADMIN_URL") + "/admin/" : ""}`;
+  const text = `🚗 새 상담 문의 #${l.id}\n${l.car_name || "일반 상담"} ${l.trim_name || ""}\n${[c.product, c.term && c.term + "개월", PLAN[c.plan], c.dist && c.dist + "만km"].filter(Boolean).join(" · ")}${l.monthly ? `\n월 ${l.monthly.toLocaleString("ko-KR")}원` : ""}\n${env("ADMIN_URL") ? (/\/admin\/?$/.test(env("ADMIN_URL")!) ? env("ADMIN_URL") : env("ADMIN_URL")!.replace(/\/$/, "") + "/admin/") : ""}`;
   const r = await post(url, { text });
   return { to: "notify", event: "new_lead", ...r };
 }

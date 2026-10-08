@@ -32,7 +32,7 @@
   var PARENT_FIELD = { models: "brandId", lineups: "modelId", trims: "lineupId" };
 
   var S = { fields: null, path: [], level: "brands", list: [], sel: null, loaded: false };   // path: [{level, item}]
-  var imgSrc = function (u) { return !u ? "" : /^(https?:|\/|data:)/.test(u) ? u : "/" + u.replace(/^(\.\.\/)+/, ""); };
+  var imgSrc = A.imgSrc;   // 공통 (admin.js)
   var colorKeyOf = function (c) { if (!c) return ""; var k = c.manufacturerCode ? c.manufacturerCode : String(c.id || "").replace(/^[a-z-]+?-color-/, ""); return String(k).toLowerCase().replace(/[^a-z0-9-]+/g, "-"); };
   var nameOf = function (o) { return o.nameKo || o.shortLabel || o.displayName || o.name || o.id; };
   var toast = function (m, bad) { var t = $("#vmToast"); t.textContent = m; t.className = "toast show" + (bad ? " bad" : ""); clearTimeout(t._t); t._t = setTimeout(function () { t.className = "toast"; }, 2600); };

@@ -7,6 +7,7 @@ import path from "node:path";
 import sanitizeHtml from "sanitize-html";
 import type pg from "pg";
 import { q, tx, pool } from "../db.js";
+import { setState, getState } from "./state.js";
 import { config } from "../config.js";
 import { log } from "./log.js";
 
@@ -14,7 +15,6 @@ export const CONTENT_KINDS = ["faq", "review", "article", "event"] as const;
 export type ContentKind = (typeof CONTENT_KINDS)[number];
 export const CAT_KINDS = ["faq", "article"] as const;
 export type CatKind = (typeof CAT_KINDS)[number];
-export const CONTENT_KO: Record<ContentKind, string> = { faq: "자주 묻는 질문", review: "이용후기", article: "아티클", event: "이벤트" };
 export class ContentError extends Error { constructor(msg: string, public status = 400) { super(msg); } }
 
 // ---------------------------------------------------------------- 본문 HTML 정리 (편집기 → 사이트)
@@ -27,7 +27,7 @@ export function cleanHtml(html: unknown): string {
     allowedSchemes: ["http", "https", "mailto", "tel"], allowedSchemesAppliedToAttributes: ["href", "src"], allowProtocolRelative: false,
     exclusiveFilter: (f) => (f.tag === "img" && !SAFE_URL.test(f.attribs.src || "")) || (f.tag === "p" && !f.text.trim() && !/img|br/.test(f.mediaChildren?.join(",") || "")),
     transformTags: {
-      a: (tag, attribs) => ({ tagName: "a", attribs: { href: SAFE_URL.test(attribs.href || "") ? attribs.href : "#", ...(/^https?:/.test(attribs.href || "") ? { target: "_blank", rel: "noopener" } : {}) } }),
+      a: (_tag, attribs) => ({ tagName: "a", attribs: { href: SAFE_URL.test(attribs.href || "") ? attribs.href : "#", ...(/^https?:/.test(attribs.href || "") ? { target: "_blank", rel: "noopener" } : {}) } }),
       h1: "h3", h2: "h3",
     },
   }).trim();
@@ -97,8 +97,7 @@ function toSite(kind: ContentKind, row: { id: string; data: any }, catIndex?: Ma
 
 // ---------------------------------------------------------------- 저장소
 async function bump(c?: pg.PoolClient) {
-  const sql = `INSERT INTO app_state (key, value, updated_at) VALUES ('content_version', $1, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`;
-  if (c) await c.query(sql, [String(Date.now())]); else await q(sql, [String(Date.now())]);
+  await setState("content_version", undefined, c);
   pub = null;
 }
 export async function cats(kind: CatKind) { return (await q(`SELECT id, name, sort FROM content_cats WHERE kind = $1 ORDER BY sort, name`, [kind])).rows; }
@@ -109,6 +108,7 @@ export async function list(kind: ContentKind) {
 export async function getOne(kind: ContentKind, id: string) { return (await q(`SELECT id, visible, sort, data, updated_at FROM content_items WHERE kind = $1 AND id = $2`, [kind, id])).rows[0] || null; }
 
 async function nextId(c: pg.PoolClient, kind: ContentKind) {
+  await c.query(`SELECT pg_advisory_xact_lock(727012, hashtext($1))`, [kind]);   // 동시에 만들어도 번호가 겹치지 않게
   const { rows } = await c.query(`SELECT id FROM content_items WHERE kind = $1`, [kind]);
   let max = 0; for (const r of rows) { const n = Number(String(r.id).replace(/^\D+/, "")); if (n > max) max = n; }
   return (kind === "review" ? "" : kind[0]) + (max + 1);
@@ -161,12 +161,13 @@ export async function removeCat(kind: CatKind, id: string) {
 export async function reorderCats(kind: CatKind, ids: string[]) { await tx(async (c) => { for (let i = 0; i < ids.length; i++) await c.query(`UPDATE content_cats SET sort = $3 WHERE kind = $1 AND id = $2`, [kind, ids[i], i]); await bump(c); }); }
 
 // ---------------------------------------------------------------- 공개 데이터 (캐시: content_version 10초마다 확인)
-let pub: { version: string; faq: string; reviews: string; content: string; etag: string } | null = null;
+let pub: { version: string; day: string; faq: string; reviews: string; content: string; etag: string } | null = null;
 let pubCheckedAt = 0;
 export async function publicContent() {
-  if (pub && Date.now() - pubCheckedAt < 10_000) return pub;
-  const version = String((await q(`SELECT value FROM app_state WHERE key = 'content_version'`)).rows[0]?.value || "0"); pubCheckedAt = Date.now();
-  if (pub && pub.version === version) return pub;
+  const day = today();   // 이벤트 진행중/종료는 날짜로 정해지므로 날짜가 바뀌면 새로 만듦
+  if (pub && pub.day === day && Date.now() - pubCheckedAt < 10_000) return pub;
+  const version = String((await getState("content_version")) || "0"); pubCheckedAt = Date.now();
+  if (pub && pub.version === version && pub.day === day) return pub;
   const vis = async (k: ContentKind) => (await q(`SELECT id, data FROM content_items WHERE kind = $1 AND visible ORDER BY sort, created_at`, [k])).rows;
   const fc = await cats("faq"); const ci = new Map(fc.map((c: any, i: number) => [c.id, i]));
   const faqs = (await vis("faq")).filter((r) => ci.has(r.data.cat)).map((r) => toSite("faq", r, ci));
@@ -179,7 +180,7 @@ export async function publicContent() {
   const fix = (k: string) => String.raw`(function(w,k){var s=document.currentScript&&document.currentScript.src,o=s?s.replace(/\/api\/pub\/.*$/,""):"";if(!o||!w[k])return;var f=function(v){if(typeof v==="string")return v.replace(/(^|[\s"'(=])\/api\/pub\/media\//g,"$1"+o+"/api/pub/media/");if(v&&typeof v==="object")for(var x in v)v[x]=f(v[x]);return v;};f(w[k]);})(window,"` + k + `");
 `;
   pub = {
-    version, etag: `"ct${version}"`,
+    version, day, etag: `"ct${version}-${day}"`,
     faq: head("자주 묻는 질문") + "window.CHAQ_FAQ = " + JSON.stringify({ cats: fc.map((c: any) => c.name), items: faqs }) + ";\n" + fix("CHAQ_FAQ"),
     reviews: head("이용후기") + "window.CHAQ_REVIEWS = " + JSON.stringify(reviews) + ";\n" + fix("CHAQ_REVIEWS"),
     content: head("아티클·이벤트") + "window.CHAQ_CONTENT = " + JSON.stringify(content) + ";\n" + fix("CHAQ_CONTENT"),

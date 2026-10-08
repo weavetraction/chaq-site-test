@@ -1,5 +1,6 @@
 // 관리자 API — 메인 화면 (섹션별 노출 선택 · 상단 배너 · 중간 띠배너). 저장하면 1분 안에 사이트 반영
 import { Router } from "express";
+import { wrap } from "../lib/http.js";
 import { adminOf } from "../middleware/auth.js";
 import { getConfig, saveConfig, SECTIONS, SECTION_KO, Section, HomeError } from "../lib/home.js";
 import { getPublished } from "../lib/quotes-store.js";
@@ -7,7 +8,6 @@ import { vm } from "../lib/vm.js";
 import { q } from "../db.js";
 
 export const adminHomeRouter = Router();
-const wrap = (fn: (req: any, res: any) => Promise<unknown>) => (req: any, res: any, next: any) => fn(req, res).catch(next);
 const monthly = (r: any) => { try { return r.cost["2"]["60"]["0"] ?? null; } catch { return null; } };
 
 adminHomeRouter.get("/api/admin/home", wrap(async (_req, res) => res.json({ config: await getConfig(), sections: SECTION_KO })));

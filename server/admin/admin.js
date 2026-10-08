@@ -145,7 +145,7 @@
         var c = x.conditions || {}, cond = [c.product, c.term ? c.term + "개월" : "", PLAN[c.plan] || "", c.dist ? c.dist + "만 km" : ""].filter(Boolean).join(" · ");
         return '<tr><td>' + x.id + '</td><td>' + dt(x.created_at) + '<br><small class="hint">' + (x.kind ? KIND[x.kind] : x.source === "GUIDE" ? "일반 상담" : "") + (x.rec_id ? " " + esc(x.rec_id) : "") + '</small></td>' +
           '<td><select data-id="' + x.id + '" class="st-' + x.status + '">' + Object.keys(L).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? " selected" : "") + '>' + L[k] + '</option>'; }).join("") + '</select></td>' +
-          '<td class="car"><strong>' + esc(x.car_name || "-") + ' ' + esc(x.trim_name) + '</strong>' + esc(x.spec) + (x.options && x.options.length ? '<br><small class="hint">옵션: ' + esc(x.options.join(", ")) + '</small>' : '') + (x.color ? '<br><small class="hint">색상: ' + esc(x.color) + '</small>' : '') + (x.page_url ? '<br><a href="' + esc(x.page_url) + '" target="_blank" rel="noopener">페이지 열기</a>' : '') + '</td>' +
+          '<td class="car"><strong>' + esc(x.car_name || "-") + ' ' + esc(x.trim_name) + '</strong>' + esc(x.spec) + (x.options && x.options.length ? '<br><small class="hint">옵션: ' + esc(x.options.join(", ")) + '</small>' : '') + (x.color ? '<br><small class="hint">색상: ' + esc(x.color) + '</small>' : '') + (/^https?:\/\//i.test(x.page_url || '') ? '<br><a href="' + esc(x.page_url) + '" target="_blank" rel="noopener">페이지 열기</a>' : '') + '</td>' +
           '<td>' + esc(cond) + '</td><td>' + touch(x.last_touch) + (x.first_touch && x.first_touch.source && x.first_touch.source !== (x.last_touch || {}).source ? '<br><small class="hint">처음: ' + touch(x.first_touch) + '</small>' : '') + '</td><td class="num">' + (x.monthly ? won(x.monthly) + "원" : "별도문의") + '</td>' +
           '<td><textarea data-memo="' + x.id + '" rows="2" placeholder="상담 메모">' + esc(x.memo) + '</textarea></td></tr>';
       }).join("") : '<tr><td colspan="8" class="hint">문의가 없습니다</td></tr>');
@@ -167,6 +167,8 @@
   setInterval(function () { if (!$("#appView").hidden) loadInquiries(); }, 60000);   // 새 문의 배지 1분마다 갱신
 
   // 다른 화면 모듈(admin-vm.js · admin-qedit.js)에서 같이 쓰는 도구
-  window.CHAQ_ADMIN = { api: api, esc: esc, won: won, dt: dt, $: $, $$: $$, KIND: KIND, reloadQuotes: loadQuotes, openBatch: openBatch };
+  /** 관리자 화면 미리보기용 이미지 주소 (사이트 상대경로 ../assets/.. → /assets/..) */
+  var imgSrc = function (u) { return !u ? "" : /^(https?:|\/|data:)/.test(u) ? u : "/" + String(u).replace(/^(\.\.\/)+/, ""); };
+  window.CHAQ_ADMIN = { api: api, esc: esc, won: won, dt: dt, $: $, $$: $$, imgSrc: imgSrc, KIND: KIND, reloadQuotes: loadQuotes, openBatch: openBatch };
   api("/api/admin/me").then(showApp).catch(showLogin);
 })();
