@@ -5,7 +5,7 @@
 import ExcelJS from "exceljs";
 import type pg from "pg";
 import { q, tx } from "../db.js";
-import { VmKind, VM, idOf, saveItem, deleteItem, loadDraft, VmError, KIND_KO } from "./vm-store.js";
+import { VmKind, VM, VM_KINDS, idOf, saveItem, deleteItem, loadDraft, VmError, KIND_KO, REQUIRED, replaceDraft, validateVm, countsOf, gz, gunzipVm } from "./vm-store.js";
 
 type Col = { h: string; f: string; t?: "int" | "strArr" | "status"; w?: number; note?: string; ref?: (o: any, X: Lookup) => unknown };
 type Lookup = { brand: Map<string, any>; model: Map<string, any>; lineup: Map<string, any>; trim: Map<string, any>; option: Map<string, any>; color: Map<string, any> };
@@ -180,4 +180,120 @@ export async function applyVmImport(importId: number, adminId: number | null) {
   });
   await loadDraft(true);
   return { applied: done };
+}
+
+// ---------------------------------------------------------------- 엑셀로 전체 교체 (9개 시트 = 작업본 전체)
+//  · 파일에 있는 행만 남고, 파일에 없는 항목은 작업본에서 빠짐 ('_' 로 시작하는 시트·작성안내는 무시)
+//  · 기존과 같은 ID 면 엑셀에 없는 필드(출처·라이선스 등)는 그대로 유지, 새 ID 는 기본값으로 생성
+//  · 색상 조합 규칙·출처·제원(엑셀에 없는 종류)은 유지 — 단 없어진 트림·색상을 가리키는 것만 정리
+//  · 오류가 하나라도 있으면 적용 불가 · 적용 직전 작업본은 반영 이력에 '자동 백업'으로 남아 되돌리기 가능
+export const REPLACE_CONFIRM = "전체 교체";
+const ID_RE = /^[a-z0-9][a-z0-9._-]{1,120}$/;
+function defaultsFor(kind: VmKind, o: any) {
+  if (["brands", "models", "lineups", "trims"].includes(kind)) { o.status ??= "ACTIVE"; o.sortOrder ??= 999; }
+  if (kind === "trimOptions") { o.type ??= "SELECTABLE"; o.dependency ??= []; o.exclusionRule ??= []; o.condition ??= null; }
+  if (kind === "vehicleImages") Object.assign(o, { source: o.source || "CHAQ_OWN", verified: o.verified ?? true, trimId: o.trimId || null, thumbnailUrl: o.thumbnailUrl || null, view: o.view || "side", sortOrder: o.sortOrder ?? 0, author: o.author || "차큐", license: o.license || "차큐 자체 제작" });
+  if (kind === "trims") o.sourceIds ??= [];
+  return o;
+}
+
+export async function planVmReplace(buf: Buffer) {
+  const M0 = await loadDraft(true);
+  const baseVersion = String((await q(`SELECT value FROM app_state WHERE key = 'vm_draft_version'`)).rows[0]?.value || "0");
+  const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf as any);
+  const missing = SHEETS.filter((sh) => !wb.getWorksheet(sh.name)).map((sh) => sh.name);
+  if (missing.length) throw new VmError(`전체 교체는 9개 시트가 모두 있어야 합니다 — 없는 시트: ${missing.join(", ")}`);
+  const N = { meta: M0.meta || {} } as VM; for (const k of VM_KINDS) N[k] = [];
+  const errors: string[] = []; const skippedDel: Record<string, number> = {};
+  for (const sh of SHEETS) {
+    const ws = wb.getWorksheet(sh.name)!;
+    const H: string[] = []; ws.getRow(1).eachCell((c, i) => { H[i] = String(cv(c.value) ?? "").trim(); });
+    const keyCols = sh.key.map((k) => sh.cols.find((c) => c.f === k)!);
+    const noKey = keyCols.filter((c) => !H.includes(c.h)).map((c) => c.h);
+    if (noKey.length) { errors.push(`${sh.name} 시트: '${noKey.join(", ")}' 열이 없습니다`); continue; }
+    const cur = new Map((M0[sh.kind] || []).map((o) => [idOf(sh.kind, o), o]));
+    const seen = new Set<string>();
+    const editable = sh.cols.filter((c) => !c.ref);
+    ws.eachRow((row, n) => {
+      if (n === 1) return;
+      const raw: Record<string, unknown> = {}; H.forEach((h, i) => { if (h) raw[h] = cv(row.getCell(i).value) ?? null; });
+      if (!Object.values(raw).some((v) => v !== null && v !== undefined && String(v).trim() !== "")) return;
+      const label = `${sh.name} ${n}행`;
+      if (/^y/i.test(String(raw[DEL] ?? "").trim())) { skippedDel[sh.name] = (skippedDel[sh.name] || 0) + 1; return; }   // 삭제 표시 행 = 빼고 올림
+      const vals: Record<string, unknown> = {};
+      for (const c of editable) if (c.h in raw) {
+        const v = norm(c, raw[c.h]);
+        if (c.t === "int" && typeof v === "string") { errors.push(`${label}: ${c.h} 숫자 아님 (${v})`); return; }
+        vals[c.f] = v;
+      }
+      const keyObj: any = {}; sh.key.forEach((k) => { keyObj[k] = vals[k] ?? null; });
+      if (!sh.key.every((k) => keyObj[k])) { errors.push(`${label}: ${keyCols.map((c) => c.h).join("·")} 가 비어 있습니다 (전체 교체는 ID 필수)`); return; }
+      const key = sh.key.length === 1 ? String(keyObj.id) : idOf(sh.kind, keyObj);
+      if (seen.has(key)) { errors.push(`${label}: 같은 항목이 파일에 두 번 있습니다 (${key})`); return; }
+      seen.add(key);
+      const old = cur.get(key);
+      if (!old && sh.key.length === 1 && !ID_RE.test(key)) { errors.push(`${label}: ID '${key}' 형식 오류 (영문 소문자·숫자·-·_·. 만)`); return; }
+      const o = defaultsFor(sh.kind, { ...(old ? JSON.parse(JSON.stringify(old)) : {}), ...vals });
+      for (const f of REQUIRED[sh.kind] || []) if (o[f] === undefined || o[f] === null || o[f] === "") { errors.push(`${label}: ${sh.cols.find((c) => c.f === f)?.h || f} 필수`); return; }
+      N[sh.kind].push(o);
+    });
+  }
+  // 엑셀에 없는 종류: 유지하되 없어진 트림·색상·라인업을 가리키는 것만 정리
+  const T = new Set(N.trims.map((t) => t.id)), C = new Set(N.colors.map((c) => c.id)), L = new Set(N.lineups.map((l) => l.id));
+  N.colorRules = (M0.colorRules || []).filter((r) => T.has(r.trimId) && C.has(r.interiorColorId)).map((r) => ({ ...r, allowedExteriorColorIds: (r.allowedExteriorColorIds || []).filter((i: string) => C.has(i)), excludedExteriorColorIds: (r.excludedExteriorColorIds || []).filter((i: string) => C.has(i)) }));
+  N.sources = M0.sources || [];
+  N.vehicleSpecs = (M0.vehicleSpecs || []).filter((s) => s.trimId ? T.has(s.trimId) : s.lineupId ? L.has(s.lineupId) : true);
+  // 참조 검사 (반영 검사 + 엑셀 전용 추가 검사)
+  const B = new Set(N.brands.map((b) => b.id)), MO = new Set(N.models.map((m) => m.id));
+  N.options.forEach((o) => { if (!MO.has(o.modelId)) errors.push(`옵션 ${o.id}: 모델 '${o.modelId}' 없음`); });
+  N.colors.forEach((c) => { if (!B.has(c.brandId)) errors.push(`색상 ${c.id}: 브랜드 '${c.brandId}' 없음`); });
+  N.vehicleImages.forEach((x) => { if (x.trimId && !T.has(x.trimId)) errors.push(`이미지 ${x.id}: 트림 '${x.trimId}' 없음`); });
+  N.trimColors.forEach((x) => { if (!["EXTERIOR", "INTERIOR"].includes(x.type)) errors.push(`트림색상 ${x.trimId}|${x.colorId}: 구분은 EXTERIOR / INTERIOR`); });
+  const v = validateVm(N);
+  errors.push(...v.errors); if (v.errorCount > v.errors.length) errors.push(`… 반영 검사 오류 ${v.errorCount - v.errors.length}건 더`);
+
+  // 건수 비교
+  const counts: Record<string, { kind: string; cur: number; next: number; added: number; removed: number }> = {};
+  for (const k of VM_KINDS) {
+    const a = new Set((M0[k] || []).map((o) => idOf(k, o))), b = new Set((N[k] || []).map((o) => idOf(k, o)));
+    if (!a.size && !b.size) continue;
+    counts[k] = { kind: KIND_KO[k], cur: a.size, next: b.size, added: [...b].filter((x) => !a.has(x)).length, removed: [...a].filter((x) => !b.has(x)).length };
+  }
+  // 영향: 사이트 견적(재고특가·빠른인도·금융사) · 이용후기 — ID 로만 연결돼 있어 같은 ID 면 그대로 붙음
+  const Tm = new Map(N.trims.map((t) => [t.id, t]));
+  const qr = (await q(`SELECT r.kind, r.trim_id, COUNT(*)::int AS n FROM quote_rows r JOIN published_sets p ON p.batch_id = r.batch_id AND p.kind = r.kind WHERE r.trim_id IS NOT NULL AND r.trim_id <> '' GROUP BY 1, 2`)).rows;
+  const qMissing = qr.filter((r) => !Tm.has(r.trim_id)), qHidden = qr.filter((r) => Tm.get(r.trim_id)?.status === "INACTIVE");
+  const rv = (await q(`SELECT id, data FROM content_items WHERE kind = 'review'`).catch(() => ({ rows: [] as any[] }))).rows;
+  const rMissing = rv.filter((r) => (r.data?.modelId && !MO.has(r.data.modelId)) || (r.data?.trimId && !T.has(r.data.trimId)));
+  const sum = (a: any[]) => a.reduce((s, r) => s + r.n, 0);
+  const impact = {
+    quotes: { linked: sum(qr), trims: qr.length, missing: sum(qMissing), missingTrims: qMissing.slice(0, 30).map((r) => `${r.kind} · ${r.trim_id} (${r.n}건)`), hidden: sum(qHidden), hiddenTrims: qHidden.slice(0, 30).map((r) => `${r.kind} · ${r.trim_id} (${r.n}건)`) },
+    reviews: { total: rv.length, missing: rMissing.length, sample: rMissing.slice(0, 20).map((r) => `#${r.id} ${r.data?.car || ""} (${r.data?.modelId || ""}${r.data?.trimId ? " / " + r.data.trimId : ""})`) },
+    keptOther: { colorRules: N.colorRules.length, sources: N.sources.length, vehicleSpecs: N.vehicleSpecs.length },
+    deleteMarked: skippedDel,
+  };
+  const r = await q(`INSERT INTO vm_imports (ops, summary, errors) VALUES ($1,$2,$3) RETURNING id`, [JSON.stringify({ mode: "replace", baseVersion, gz: gz(N).toString("base64") }), JSON.stringify({ mode: "replace", counts, impact }), JSON.stringify(errors.slice(0, 200))]);
+  return { importId: r.rows[0].id as number, mode: "replace", counts, impact, warnings: v.warnings, warningCount: v.warningCount, errors: errors.slice(0, 100), errorCount: errors.length, canApply: errors.length === 0, confirmText: REPLACE_CONFIRM };
+}
+
+export async function applyVmReplace(importId: number, confirm: string, adminId: number | null) {
+  if (String(confirm || "").trim() !== REPLACE_CONFIRM) throw new VmError(`확인 문구 '${REPLACE_CONFIRM}' 를 정확히 입력하세요`);
+  const r = await q(`SELECT ops, errors, applied_at FROM vm_imports WHERE id = $1`, [importId]);
+  if (!r.rowCount) throw new VmError("미리보기가 없습니다", 404);
+  const { ops, errors, applied_at } = r.rows[0];
+  if (ops?.mode !== "replace") throw new VmError("전체 교체 미리보기가 아닙니다");
+  if (applied_at) throw new VmError("이미 적용된 파일입니다");
+  if ((errors || []).length) throw new VmError(`오류 ${errors.length}건이 있어 적용할 수 없습니다 — 파일을 고쳐 다시 올려 주세요`);
+  const ver = String((await q(`SELECT value FROM app_state WHERE key = 'vm_draft_version'`)).rows[0]?.value || "0");
+  if (ver !== ops.baseVersion) throw new VmError("미리보기 이후 작업본이 바뀌었습니다 — 파일을 다시 올려 미리보기부터 해 주세요", 409);
+  const N = gunzipVm(Buffer.from(ops.gz, "base64"));
+  const M0 = await loadDraft(true);
+  const backupId = await tx(async (c: pg.PoolClient) => {
+    const b = await c.query(`INSERT INTO vm_releases (created_by, note, counts, payload, is_current) VALUES ($1,$2,$3,$4,false) RETURNING id`, [adminId, `전체 교체 전 작업본 자동 백업 (엑셀 #${importId})`, countsOf(M0), gz(M0)]);
+    await replaceDraft(N, adminId, "replace", `엑셀 전체 교체 #${importId} (백업 #${b.rows[0].id})`, c);
+    await c.query(`UPDATE vm_imports SET applied_at = now(), applied_by = $2 WHERE id = $1`, [importId, adminId]);
+    return b.rows[0].id as number;
+  });
+  await loadDraft(true);
+  return { ok: true, backupReleaseId: backupId, counts: countsOf(N) };
 }

@@ -62,7 +62,7 @@
       $("#vmReleases").innerHTML = '<tr><th>반영본</th><th>시각</th><th>담당</th><th>내용</th><th class="num">트림</th><th></th></tr>' + r[0].map(function (x) {
         return '<tr><td>#' + x.id + (x.is_current ? ' <span class="pill live">사이트</span>' : '') + '</td><td>' + dt(x.created_at) + '</td><td>' + esc(x.by || "") + '</td><td>' + esc(x.note) + '</td><td class="num">' + won((x.counts || {}).trims) + '</td><td>' + (x.is_current ? '' : '<button class="btn sm" data-rb="' + x.id + '">이 반영본으로 되돌리기</button>') + '</td></tr>';
       }).join("");
-      var ACT = { create: "추가", update: "수정", delete: "삭제", import: "엑셀 적용", publish: "사이트 반영", rollback: "되돌리기" };
+      var ACT = { create: "추가", update: "수정", delete: "삭제", import: "엑셀 적용", replace: "전체 교체", publish: "사이트 반영", rollback: "되돌리기" };
       $("#vmChanges").innerHTML = '<tr><th>시각</th><th>담당</th><th>작업</th><th>항목</th><th>내용</th></tr>' + r[1].map(function (x) {
         return '<tr><td>' + dt(x.at) + '</td><td>' + esc(x.by || "") + '</td><td>' + (ACT[x.action] || x.action) + '</td><td>' + esc(x.kindKo || "") + ' <small class="hint">' + esc(x.item_id || "") + '</small></td><td>' + esc(x.summary) + '</td></tr>';
       }).join("");
@@ -373,6 +373,38 @@
         api("/api/admin/vm/import/" + p.importId + "/apply", { method: "POST" }).then(function (r) { $("#vmXlsPlan").innerHTML = '<p class="up">' + r.applied + '건 적용했습니다. 확인 후 [사이트 반영] 을 누르세요.</p>'; e.target.reset(); loadStatus(); go(S.path, S.level); }).catch(function (er) { ap.disabled = false; fail(er); });
       };
     }).catch(function (er) { $("#vmXlsPlan").innerHTML = '<p class="err">' + esc(er.message) + '</p>'; }).finally(function () { btn.disabled = false; });
+  });
+
+  // ---------------------------------------------------------------- 엑셀로 전체 교체
+  $("#vmRepForm").addEventListener("submit", function (e) {
+    e.preventDefault(); var fd = new FormData(e.target), btn = $("button", e.target); btn.disabled = true;
+    $("#vmRepPlan").innerHTML = '<p class="hint">확인 중… (전체 파일은 1분 정도 걸릴 수 있습니다)</p>';
+    api("/api/admin/vm/replace", { method: "POST", body: fd }).then(function (p) {
+      var im = p.impact, ks = Object.keys(p.counts), list = function (a) { return a.map(esc).join("<br>"); };
+      var h = '<h3>전체 교체 미리보기</h3><table class="tbl"><tr><th>종류</th><th class="num">지금</th><th class="num">파일</th><th class="num">새로 생김</th><th class="num">없어짐</th></tr>' + ks.map(function (k) { var c = p.counts[k]; return '<tr><td>' + esc(c.kind) + '</td><td class="num">' + won(c.cur) + '</td><td class="num"><b>' + won(c.next) + '</b></td><td class="num up">' + won(c.added) + '</td><td class="num down">' + won(c.removed) + '</td></tr>'; }).join("") + '</table>';
+      h += '<h3>연결 데이터 영향</h3><ul class="hint">' +
+        '<li>사이트 견적(재고특가·빠른인도·금융사) 연결 ' + won(im.quotes.linked) + '건 중 <b class="' + (im.quotes.missing ? "down" : "up") + '">트림이 없어져 끊기는 견적 ' + won(im.quotes.missing) + '건</b>' + (im.quotes.hidden ? ' · 숨김 트림에 연결 ' + won(im.quotes.hidden) + '건' : '') + '</li>' +
+        '<li>이용후기 ' + im.reviews.total + '건 중 <b class="' + (im.reviews.missing ? "down" : "up") + '">차종 연결이 끊기는 후기 ' + im.reviews.missing + '건</b></li>' +
+        '<li>유지: 색상 조합 규칙 ' + won(im.keptOther.colorRules) + ' · 출처 ' + won(im.keptOther.sources) + ' · 제원 ' + won(im.keptOther.vehicleSpecs) + '</li>' +
+        (Object.keys(im.deleteMarked).length ? '<li>삭제 표시(Y)라 뺀 행: ' + Object.keys(im.deleteMarked).map(function (k) { return esc(k) + " " + im.deleteMarked[k]; }).join(", ") + '</li>' : '') + '</ul>' +
+        (im.quotes.missing ? '<details><summary>끊기는 견적 트림 보기</summary><div class="problems">' + list(im.quotes.missingTrims) + '</div></details>' : '') +
+        (im.quotes.hidden ? '<details><summary>숨김 트림에 연결된 견적 보기</summary><div class="problems">' + list(im.quotes.hiddenTrims) + '</div></details>' : '') +
+        (im.reviews.missing ? '<details><summary>끊기는 후기 보기</summary><div class="problems">' + list(im.reviews.sample) + '</div></details>' : '');
+      if (p.warningCount) h += '<details><summary>확인 필요 ' + p.warningCount + '건 (적용은 가능)</summary><div class="problems ok">' + list(p.warnings) + '</div></details>';
+      if (p.errorCount) h += '<div class="problems"><b>오류 ' + p.errorCount + '건 — 고쳐서 다시 올려야 적용할 수 있습니다</b><br>' + list(p.errors) + '</div>';
+      else h += '<div class="row gap"><input id="vmRepConfirm" placeholder="' + esc(p.confirmText) + ' 라고 입력" style="width:160px"><button class="btn danger" id="vmRepApply" disabled>작업본 전체 교체</button><span class="hint">적용 전 작업본은 자동 백업됩니다</span></div>';
+      $("#vmRepPlan").innerHTML = h;
+      var inp = $("#vmRepConfirm"), ap = $("#vmRepApply"); if (!ap) return;
+      inp.oninput = function () { ap.disabled = inp.value.trim() !== p.confirmText; };
+      ap.onclick = function () {
+        if (!confirm("작업본을 이 파일 내용으로 통째로 바꿉니다. 계속할까요?")) return;
+        ap.disabled = true;
+        api("/api/admin/vm/replace/" + p.importId + "/apply", { method: "POST", json: { confirm: inp.value } }).then(function (r) {
+          $("#vmRepPlan").innerHTML = '<p class="up">전체 교체 완료 — 트림 ' + won(r.counts.trims) + ' · 이미지 ' + won(r.counts.vehicleImages) + '. 이전 작업본은 반영 이력 #' + r.backupReleaseId + ' 로 백업됐습니다. 확인 후 [사이트 반영] 을 누르세요.</p>';
+          e.target.reset(); loadStatus(); go([], "brands"); showEmptyEditor(); if (!$("#vmHistory").hidden) loadHistory();
+        }).catch(function (er) { ap.disabled = false; fail(er); });
+      };
+    }).catch(function (er) { $("#vmRepPlan").innerHTML = '<p class="err">' + esc(er.message) + '</p>'; }).finally(function () { btn.disabled = false; });
   });
 
   // ---------------------------------------------------------------- 시작

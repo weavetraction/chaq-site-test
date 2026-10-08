@@ -63,6 +63,13 @@
           <form id="vmXlsForm" class="row gap" style="margin-top:10px"><input type="file" name="file" accept=".xlsx" required><button type="submit" class="btn primary">올리고 미리보기</button></form>
           <p class="hint">받은 엑셀에서 필요한 칸만 고쳐 올리세요. 고치지 않은 행은 그대로이고, 삭제는 '삭제' 열에 Y. 가격(트림가격·옵션가격·추가금액)은 원 단위 숫자.</p>
           <div id="vmXlsPlan"></div>
+          <details class="vm_replace" style="margin-top:16px">
+            <summary><b class="down">엑셀로 전체 교체</b> <small class="hint">— 작업본을 파일 내용으로 통째로 바꿈 (파일에 없는 항목은 빠짐)</small></summary>
+            <p class="hint">9개 시트(브랜드·모델·라인업·트림·옵션·트림옵션·색상·트림색상·이미지)가 모두 있어야 하고 모든 행에 ID 가 있어야 합니다. '_' 로 시작하는 시트는 무시합니다.<br>
+              적용 직전 작업본은 [반영 이력]에 '자동 백업'으로 남아 언제든 되돌릴 수 있습니다. 적용 후 [사이트 반영] 을 눌러야 사이트에 나갑니다.</p>
+            <form id="vmRepForm" class="row gap"><input type="file" name="file" accept=".xlsx" required><button type="submit" class="btn">올리고 미리보기</button></form>
+            <div id="vmRepPlan"></div>
+          </details>
         </div>
       </section>
 

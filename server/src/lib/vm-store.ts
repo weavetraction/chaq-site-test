@@ -171,7 +171,7 @@ export const FIELDS: Record<VmKind, Record<string, FieldType>> = {
   vehicleSpecs: {},
 };
 /** 반드시 있어야 하는 필드 */
-const REQUIRED: Partial<Record<VmKind, string[]>> = {
+export const REQUIRED: Partial<Record<VmKind, string[]>> = {
   brands: ["nameKo"], models: ["brandId", "nameKo"], lineups: ["modelId", "shortLabel"], trims: ["lineupId", "name"],
   options: ["modelId", "name"], trimOptions: ["trimId", "optionId"], colors: ["brandId", "name"], trimColors: ["trimId", "colorId", "type"],
   colorRules: ["trimId", "interiorColorId"], vehicleImages: ["lineupId", "imageUrl"],
@@ -390,8 +390,8 @@ export function validateVm(M: VM) {
 
 let pub: { version: string; coreJs: string; details: Map<string, string>; modelIds: Set<string>; etag: string; releaseId: number } | null = null;
 let pubCheckedAt = 0;
-const gz = (M: VM) => zlib.gzipSync(Buffer.from(JSON.stringify(M)), { level: 6 });
-const gunzipVm = (b: Buffer): VM => JSON.parse(zlib.gunzipSync(b).toString("utf8"));
+export const gz = (M: VM) => zlib.gzipSync(Buffer.from(JSON.stringify(M)), { level: 6 });
+export const gunzipVm = (b: Buffer): VM => JSON.parse(zlib.gunzipSync(b).toString("utf8"));
 
 /** 작업본 → 사이트 반영 */
 export async function publishDraft(adminId: number | null, note: string) {
@@ -430,7 +430,7 @@ export async function releases() {
 /** 작업본이 반영본과 다른지 (반영 안 된 변경 수) */
 export async function pendingChanges() {
   const v = Number((await stateGet("vm_pub_version")) || 0);
-  const r = await q(`SELECT COUNT(*)::int AS n FROM vm_changes WHERE action IN ('create','update','delete') AND at > to_timestamp($1 / 1000.0)`, [v]);
+  const r = await q(`SELECT COUNT(*)::int AS n FROM vm_changes WHERE action IN ('create','update','delete','replace') AND at > to_timestamp($1 / 1000.0)`, [v]);
   return r.rows[0].n as number;
 }
 

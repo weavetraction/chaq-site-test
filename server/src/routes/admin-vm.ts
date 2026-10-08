@@ -8,7 +8,7 @@ import {
   VM_KINDS, VmKind, KIND_KO, FIELDS, loadDraft, getItem, children, trimBundle, searchTree, saveItem, deleteItem,
   publishDraft, rollbackTo, releases, pendingChanges, validateVm, countsOf, VmError, idOf,
 } from "../lib/vm-store.js";
-import { buildVmWorkbook, planVmImport, applyVmImport } from "../lib/vm-excel.js";
+import { buildVmWorkbook, planVmImport, applyVmImport, planVmReplace, applyVmReplace } from "../lib/vm-excel.js";
 import { saveMedia, listMedia, MEDIA_PURPOSES } from "../lib/media.js";
 import { tx } from "../db.js";
 
@@ -104,6 +104,13 @@ adminVmRouter.post("/api/admin/vm/import", upload.single("file"), wrap(async (re
   catch (e: any) { if (e instanceof VmError) throw e; throw new VmError("엑셀 파일을 읽을 수 없습니다: " + (e.message || e)); }
 }));
 adminVmRouter.post("/api/admin/vm/import/:id/apply", wrap(async (req, res) => res.json(await applyVmImport(Number(req.params.id), adminOf(req).id))));
+/** 엑셀로 전체 교체: 미리보기(건수·끊길 연결) → 확인 문구 입력 후 적용 (적용 전 작업본은 자동 백업) */
+adminVmRouter.post("/api/admin/vm/replace", upload.single("file"), wrap(async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "파일이 없습니다" });
+  try { res.json(await planVmReplace(req.file.buffer)); }
+  catch (e: any) { if (e instanceof VmError) throw e; throw new VmError("엑셀 파일을 읽을 수 없습니다: " + (e.message || e)); }
+}));
+adminVmRouter.post("/api/admin/vm/replace/:id/apply", wrap(async (req, res) => res.json(await applyVmReplace(Number(req.params.id), String(req.body?.confirm || ""), adminOf(req).id))));
 
 // ---------------------------------------------------------------- 사이트 반영 · 이력
 adminVmRouter.post("/api/admin/vm/publish", wrap(async (req, res) => res.json(await publishDraft(adminOf(req).id, String(req.body?.note || "").slice(0, 200)))));
