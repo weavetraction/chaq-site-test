@@ -167,6 +167,33 @@
     </script>
     <script>/* API 상세본을 못 읽었으면 사이트 파일 */ (function () { var VM = window.CHAQ_VM, mid = window.CHAQ_DETAIL_MID; if (VM && mid && VM.isDetailLoaded && !VM.isDetailLoaded(mid)) document.write('<script src="data/vm/' + encodeURIComponent(mid) + '.js"><\/script>'); })();</script>
     <script>
+        /* 재고 장착 옵션 금액 (옵션 상세 팝업 · 아래 '옵션 가격' 공통 — 두 곳이 항상 같은 합계)
+           견적 금액 → 없으면 차량 데이터의 공식 옵션가(이름 일치 → 비슷한 이름) → 없으면 '별도문의'(합계 제외) */
+        window.CHAQ_OPT_PRICES = function (rec) {
+            var VM = window.CHAQ_VM;
+            var nz = function (x) { return String(x || '').toLowerCase().replace(/시그니쳐/g, '시그니처').replace(/plus/g, '플러스').replace(/krell/g, '크렐').replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2').replace(/Ⅲ/g, '3').replace(/(^|\s)iii(?=\s|$)/g, '$13').replace(/(^|\s)ii(?=\s|$)/g, '$12').replace(/(^|\s)i(?=\s|$)/g, '$11').replace(/[\s·,&+()\[\]\-_\/."'″]/g, ''); };
+            var vo = (VM && rec && rec.trimId && VM.getTrimOptions) ? VM.getTrimOptions(rec.trimId, 'SELECTABLE') : [];
+            var vmPrice = function (n) {
+                var k = nz(n); if (!k) return null;
+                var hit = vo.filter(function (v) { return nz(v.name) === k; })[0];
+                if (!hit) hit = vo.filter(function (v) { var x = nz(v.name), a = Math.min(x.length, k.length), b = Math.max(x.length, k.length); return a >= 3 && a / b >= 0.6 && (x.indexOf(k) > -1 || k.indexOf(x) > -1); })[0];
+                if (!hit && /[(（]/.test(n)) return vmPrice(String(n).replace(/[(（][^)）]*[)）]?/g, ' '));   // 괄호 속 조건 문구 빼고 다시
+                return hit && hit.price != null ? hit.price : null;
+            };
+            var out = { items: [], sum: 0, cnt: 0, priceable: 0 };
+            ((rec && rec.opts) || []).forEach(function (o) {
+                if (/^무옵션$/.test(String(o.n || '').trim())) { out.items.push({ n: o.n, none: true, price: null }); return; }
+                var q = o.pSrc === 'VM' ? null : o.p;   // 다른 스크립트가 채운 공식가(pSrc=VM)는 다시 계산
+                var pr = q != null && q !== '' && +q ? +q : null;
+                if (pr == null && VM && VM.optionPriceByName && rec.trimId) pr = VM.optionPriceByName(rec.trimId, o.n) || null;   // 공식 옵션가(이름 일치)
+                if (pr == null) pr = vmPrice(o.n);                                                                                 // 비슷한 이름
+                out.items.push({ n: o.n, price: pr, src: q != null && q !== '' && +q ? 'QUOTE' : (pr != null ? 'VM' : null) });
+                out.priceable++; if (pr != null) { out.sum += pr; out.cnt++; }
+            });
+            return out;
+        };
+    </script>
+    <script>
         (function () {
             // 조건 칩: 그룹 내 단일 선택
             document.querySelectorAll('.filter_chip').forEach(function (chip) {
@@ -281,27 +308,17 @@
                         html += '<div class="opt_row is-static"><span>' + esc(pm ? pm[1] : t) + '</span>' + (pm ? '<em>' + pm[2] + '</em>' : '') + '</div>';
                     });
                     // 재고 차량 장착 옵션은 항목별 옵션 비용을 오른쪽 끝에: 견적 금액 → 없으면 차량 데이터의 공식 옵션가(이름 일치) → 없으면 '별도문의'
-                    var D = window.CHAQ || {}, VM = window.CHAQ_VM, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1];
+                    var D = window.CHAQ || {}, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1];
                     var rec = window.CHAQ_DETAIL_QUOTE || (idm ? (D.stock || []).concat(D.fast || [], D.estimate || []).filter(function (r) { return r.id === idm; })[0] : null);
-                    if (rec && (rec.opts || []).length) {
-                        var nz = function (x) { return String(x || '').toLowerCase().replace(/시그니쳐/g, '시그니처').replace(/plus/g, '플러스').replace(/krell/g, '크렐').replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2').replace(/Ⅲ/g, '3').replace(/(^|\s)iii(?=\s|$)/g, '$13').replace(/(^|\s)ii(?=\s|$)/g, '$12').replace(/(^|\s)i(?=\s|$)/g, '$11').replace(/[\s·,&+()\[\]\-_\/."'″]/g, ''); };
-                        var vo = (VM && rec.trimId && VM.getTrimOptions) ? VM.getTrimOptions(rec.trimId, 'SELECTABLE') : [];
-                        var vmPrice = function (n) {
-                            var k = nz(n); if (!k) return null;
-                            var hit = vo.filter(function (v) { return nz(v.name) === k; })[0];
-                            if (!hit) hit = vo.filter(function (v) { var x = nz(v.name), a = Math.min(x.length, k.length), b = Math.max(x.length, k.length); return a >= 3 && a / b >= 0.6 && (x.indexOf(k) > -1 || k.indexOf(x) > -1); })[0];
-                            if (!hit && /[(（]/.test(n)) return vmPrice(String(n).replace(/[(（][^)）]*[)）]?/g, ' '));   // 괄호 속 조건 문구 빼고 다시
-                            return hit && hit.price != null ? hit.price : null;
-                        };
-                        var sum = 0, cnt = 0, rows = '';
-                        rec.opts.forEach(function (o) {
-                            if (/^무옵션$/.test(String(o.n || '').trim())) { rows += '<div class="opt_row is-static"><span>추가 옵션 없음</span></div>'; return; }
-                            var pr = o.p != null && o.p !== '' && +o.p ? +o.p : vmPrice(o.n);
-                            if (pr != null) { sum += pr; cnt++; }
-                            rows += '<div class="opt_row is-static"><span>' + esc(o.n) + '</span><em' + (pr == null ? ' class="is-ask"' : '') + '>' + (pr != null ? '+' + pr.toLocaleString('ko-KR') + '원' : '별도문의') + '</em></div>';
+                    var OP = rec ? window.CHAQ_OPT_PRICES(rec) : null;
+                    if (OP && OP.items.length) {
+                        var rows = '';
+                        OP.items.forEach(function (it) {
+                            if (it.none) { rows += '<div class="opt_row is-static"><span>추가 옵션 없음</span></div>'; return; }
+                            rows += '<div class="opt_row is-static"><span>' + esc(it.n) + '</span><em' + (it.price == null ? ' class="is-ask"' : '') + '>' + (it.price != null ? '+' + it.price.toLocaleString('ko-KR') + '원' : '별도문의') + '</em></div>';
                         });
-                        html = '<p class="opt_sec">장착 옵션 ' + rec.opts.length + '개</p>' + rows +
-                            (cnt ? '<div class="opt_row is-static opt_total"><span>옵션 합계' + (cnt < rec.opts.length ? ' <small>(금액 확인된 ' + cnt + '개)</small>' : '') + '</span><em>' + sum.toLocaleString('ko-KR') + '원</em></div>' : '') +
+                        html = '<p class="opt_sec">장착 옵션 ' + OP.items.length + '개</p>' + rows +
+                            (OP.cnt ? '<div class="opt_row is-static opt_total"><span>옵션 합계' + (OP.cnt < OP.priceable ? ' <small>(금액 확인된 ' + OP.cnt + '개)</small>' : '') + '</span><em>' + OP.sum.toLocaleString('ko-KR') + '원</em></div>' : '') +
                             '<p class="opt_note">옵션 비용은 견적 금액 기준이며, 견적에 없는 항목은 공식 가격표의 옵션가입니다.</p>';
                     }
                     detPop.querySelector('.opt_body').innerHTML = html || '<p class="opt_note">옵션 정보가 없습니다.</p>';
@@ -403,7 +420,7 @@
                 set('.confirm-monthly strong','별도문의');
                 // 차량가: 견적이 없으면 차량 데이터의 트림 기본가(listPrice, 파일 기준 · 견적 데이터가 들어오면 견적 우선)
                 var lp = VM.getListPrice ? VM.getListPrice(trimId) : null;
-                set('#pBase', lp ? won(lp.price)+'원' : '차량가 문의'); set('#pOpt', lp ? '0원' : '—'); set('#pDisc', lp ? '0원' : '—'); set('#pTotal', lp ? won(lp.price)+'원' : '—'); set('#pAcq','—');
+                set('#pBase', lp ? won(lp.price)+'원' : '차량가 문의'); window.CHAQ_DETAIL_BASE = lp ? lp.price : null; set('#pOpt', lp ? '0원' : '—'); set('#pDisc', lp ? '0원' : '—'); set('#pTotal', lp ? won(lp.price)+'원' : '—'); set('#pAcq','—');
                 var hm=document.querySelector('.detail_monthly strong'); if(hm) hm.style.color='#8a8f96';
                 var cm=document.querySelector('.confirm-monthly strong'); if(cm) cm.style.color='#8a8f96';
                 document.querySelectorAll('.detail_conds .filter_chip').forEach(function(ch){ ch.addEventListener('click', function(){ setTimeout(function(){ set('.detail_monthly strong','별도문의'); set('.confirm-monthly strong','별도문의'); },0); }); });
@@ -466,9 +483,11 @@
 
             // 옵션 상세 패널
             var opts = rec.opts||[];
-            if (window.CHAQ_VM && window.CHAQ_VM.optionPriceByName && rec.trimId) opts.forEach(function(o){ if(!o.p){ var vp=window.CHAQ_VM.optionPriceByName(rec.trimId, o.n); if(vp){ o.p=vp; o.pSrc='VM'; } } });   // 견적에 옵션가가 없으면 공식 옵션가(차량 데이터)
+            // 옵션가: '옵션 상세' 팝업과 같은 계산(CHAQ_OPT_PRICES) — 견적 금액 → 없으면 공식 옵션가 → 없으면 합계 제외
+            var OPS = window.CHAQ_OPT_PRICES ? window.CHAQ_OPT_PRICES(rec) : { items: [], sum: 0 };
+            opts.forEach(function(o, i){ var it = OPS.items[i]; if(!o.p && it && it.price != null){ o.p = it.price; o.pSrc = 'VM'; } });
             var priced = opts.filter(function(o){return o.p;});
-            var optSum = priced.reduce(function(a,o){return a+(o.p||0);},0);
+            var optSum = OPS.sum;
             var panel=document.getElementById('optionPanel');
             if(panel && !VMQ){
                 if(priced.length){
@@ -557,9 +576,11 @@
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
                 if(m==null){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
-                var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
+                var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 금융사 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
                 var set=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
                 set('pBase', base!=null?won(base)+'원':'차량가 문의');
+                window.CHAQ_DETAIL_BASE = base;   // 위 세부 등급 줄(트림 가격)도 같은 값 — 조건 변경으로 금융사가 바뀌면 같이 바뀜
+                var dp=document.querySelector('.dts_price'); if(dp && base!=null && window.CHAQ_UTIL.priceShort) dp.textContent=window.CHAQ_UTIL.priceShort(base);
                 var extra=selExtra();
                 set('pOpt', (optSum+extra)>0?won(optSum+extra)+'원':(opts.length?'기본 포함':'0원'));
                 set('pDisc','0원');
@@ -619,9 +640,11 @@
                 if (!t && !(isStock && rec)) return;
                 var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
                 var won = window.CHAQ_UTIL.won;
-                var man = function(n){ return n ? (Math.round(n/10000)).toLocaleString('ko-KR')+'만원' : ''; };
+                var man = function(n){ return n ? window.CHAQ_UTIL.priceShort(n) : ''; };   // 만원 단위로 안 떨어지면 원 단위 그대로 (아래 '기본 가격'과 같은 값)
                 var CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>';
-                function priceOf(tr, r){ var lp = tr && VM.getListPrice ? VM.getListPrice(tr.id) : null; return (lp && lp.price) || (r && r.base) || null; }   // 트림 가격(차량 데이터 기본가), 없으면 견적 차량가
+                // 트림 가격 = 아래 '기본 가격'과 같은 기준: 금융사 견적 차량가 우선, 없으면 차량 데이터(마스터) 트림 기본가
+                function priceOf(tr, r){ if (r && r.base) return r.base; var lp = tr && VM.getListPrice ? VM.getListPrice(tr.id) : null; return (lp && lp.price) || null; }
+                function quoteOf(trId){ if (!kind || !VM.pickQuote) return null; var only = {}; only[kind] = D[kind] || []; var pk = VM.pickQuote(trId, kind, only); return pk && pk.rec; }
                 // 기본옵션: 데이터의 'A 기본 품목 포함/외' 표기를 따라 하위 등급 품목까지 합쳐 실제 기본 포함 전체로 (같은 라인업 안에서)
                 var STD_REF = /^(.+?)\s*기본\s*품목\s*(?:외|포함)\s*$/, nz = function(x){ return String(x||'').replace(/\s+/g,''); };
                 function stdParts(tr, depth){
@@ -657,7 +680,7 @@
                 }
                 // ---- 세부 등급 한 줄
                 var name = t ? TG.shortName(t) : (rec && rec.trim) || '';
-                var price = priceOf(t, rec), sc = stdCount(t), selectable = !isStock && g && g.trims.length > 1;
+                var price = window.CHAQ_DETAIL_BASE != null ? window.CHAQ_DETAIL_BASE : priceOf(t, rec || window.CHAQ_DETAIL_QUOTE), sc = stdCount(t), selectable = !isStock && g && g.trims.length > 1;
                 var box = document.createElement('div'); box.className = 'detail_trimsel' + (isStock ? ' is-fixed' : '');
                 box.innerHTML = '' +   // '세부 등급' 제목 없이 한 줄만 (연식·라인업·인승·구동은 바로 위 줄 detail_year)
                     '<div class="dts_bar'+(selectable?' is-select':'')+'"'+(selectable?' role="button" tabindex="0" aria-label="다른 세부 등급 선택"':'')+'>' +
@@ -685,7 +708,7 @@
                 // '>' 다른 세부 등급 선택 (견적조회)
                 if (selectable) {
                     var trimPop = sheet('dtsTrimPop', '세부 등급 선택');
-                    trimPop.body.innerHTML = '<p class="opt_sec">'+esc(g.label)+'</p>' + g.trims.map(function (x) { var on = x.id === tid, p = priceOf(x, null);
+                    trimPop.body.innerHTML = '<p class="opt_sec">'+esc(g.label)+'</p>' + g.trims.map(function (x) { var on = x.id === tid, p = on ? price : priceOf(x, quoteOf(x.id));
                         return '<button type="button" class="opt_row dts_opt'+(on?' on':'')+'" data-trim="'+esc(x.id)+'"><span>'+esc(TG.shortName(x))+(on?' <small>현재</small>':'')+'</span><em>'+(p?man(p):'')+'<small>기본옵션 '+stdCount(x)+'개</small></em></button>'; }).join('');
                     var bar = box.querySelector('.dts_bar');
                     bar.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('.dts_info')) return; trimPop.open(); });
@@ -771,7 +794,7 @@
     <script src="data/auth.js"></script>   <!-- 회원: 카카오·휴대폰 가입 시트 · 비회원 조건 변경 제한 -->
     <script src="data/inquiry.js"></script>   <!-- 상담 문의: 회원 → 카카오톡 견적서·상담 / 로그인 수단 없으면 채널톡·상담 신청 양식 -->
     <script>
-        /* 견적 저장하기 · 최근 본 견적 — 로그인 없이 이 기기에 저장 (마이페이지에서 확인) */
+        /* 견적 저장하기(회원만) · 최근 본 견적 — 이 기기에 저장 (마이페이지에서 확인) */
         (function () {
             var U = window.CHAQ_UTIL, I = window.CHAQ_INQUIRY; if (!U || !U.store) return;
             function ctx() {
@@ -782,11 +805,26 @@
             var like = document.getElementById('likeBtn'); if (!like) return;
             function paint(on) { like.classList.toggle('is-on', on); like.style.color = on ? '#18a85c' : ''; like.setAttribute('aria-pressed', on ? 'true' : 'false'); }
             var c0 = ctx(); U.store.addRecent(c0); paint(U.store.isSaved(c0));
-            like.addEventListener('click', function () {
+            function doSave() {
                 var c = ctx();
                 if (U.store.isSaved(c)) { U.store.unsave(c); paint(false); U.toast('저장한 견적에서 뺐어요'); return; }
                 if (U.store.save(c)) { paint(true); U.toast('견적을 저장했어요 · 마이페이지에서 볼 수 있어요'); }
                 else U.toast('이 브라우저에서는 저장할 수 없어요');
+            }
+            // 견적 저장은 회원만 (로그인 수단이 켜져 있을 때) — 비회원은 가입 시트, 카카오 로그인으로 다녀오면 고르던 조건 그대로 저장
+            var AU = window.CHAQ_AUTH;
+            function chipIdx() { var all = document.querySelectorAll('.cond_wrap .filter_chip'), out = []; [].forEach.call(all, function (b, i) { if (b.classList.contains('on')) out.push(i); }); return out; }
+            like.addEventListener('click', function () {
+                if (!AU || !AU.requireLogin) return doSave();
+                AU.requireLogin({ reason: 'save', pending: { action: 'save', data: { chips: chipIdx() } } }).then(function () { doSave(); }).catch(function () {});
+            });
+            document.addEventListener('chaq:login', function (e) {
+                var p = e.detail && e.detail.pending; if (!p || p.action !== 'save') return;
+                setTimeout(function () {
+                    var chips = document.querySelectorAll('.cond_wrap .filter_chip');
+                    AU.withoutLimit(function () { ((p.data && p.data.chips) || []).forEach(function (i) { var b = chips[i]; if (b && !b.classList.contains('on')) b.click(); }); });
+                    setTimeout(function () { if (!U.store.isSaved(ctx())) doSave(); }, 300);
+                }, 400);
             });
         })();
     </script>

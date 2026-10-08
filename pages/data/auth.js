@@ -45,7 +45,7 @@
   var CSS = ".au [hidden]{display:none!important}.au_bg{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(17,20,24,.55)}" +
     ".au{position:relative;width:100%;max-width:480px;max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;background:#fff;padding:24px 20px calc(20px + env(safe-area-inset-bottom));box-sizing:border-box;font-family:inherit;color:#202124}" +
     "@media(min-width:600px){.au_bg{align-items:center}.au{border-radius:20px}}" +
-    ".au h3{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.3px}.au .au_sub{margin:0 0 18px;color:#5f6368;font-size:14px;line-height:1.5}" +
+    ".au h3{margin:0 0 6px;font-size:20px;font-weight:800;letter-spacing:-.3px}.au .au_sub{margin:0 0 18px;color:#5f6368;font-size:14px;line-height:1.5;word-break:keep-all}" +
     ".au .au_x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:0;border-radius:50%;background:#f1f3f4;color:#5f6368;font-size:20px;line-height:1;cursor:pointer}" +
     ".au .au_kakao{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;padding:15px;border:0;border-radius:12px;background:#FEE500;color:rgba(0,0,0,.85);font:inherit;font-size:16px;font-weight:700;cursor:pointer}" +
     ".au .au_kakao svg{width:20px;height:20px}" +
@@ -60,12 +60,14 @@
     ".au .au_agree small{display:block;color:#80868b;font-size:12px;margin-top:2px}" +
     ".au .au_err{min-height:18px;margin:8px 0;color:#e5484d;font-size:13px;line-height:1.45}" +
     ".au .au_go{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:#18a85c;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}.au .au_go:disabled{opacity:.55;cursor:default}" +
+    ".au .au_kakao.is-off,.au .au_send.is-off{opacity:.45}.au .au_agree_hint{margin:6px 0 0;color:#80868b;font-size:12px}" +
     ".au .au_note{margin:12px 0 0;color:#80868b;font-size:12px;line-height:1.5;text-align:center}";
   var KAKAO_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.65 1.74 4.98 4.37 6.31l-.9 3.3c-.08.3.26.54.52.37l3.93-2.6c.52.06 1.04.1 1.58.1 5.25 0 9.5-3.36 9.5-7.48S17.25 3.5 12 3.5z"/></svg>';
   var REASON = {
     inquiry: ["3초 가입하고 견적 받기", "가입하면 이 견적을 카카오톡으로 바로 보내드리고, 담당 매니저가 상담을 이어가요."],
     cond: ["조건을 더 바꿔보시려면 가입이 필요해요", "비회원은 조건 변경 횟수가 정해져 있어요. 3초 가입하면 제한 없이 비교할 수 있어요."],
     mypage: ["차큐 시작하기", "가입하면 상담 내역과 견적서를 어디서든 확인할 수 있어요."],
+    save: ["견적 저장은 회원만 할 수 있어요", "3초 가입하면 마음에 드는 견적을 저장하고 마이페이지에서 다시 볼 수 있어요."],
     phone: ["휴대폰 번호 확인", "견적서를 카카오톡(알림톡)으로 보내드리려면 휴대폰 번호 확인이 필요해요."],
     phoneSelf: ["연락받을 휴대폰 번호", "담당 매니저가 이 번호와 카카오톡으로 견적 상담을 도와드려요."],
   };
@@ -95,11 +97,12 @@
           '<label class="f au_codewrap" hidden>인증번호<span class="au_row"><input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6자리 숫자"></span><p class="au_timer"></p></label>' +
           (phoneOnly ? '' : '<label class="f au_namewrap" hidden>이름 <small style="font-weight:400;color:#80868b">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>') +
           '</div>' : '') +
-        (phoneOnly ? '' : '<div class="au_agree"><label class="all"><input type="checkbox" data-all>전체 동의 <small style="display:inline;margin-left:4px">(처음 가입할 때만 필요해요)</small></label>' +
+        (phoneOnly ? '' : '<div class="au_agree"><label class="all"><input type="checkbox" data-all>전체 동의</label>' +
           '<label><input type="checkbox" data-req="age">[필수] 만 14세 이상입니다</label>' +
           '<label><input type="checkbox" data-req="terms">[필수] 이용약관 동의<a href="' + agreementsHref() + '#terms" target="_blank" rel="noopener">보기</a></label>' +
           '<label><input type="checkbox" data-req="privacy"><span>[필수] 개인정보 수집·이용 동의<small>휴대폰 번호·이름(카카오 가입 시 카카오 회원번호·닉네임), 상담 차량·조건 / 회원 관리·견적 상담·알림톡 안내 / 회원 탈퇴 시까지 (상담 기록은 상담 종료 후 1년)</small></span><a href="' + agreementsHref() + '#privacy" target="_blank" rel="noopener">보기</a></label>' +
-          '<label><input type="checkbox" data-opt="marketing">[선택] 혜택·이벤트 소식 받기 (카카오톡·문자)</label></div>') +
+          '<label><input type="checkbox" data-opt="marketing">[선택] 혜택·이벤트 소식 받기 (카카오톡·문자)</label>' +
+          '<p class="au_agree_hint">[필수] 항목에 모두 동의해야 시작할 수 있어요</p></div>') +
         '<p class="au_err" role="alert"></p>' +
         (A.sms || phoneOnly ? '<button type="button" class="au_go"' + (selfMode ? '' : ' disabled') + '>' + (phoneOnly ? "확인" : "인증하고 시작하기") + '</button>' : '') +
         (!A.kakao && !A.sms && !phoneOnly ? '<p class="au_note">지금은 온라인 가입이 어려워요. <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p>' : '') +
@@ -114,6 +117,14 @@
         all.addEventListener("change", function () { if (/동의/.test(err.textContent)) err.textContent = ""; [].forEach.call(box.querySelectorAll("[data-req],[data-opt]"), function (i) { i.checked = all.checked; }); box.querySelector(".au_agree").classList.remove("need"); });
         box.querySelector(".au_agree").addEventListener("change", function (e) { if (/동의/.test(err.textContent)) err.textContent = ""; if (e.target === all) return; var a = agreeVals(); all.checked = a.age && a.terms && a.privacy && a.marketing; if (a.terms && a.privacy) box.querySelector(".au_agree").classList.remove("need"); });
       }
+      // 필수 동의(만 14세·이용약관·개인정보) 전에는 카카오·인증번호 버튼이 동작하지 않음
+      function reqOK() { var a = agreeVals(); return !!(a.age && a.terms && a.privacy); }
+      function gate() {
+        if (phoneOnly) return; var ok = reqOK(), h = box.querySelector(".au_agree_hint");
+        [box.querySelector(".au_kakao"), box.querySelector(".au_send")].forEach(function (b) { if (b) { b.classList.toggle("is-off", !ok); b.setAttribute("aria-disabled", ok ? "false" : "true"); } });
+        if (h) h.hidden = ok;
+      }
+      var agEl = box.querySelector(".au_agree"); if (agEl) agEl.addEventListener("change", function () { setTimeout(gate, 0); });
       function needAgree(msg) { var ag = box.querySelector(".au_agree"); if (ag) { ag.classList.add("need"); ag.scrollIntoView({ block: "nearest" }); } err.textContent = msg || "처음 가입이시면 필수 항목에 동의해 주세요"; }
       function done(m, created) {
         var r = o.reject; o.reject = null; closeSheet();
@@ -123,10 +134,12 @@
       // 카카오
       var kb = box.querySelector(".au_kakao");
       if (kb) kb.addEventListener("click", function () {
+        if (!reqOK()) return needAgree("[필수] 항목에 모두 동의해 주세요");
         var a = agreeVals(); if (pending) ss(SS_PEND, { action: pending.action, data: pending.data || null, url: location.href.split("#")[0], at: Date.now() });
         var ret = location.href.split("#")[0];
         location.href = BASE + "/api/auth/kakao/start?return=" + encodeURIComponent(ret) + "&terms=" + (a.terms ? 1 : 0) + "&privacy=" + (a.privacy ? 1 : 0) + "&marketing=" + (a.marketing ? 1 : 0);
       });
+      gate();
       // 휴대폰
       var ph = box.querySelector('input[name="phone"]'), code = box.querySelector('input[name="code"]'), send = box.querySelector(".au_send"), go = box.querySelector(".au_go");
       if (!ph) return;
@@ -148,6 +161,7 @@
         o.timer = setInterval(function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); t.textContent = s ? "남은 시간 " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") : "인증 시간이 지났어요. 인증번호를 다시 받아 주세요"; if (!s) clearInterval(o.timer); }, 500);
       }
       send.addEventListener("click", function () {
+        if (!phoneOnly && !reqOK()) return needAgree("[필수] 항목에 모두 동의해 주세요");
         err.textContent = ""; var d = ph.value.replace(/\D/g, "");
         if (!/^01[016789]\d{7,8}$/.test(d)) { err.textContent = "휴대폰 번호를 정확히 입력해 주세요 (예: 010-1234-5678)"; ph.focus(); return; }
         send.disabled = true; send.textContent = "보내는 중…";
@@ -160,6 +174,7 @@
       });
       code.addEventListener("input", function () { code.value = code.value.replace(/\D/g, "").slice(0, 6); });
       go.addEventListener("click", function () {
+        if (!phoneOnly && !reqOK()) return needAgree("[필수] 항목에 모두 동의해 주세요");
         err.textContent = ""; var c = code.value.replace(/\D/g, "");
         if (c.length !== 6) { err.textContent = "문자로 받은 인증번호 6자리를 입력해 주세요"; code.focus(); return; }
         var a = agreeVals(), nm = box.querySelector('input[name="name"]');
@@ -171,6 +186,15 @@
     });
   }
 
+  /** 로그인만 필요한 동작(견적 저장 등) 앞에서: 회원이면 바로, 아니면 가입 시트. 로그인 수단이 없으면 null(기존처럼 허용) */
+  function requireLogin(opts) {
+    opts = opts || {};
+    return me().then(function (m) {
+      if (!(state && state.auth && (state.auth.kakao || state.auth.sms))) return null;
+      if (m) return m;
+      return openSheet(opts.reason || "mypage", opts.pending, "join");
+    });
+  }
   /** 로그인(+휴대폰 번호)이 필요한 동작 앞에서 */
   function requireMember(opts) {
     opts = opts || {};
@@ -223,7 +247,7 @@
     setTimeout(function () { var c = document.querySelectorAll(".cond_wrap .filter_chip")[p.data.idx]; if (c && !c.classList.contains("on")) { bypass = true; try { c.click(); } finally { bypass = false; } } }, 400);
   });
 
-  window.CHAQ_AUTH = { me: me, member: member, require: requireMember, open: function (r) { return me().then(function () { return openSheet(r || "mypage", null, "join"); }); }, logout: logout, api: api, withoutLimit: function (fn) { bypass = true; try { fn(); } finally { bypass = false; } }, get required() { return required(); }, state: function () { return state; } };
+  window.CHAQ_AUTH = { me: me, member: member, require: requireMember, requireLogin: requireLogin, open: function (r) { return me().then(function () { return openSheet(r || "mypage", null, "join"); }); }, logout: logout, api: api, withoutLimit: function (fn) { bypass = true; try { fn(); } finally { bypass = false; } }, get required() { return required(); }, state: function () { return state; } };
   me(true);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", afterReturn); else afterReturn();
 })();

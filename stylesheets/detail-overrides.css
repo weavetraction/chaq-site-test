@@ -2638,3 +2638,8 @@ html.chaq-detail-loading .local-car-detail::after{
 .mypage .mp_inq_rep { margin-top: 2px; color: #18a85c; font-size: 13px; font-weight: 700; text-decoration: none; }
 .mypage .mp_withdraw { margin: 0; padding: 18px 16px 4px; background: #fff; text-align: right; }
 .mypage .mp_withdraw button { border: 0; background: none; color: #9aa0a6; font: inherit; font-size: 12.5px; text-decoration: underline; cursor: pointer; }
+/* 마이페이지 안내 문장: 단어 단위 줄바꿈 · 줄 간격 (261008) */
+.local-sub.mypage .mp_note { margin: -6px 0 14px; font-size: 12.5px; color: #8a8f96; line-height: 1.6; word-break: keep-all; }
+.local-sub.mypage .mp_empty { padding: 20px 8px; line-height: 1.65; word-break: keep-all; }
+.mypage .mp_profile .mp_pnote { line-height: 1.5; word-break: keep-all; }
+

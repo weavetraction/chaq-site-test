@@ -118,8 +118,9 @@
   function showDone(c, j) {
     var st = window.CHAQ_AUTH.state() || {}, ch = st.kakaoChannel, m = st.member || {}, sent = j.kakao && j.kakao.sent;
     var car = c.carName ? '<div class="iqf_car"><b>' + esc((c.carName + " " + (c.trimName || "")).trim()) + '</b>' + esc([c.spec, condLine(c)].filter(Boolean).join(" · ")) + '</div>' : "";
-    sheet('<div class="iqf_done"><i>✓</i><h3>' + (sent ? "카카오톡으로 견적서를 보냈어요" : c.source === "DETAIL" ? "견적 상담이 접수됐어요" : "상담 신청이 접수됐어요") + '</h3>' +
-      '<p>' + (sent ? esc(m.phone || "") + " 카카오톡 <b>차큐</b> 채널에서 견적서를 확인하고<br>채팅방에 궁금한 점을 남겨 주세요." : "담당 매니저가 확인 후 " + esc(m.phone || "남겨주신 번호") + "로<br>카카오톡 또는 전화로 연락드릴게요.") + '</p>' +
+    // 알림톡이 실제로 발송됐을 때만 '발송됐어요' (알림톡 연동 전·미인증 번호는 접수 안내)
+    sheet('<div class="iqf_done"><i>✓</i><h3>' + (sent ? "카톡으로 견적서가 발송됐어요 :)" : c.source === "DETAIL" ? "견적 상담이 접수됐어요" : "상담 신청이 접수됐어요") + '</h3>' +
+      '<p>' + (sent ? "카카오톡 <b>차큐</b> 채널에서<br>견적서를 확인해 주세요." : j.report ? "아래 '견적서 보기'에서<br>접수한 견적을 확인할 수 있어요." : "") + '</p>' +
       (j.id ? '<p style="font-size:12.5px;color:#80868b">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
       '<div class="iqf_btns" style="flex-direction:column">' +
       (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">카카오톡에서 상담 이어가기</a>' : '') +

@@ -9,6 +9,8 @@
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   /** 금액 천 단위 쉼표 */
   function won(n) { return (n || 0).toLocaleString("ko-KR"); }
+  /** 차량가 짧게: 만원 단위로 떨어지면 '4,287만원', 아니면 원 단위 그대로 (반올림으로 다른 금액처럼 보이지 않게) */
+  function priceShort(n) { n = +n || 0; return n % 10000 ? won(n) + "원" : won(n / 10000) + "만원"; }
   /** 견적 레코드의 차량 이미지: 차량 데이터 이미지(재고 외장색 → 색상 이미지, 없으면 대표) → 없으면 대체 이미지 */
   function carImg(r) {
     try {
@@ -60,5 +62,5 @@
     if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
-  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, priceShort: priceShort, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

@@ -18,30 +18,33 @@
 
         <main>
             <!-- 내 견적함 안내 (로그인 없이 이 기기에 저장) -->
-            <section class="mp_profile" id="mpProfile"><span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">로그인 없이 이 기기(브라우저)에 저장돼요</small></span></section>
+            <section class="mp_profile" id="mpProfile"><span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">이 기기(브라우저)에 저장돼요</small></span></section>
 
             <!-- 상담 신청 내역 (이 기기에서 신청한 상담) -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>상담 신청 내역</h2><span class="mp_count" id="mpInqCount"></span></div>
+                <p class="mp_note">문의하신 견적과 진행 상태를 확인할 수 있어요.<br>'견적서 보기'를 누르면 받은 견적서를 다시 볼 수 있어요.</p>
                 <div class="mp_inq" id="mpInq"></div>
             </section>
 
             <!-- 내가 저장한 견적 -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>내가 저장한 견적</h2><span class="mp_count" id="mpSavedCount"></span></div>
-                <p class="mp_note">저장한 시점의 금액이에요. '확인하기'를 눌러 현재 기준 견적을 다시 확인해주세요.</p>
+                <p class="mp_note">저장한 시점의 금액이에요.<br>'확인하기'를 누르면 지금 기준 견적으로 다시 볼 수 있어요.</p>
                 <div class="mp_saved" id="mpSaved"></div>
             </section>
 
             <!-- 최근 본 견적 -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>최근 본 견적</h2></div>
+                <p class="mp_note">이 기기에서 최근에 본 차량이에요.<br>월 납입금은 60개월 · 초기비용 0원 · 연 2만 km 기준이에요.</p>
                 <div class="mp_recent_scroll" id="mpRecent"></div>
             </section>
 
             <!-- 차큐에 문의하기 (메인페이지 문의 카드) -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>차큐에 문의하기</h2></div>
+                <p class="mp_note">이용 중인 차량 문의도, 계약 전 고민도 편하게 남겨 주세요.</p>
                 <div class="guide-grid">
                     <button type="button" data-pending-link data-action="inquiry"><strong>이미 이용 중이신가요?</strong><span>사고·보험 처리,<br>반납/위약금 등</span><b>무엇이든 물어보세요 ›</b></button>
                     <button type="button" data-pending-link data-action="inquiry"><strong>계약 고민 중이신가요?</strong><span>최저가 비교, 숨은 조건,<br>즉시 출고 차량 조회 등</span><b>출고 고민 상담 ›</b></button>
@@ -97,7 +100,7 @@
             document.getElementById('mpInqCount').textContent = inq.length ? inq.length+'건' : '';
             document.getElementById('mpInq').innerHTML = inq.map(function(q){
                 return '<div class="mp_inq_row"><span class="mp_inq_t"><strong>'+esc(q.car||q.topic||'일반 상담')+'</strong>'+(q.cond?'<small>'+esc(q.cond)+'</small>':'')+'</span><span class="mp_inq_s"><em>접수 완료</em><small>'+fmtDate(q.at)+(q.id?' · #'+q.id:'')+'</small></span></div>';
-            }).join('') || '<p class="mp_empty">신청한 상담이 없습니다. 아래 \'차큐에 문의하기\'나 차량 상세의 \'이 조건 그대로 문의하기\'로 신청할 수 있어요.</p>';
+            }).join('') || '<p class="mp_empty">아직 신청한 상담이 없어요.<br>차량 상세의 \'이 조건 그대로 문의하기\'로 신청해 보세요.</p>';
 
             // 내가 저장한 견적 (차량 상세 '견적 저장하기')
             var saved = ST.saved().map(function(q){ return { q:q, r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; });
@@ -111,7 +114,7 @@
                     '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong>'+
                     '<span class="mp_qcond">'+esc(condText(c))+'</span></span>'+
                     '<span class="mp_qcta">확인하기</span></a>';
-            }).join('') || '<p class="mp_empty">저장한 견적이 없습니다. 차량 상세에서 \'견적 저장하기\'를 눌러 보세요.</p>';
+            }).join('') || '<p class="mp_empty">아직 저장한 견적이 없어요.<br>차량 상세에서 \'견적 저장하기\'를 눌러 보세요.</p>';
 
             // 최근 본 견적 (가로 스크롤 · 이 기기에서 본 차량 상세)
             var dc={term:'60',plan:'0',dist:'2'};
@@ -122,7 +125,7 @@
                     '<img src="'+imgOf(x)+'" alt="">'+
                     '<small class="cn">'+vmName(x)+'</small>'+
                     '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong></a>';
-            }).join('') || '<p class="mp_empty">최근 본 견적이 없습니다.</p>';
+            }).join('') || '<p class="mp_empty">아직 본 견적이 없어요.</p>';
         })();
     </script>
     <script src="data/auth.js"></script>   <!-- 회원: 카카오·휴대폰 가입 시트 · 비회원 조건 변경 제한 -->
@@ -147,10 +150,10 @@
                         document.getElementById('mpInq').innerHTML = rows.map(function(r){
                             var c = r.conditions||{}, cond = [c.product, c.term?c.term+'개월':'', PLAN[c.plan]||'', c.dist?'연 '+c.dist+'만 km':'', r.monthly?'월 '+won(r.monthly)+'원':''].filter(Boolean).join(' · ');
                             return '<div class="mp_inq_row"><span class="mp_inq_t"><strong>'+esc(((r.car_name||'')+' '+(r.trim_name||'')).trim() || '일반 상담')+'</strong>'+(cond?'<small>'+esc(cond)+'</small>':'')+(r.report_token?'<a class="mp_inq_rep" href="quote-report.html?t='+encodeURIComponent(r.report_token)+'">견적서 보기 ›</a>':'')+'</span><span class="mp_inq_s"><em>'+(ST[r.status]||'접수 완료')+'</em><small>'+d8(r.created_at)+' · #'+r.id+'</small></span></div>';
-                        }).join('') || '<p class="mp_empty">신청한 상담이 없습니다. 차량 상세의 \'이 조건 그대로 문의하기\'로 견적을 카카오톡으로 받아보세요.</p>';
+                        }).join('') || '<p class="mp_empty">아직 신청한 상담이 없어요.<br>차량 상세의 \'이 조건 그대로 문의하기\'를 누르면<br>견적서를 카카오톡으로 받아볼 수 있어요.</p>';
                     }).catch(function(){});
                 } else if (A.kakao || A.sms) {
-                    prof.innerHTML = '<span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">가입하면 상담 내역과 견적서를 어디서든 볼 수 있어요</small></span><span class="mp_pact"><button type="button" class="mp_pbtn on" data-act="login">로그인 · 가입</button></span>';
+                    prof.innerHTML = '<span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">가입하면 상담 내역과 견적서를<br>어디서든 볼 수 있어요</small></span><span class="mp_pact"><button type="button" class="mp_pbtn on" data-act="login">로그인 · 가입</button></span>';
                 }
                 var wd = document.getElementById('mpWithdraw'); if (wd) wd.hidden = !m;
             }
@@ -158,7 +161,7 @@
                 var b = e.target.closest('[data-act]'); if (!b) return;
                 var act = b.getAttribute('data-act');
                 if (act === 'login') AU.open('mypage').then(function(){ render(); }).catch(function(){});
-                if (act === 'logout') AU.logout().then(function(){ U.toast('로그아웃했어요'); location.reload(); });
+                if (act === 'logout') AU.logout().then(function(){ U.toast('로그아웃했어요'); setTimeout(function(){ location.replace('../index.html'); }, 600); });
             });
             prof.addEventListener('change', function(e){
                 if (e.target.getAttribute('data-act') !== 'mkt') return;
@@ -169,7 +172,14 @@
                 if (!window.confirm('회원 탈퇴할까요? 가입 정보가 지워지고 다시 되돌릴 수 없어요. (진행 중인 상담 기록은 상담 종료 후 1년간 보관 후 파기돼요)')) return;
                 AU.api('/api/me/withdraw', { method:'POST' }).then(function(){ U.toast('탈퇴가 완료됐어요'); setTimeout(function(){ location.reload(); }, 800); }).catch(function(e){ U.toast(e.message); });
             });
-            AU.me(true).then(render);
+            // 비회원은 마이페이지 접근 불가 (로그인 수단이 켜져 있을 때) → 로그인·가입 후 다시 마이페이지로
+            var mainEl = document.querySelector('main'); if (mainEl) mainEl.style.visibility = 'hidden';
+            AU.me(true).then(function(m){
+                var A = (AU.state() || {}).auth || {};
+                if (!m && (A.kakao || A.sms)) { location.replace('login.html?return=mypage.html'); return; }
+                if (mainEl) mainEl.style.visibility = '';
+                render();
+            });
             document.addEventListener('chaq:login', render);
         })();
     </script>
