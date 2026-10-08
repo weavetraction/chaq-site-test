@@ -9,7 +9,7 @@ import { getState, setState } from "./state.js";
 export const IntegrationsInput = z.object({
   kakaoRestApiKey: z.string().trim().max(100),          // 카카오 디벨로퍼스 > 앱 > 앱 키 > REST API 키
   kakaoClientSecret: z.string().trim().max(100),        // 카카오 로그인 > 보안 > Client Secret (사용 시)
-  kakaoChannelId: z.string().trim().max(40),            // 카카오톡 채널 홈 주소의 _xxxx (예: _AbCdE) — 상담하기·채널 추가 버튼
+  kakaoChannelId: z.string().trim().max(120).transform((v) => (v.match(/_[A-Za-z0-9]+/) || [v])[0]),   // 채널 URL(http://pf.kakao.com/_AbCdE) 통째로 넣어도 _AbCdE 만 저장 — 상담하기 버튼
   alimtalkAppKey: z.string().trim().max(100),           // 알림톡(NHN Cloud KakaoTalk Bizmessage) Appkey — 콘솔 > Notification > KakaoTalk Bizmessage > URL & Appkey
   alimtalkSecretKey: z.string().trim().max(200),        // 같은 화면의 Secret Key
   alimtalkSenderKey: z.string().trim().max(60),         // 발신 프로필 키(Sender Key, 40자) — 카카오톡 채널을 발신 프로필로 등록하면 나옴

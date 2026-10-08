@@ -4,7 +4,7 @@
   var A = window.CHAQ_ADMIN, $ = A.$, esc = A.esc, dt = A.dt, api = A.api;
   var FIELDS = [
     ["카카오 로그인", [["kakaoRestApiKey", "REST API 키", "카카오 디벨로퍼스 > 내 애플리케이션 > 앱 키"], ["kakaoClientSecret", "Client Secret", "카카오 로그인 > 보안 (사용 설정한 경우만)"]]],
-    ["카카오톡 채널 (상담 채팅방)", [["kakaoChannelId", "채널 ID", "채널 홈 주소 pf.kakao.com/ 뒤의 _로 시작하는 값 (예: _AbCdE) — '카카오톡에서 상담하기' 버튼"]]],
+    ["카카오톡 채널 (상담 채팅방)", [["kakaoChannelId", "채널 ID", "관리자센터 채널 URL(http://pf.kakao.com/_AbCdE)을 통째로 붙여도 됨 — @검색용 아이디 아님"]]],
     ["카카오톡 알림톡 (NHN Cloud)", [["alimtalkAppKey", "Appkey", "NHN Cloud 콘솔 > Notification > KakaoTalk Bizmessage > URL & Appkey"], ["alimtalkSecretKey", "Secret Key", "같은 화면"], ["alimtalkSenderKey", "발신 프로필 키 (Sender Key)", "KakaoTalk Bizmessage > 발신 프로필 관리 (카카오톡 채널 등록 후 40자 키)"], ["alimtalkTemplateCode", "템플릿 코드", "검수 승인된 '견적서 도착' 템플릿의 코드"]]],
     ["휴대폰 인증문자 (NHN Cloud)", [["smsAppKey", "Appkey", "NHN Cloud 콘솔 > Notification > SMS > URL & Appkey"], ["smsSecretKey", "Secret Key", "같은 화면"], ["smsSender", "발신번호", "SMS > 발신번호 관리에 등록·승인된 번호 (예: 1533-5663)"]]],
   ];
