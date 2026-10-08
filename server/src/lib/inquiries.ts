@@ -34,6 +34,14 @@ export const InquiryInput = z.object({
   message: z.string().trim().max(1000).default(""),
   privacyAgreed: z.boolean().optional(),
   website: z.string().max(200).optional(),         // 스팸 방지용 숨은 칸 (사람은 비워둠 — 채워져 있으면 저장하지 않고 조용히 200)
+  // 문의 당시 견적 그대로 (견적서 보기 화면·알림톡 내용) — 화면에 보이던 값
+  snapshot: z.object({
+    image: z.string().max(300).refine((v) => /^(assets\/|\.\.\/assets\/|\/api\/pub\/media\/|https:\/\/)/.test(v), "이미지 주소").optional(),
+    product: z.string().max(20), term: z.string().max(20), plan: z.string().max(30), dist: z.string().max(20),
+    vehiclePrice: z.number().int().nonnegative().max(2_000_000_000).nullable(),
+    options: z.array(z.object({ n: z.string().max(120), p: z.number().int().nonnegative().max(500_000_000).nullable().optional() })).max(40),
+    ext: z.string().max(80), int: z.string().max(80), delivery: z.string().max(60), finance: z.string().max(40),
+  }).partial().optional(),
 });
 export type InquiryInputT = z.infer<typeof InquiryInput>;
 /** 010-1234-5678 형태 */
@@ -44,15 +52,36 @@ export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "
 
 const ipHash = (ip: string) => crypto.createHmac("sha256", config.jwtSecret).update(ip || "").digest("hex").slice(0, 16);
 
-export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string }) {
+type MemberLite = { id: number; name: string; nickname: string; phone: string | null; privacy_agreed_at?: string | null } | null;
+export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string; member?: MemberLite }) {
+  const m = meta.member || null;
+  const name = m ? (m.name || m.nickname || i.name) : i.name, phone = m?.phone || i.phone;
+  const token = crypto.randomBytes(16).toString("base64url");
   const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent, first_touch, last_touch, ga_client_id, fbp, fbc,
-      customer_name, phone, contact_time, message, privacy_agreed_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25) RETURNING *`,
-    [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300),
+      customer_name, phone, contact_time, message, privacy_agreed_at, member_id, report_token, snapshot)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28) RETURNING *`,
+    [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, m ? "m" + m.id : i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300),
      i.firstTouch || {}, i.lastTouch || {}, i.gaClientId ?? null, i.fbp ?? null, i.fbc ?? null,
-     i.name, i.phone ? fmtPhone(i.phone) : "", i.contactTime, i.message, i.phone && i.privacyAgreed ? new Date() : null]);
+     name, phone ? fmtPhone(phone) : "", i.contactTime, i.message, m ? (m.privacy_agreed_at || new Date()) : i.phone && i.privacyAgreed ? new Date() : null,
+     m ? m.id : null, token, JSON.stringify(i.snapshot || {})]);
   onLeadCreated(rows[0], { ip: meta.ip, ua: meta.ua });
-  return rows[0] as { id: number; created_at: string };
+  return rows[0] as { id: number; created_at: string; report_token: string };
+}
+
+const PLAN_KO: Record<string, string> = { "0": "초기비용 0원", b: "보증금 30%", s: "선납금 30%" };
+/** 견적서 보기 (알림톡 버튼 주소): 개인정보 없이 견적 내용만 */
+export async function reportView(token: string) {
+  const r = await q(`SELECT id, created_at, car_name, spec, trim_name, conditions, monthly, options, color, snapshot, kind, rec_id, trim_id, source FROM inquiries WHERE report_token = $1 AND status <> 'SPAM'`, [token]);
+  const x = r.rows[0]; if (!x) return null;
+  const s = x.snapshot || {}, c = x.conditions || {};
+  return {
+    no: x.id, at: x.created_at, kind: x.kind, recId: x.rec_id, trimId: x.trim_id, source: x.source,
+    carName: x.car_name, spec: x.spec, trimName: x.trim_name, image: s.image || null,
+    product: s.product || c.product || "", term: s.term || (c.term ? c.term + "개월" : ""), plan: s.plan || PLAN_KO[c.plan] || "", dist: s.dist || (c.dist ? "연 " + c.dist + "만 km" : ""),
+    monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null,
+    options: Array.isArray(s.options) && s.options.length ? s.options : (x.options || []).map((n: string) => ({ n, p: null })),
+    ext: s.ext || x.color || "", int: s.int || "", delivery: s.delivery || "", finance: s.finance || "",
+  };
 }
 
 export async function listInquiries(f: { status?: string; q?: string; page?: number; size?: number }) {

@@ -2,27 +2,27 @@
 <html lang="ko">
 <head>
     <meta name="robots" content="noindex">
-    <script>location.replace("mypage.html");   /* 회원(로그인) 기능이 열리기 전까지 마이페이지(이 기기 내 견적함)로 */</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>차큐 마이페이지</title>
+    <title>차큐 로그인 · 가입</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white">
     <div class="sub_shell">
         <header class="sub_header">
             <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="location.href='../index.html'">뒤로</button>
-            <h1>마이페이지</h1>
+            <h1>로그인 · 가입</h1>
         </header>
 
         <main>
             <div class="login_hero">
                 <img class="login_logo" src="../assets/icons/logo.svg" alt="chaQ">
                 <h2>장기렌트의 <em>모든 혜택</em><br>놓치지 말고 받아가세요</h2>
-                <p>1초 만에 로그인하고 내 조건 최저가를 확인하세요</p>
-                <button type="button" class="kakao_button" data-pending-link data-action="login">카카오로 시작하기</button>
+                <p>3초 만에 가입하고 내 조건 견적을 카카오톡으로 받아보세요</p>
+                <button type="button" class="kakao_button" id="loginKakao">카카오로 시작하기</button>
 
                 <div class="login_or"><span>또는</span></div>
 
@@ -50,33 +50,29 @@
             <button type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
         </footer>
     </div>
+    <script src="data/auth.js"></script>
     <script>
-        document.querySelectorAll('[data-pending-link]').forEach(function (el) {
-            el.addEventListener('click', function () { alert('로그인 링크는 최종 URL 전달 후 연결됩니다.'); });
-        });
-
-        // 휴대폰 번호로 가입
+        /* 로그인·가입: 카카오 / 휴대폰 → 가입 시트(동의 포함) → 돌아갈 곳(?return=) 또는 마이페이지 */
         (function () {
-            var input = document.getElementById('joinPhone');
-            var btn = document.getElementById('joinPhoneBtn');
-            var msg = document.getElementById('joinPhoneMsg');
-            if (!input || !btn) return;
-            function fmtPhone(v) {
-                v = v.replace(/\D/g, '').slice(0, 11);
-                if (v.length < 4) return v;
-                if (v.length < 8) return v.slice(0, 3) + '-' + v.slice(3);
-                return v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7);
-            }
-            input.addEventListener('input', function () { this.value = fmtPhone(this.value); });
-            btn.addEventListener('click', function () {
-                var v = input.value.replace(/\D/g, '');
-                if (v.length < 10) {
-                    msg.textContent = '휴대폰 번호를 정확히 입력해주세요.';
-                    msg.classList.add('is-err'); msg.hidden = false; return;
-                }
-                msg.textContent = '인증번호를 발송했습니다. 인증 완료 후 가입됩니다. (인증 연동 예정)';
-                msg.classList.remove('is-err'); msg.hidden = false;
+            var AU = window.CHAQ_AUTH, kb = document.getElementById('loginKakao'), ph = document.getElementById('joinPhone'), pb = document.getElementById('joinPhoneBtn'), box = document.querySelector('.login_phone'), or = document.querySelector('.login_or');
+            var ret = (location.search.match(/[?&]return=([^&]+)/) || [])[1]; ret = ret ? decodeURIComponent(ret) : 'mypage.html';
+            if (!/^[a-z0-9_\-]+\.html([?#].*)?$/i.test(ret) && !/^\.\.\/index\.html/.test(ret)) ret = 'mypage.html';   // 사이트 안 주소만
+            function goBack() { location.replace(ret); }
+            function open() { AU.open('mypage').then(goBack).catch(function () {}); }
+            AU.me().then(function (m) {
+                var A = (AU.state() || {}).auth || {};
+                if (m) return goBack();
+                if (!A.kakao && !A.sms) return location.replace('mypage.html');   // 가입 수단 준비 전
+                if (!A.kakao) { kb.style.display = 'none'; if (or) or.style.display = 'none'; }
+                if (!A.sms) { box.style.display = 'none'; if (or) or.style.display = 'none'; }
             });
+            kb.addEventListener('click', open);
+            ph.addEventListener('input', function () { var v = this.value.replace(/\D/g, '').slice(0, 11); this.value = v.length < 4 ? v : v.length < 8 ? v.slice(0, 3) + '-' + v.slice(3) : v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7); });
+            pb.addEventListener('click', function () {
+                AU.open('mypage').then(goBack).catch(function () {});
+                setTimeout(function () { var i = document.querySelector('.au input[name="phone"]'); if (i && ph.value) { i.value = ph.value; } }, 80);
+            });
+            document.addEventListener('chaq:login', goBack);
         })();
     </script>
 </body>

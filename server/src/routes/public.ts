@@ -3,6 +3,9 @@ import { Router } from "express";
 import { limiter } from "../lib/limits.js";
 import { getPublicPayload } from "../lib/quotes-store.js";
 import { InquiryInput, createInquiry, channelMessage } from "../lib/inquiries.js";
+import { currentMember } from "../lib/members.js";
+import { integrations, loginAvailable } from "../lib/integrations.js";
+import { pushQuoteToChannel } from "../lib/kakao-flow.js";
 import { config } from "../config.js";
 import { q } from "../db.js";
 import { getPublicVm } from "../lib/vm-store.js";
@@ -101,10 +104,15 @@ publicRouter.post("/api/inquiries", inquiryLimit, async (req, res, next) => {
     const parsed = InquiryInput.safeParse(req.body || {});
     if (!parsed.success) return res.status(400).json({ error: "입력 형식 오류", detail: parsed.error.issues.slice(0, 5).map((i) => i.path.join(".") + ": " + i.message) });
     if (parsed.data.website) return res.status(200).json({ id: 0, message: "" });      // 스팸 봇
+    const member = await currentMember(req);
+    // 회원가입(카카오·휴대폰) 수단이 켜져 있으면 문의는 회원만 — 꺼져 있으면 기존 상담 신청 양식(연락처·동의)으로 받음
+    if (!member && loginAvailable(await integrations())) return res.status(401).json({ error: "로그인 후 문의할 수 있어요", needLogin: true });
+    if (member && !member.phone) return res.status(401).json({ error: "휴대폰 번호 확인이 필요해요", needPhone: true });
     const ph = parsed.data.phone.trim();
-    if (parsed.data.source === "FORM" && !ph) return res.status(400).json({ error: "연락처를 입력해 주세요" });
-    if (ph && parsed.data.privacyAgreed !== true) return res.status(400).json({ error: "개인정보 수집·이용에 동의해 주세요" });
-    const r = await createInquiry(parsed.data, { ip: req.ip || "", ua: String(req.headers["user-agent"] || "") });
-    res.status(201).json({ id: r.id, createdAt: r.created_at, message: channelMessage(parsed.data, r.id) });
+    if (!member && parsed.data.source === "FORM" && !ph) return res.status(400).json({ error: "연락처를 입력해 주세요" });
+    if (!member && ph && parsed.data.privacyAgreed !== true) return res.status(400).json({ error: "개인정보 수집·이용에 동의해 주세요" });
+    const r = await createInquiry(parsed.data, { ip: req.ip || "", ua: String(req.headers["user-agent"] || ""), member });
+    const kakao = member ? await pushQuoteToChannel(r as any, member, parsed.data) : null;   // 채널톡 → 알림톡(견적 내용) 발송 계기
+    res.status(201).json({ id: r.id, createdAt: r.created_at, message: channelMessage(parsed.data, r.id), report: r.report_token, kakao: kakao ? { sent: kakao.ok } : null });
   } catch (e) { next(e); }
 });

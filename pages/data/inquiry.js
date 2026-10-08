@@ -1,4 +1,5 @@
-/* 상담 문의 — 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식(이름·연락처·동의)으로 접수 (data/api-config.js 설정 사용)
+/* 상담 문의 — 회원 로그인 수단(카카오·휴대폰)이 켜져 있으면: 로그인 → 견적 그대로 접수 → 카카오톡(알림톡)으로 견적서 → 카카오 상담 (data/auth.js)
+   로그인 수단이 없으면 기존 방식: 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식(이름·연락처·동의)
    · '이 조건 그대로 문의하기'(차량 상세): 차량·등급·사양·조건·월 납입금·옵션·색상을 함께 접수
    · 그 밖의 상담 버튼([data-pending-link][data-action="inquiry"]): 일반 상담 (버튼 제목을 상담 주제로)
    · 접수한 상담은 이 기기의 '마이페이지 > 상담 신청 내역'에 남음 (localStorage) */
@@ -11,10 +12,10 @@
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 
   // 채널톡 SDK (공식 설치 코드) — 키가 있을 때만
-  if (KEY) (function () { var w = window; if (w.ChannelIO) return; var ch = function () { ch.c(arguments); }; ch.q = []; ch.c = function (a) { ch.q.push(a); }; w.ChannelIO = ch;
+  if (KEY && !window.CHAQ_AUTH) (function () { var w = window; if (w.ChannelIO) return; var ch = function () { ch.c(arguments); }; ch.q = []; ch.c = function (a) { ch.q.push(a); }; w.ChannelIO = ch;
     function l() { if (w.ChannelIOInitialized) return; w.ChannelIOInitialized = true; var s = document.createElement("script"); s.async = true; s.src = "https://cdn.channel.io/plugin/ch-plugin-web.js"; var x = document.getElementsByTagName("script")[0]; if (x && x.parentNode) x.parentNode.insertBefore(s, x); else document.head.appendChild(s); }
     if (document.readyState === "complete") l(); else { w.addEventListener("DOMContentLoaded", l); w.addEventListener("load", l); } })();
-  if (KEY) window.ChannelIO("boot", { pluginKey: KEY, hideChannelButtonOnBoot: !C.channelButton, language: "ko" });
+  if (KEY && !window.CHAQ_AUTH) window.ChannelIO("boot", { pluginKey: KEY, hideChannelButtonOnBoot: !C.channelButton, language: "ko" });   // auth.js 가 있으면 auth.js 가 회원으로 부팅
 
   var PLAN = { "0": "초기비용 0원", b: "보증금 30%", s: "선납금 30%" };
   function txt(sel) { var e = document.querySelector(sel); return e ? e.textContent.replace(/\s+/g, " ").trim() : ""; }
@@ -36,7 +37,20 @@
       carName: txt(".detail_header h1"), spec: txt(".detail_card .detail_year"), trimName: txt(".dts_name"),
       conditions: { product: onChip("type"), term: (onChip("term").match(/\d+/) || [""])[0], plan: it.indexOf("보증") > -1 ? "b" : it.indexOf("선납") > -1 ? "s" : "0", dist: (onChip("dist").match(/(\d)만/) || [, ""])[1] },
       monthly: m ? Number(m) : null, options: opts.slice(0, 40), color: col, pageUrl: location.href.slice(0, 500),
+      snapshot: snapshot(rec, kind),
     };
+  }
+  /** 견적서 보기·알림톡에 쓸 화면 그대로의 값 */
+  function snapshot(rec, kind) {
+    var img = document.querySelector(".detail_car_visual img"), src = img ? img.getAttribute("src") || "" : "";
+    var it = onChip("init").replace(/\s+/g, ""), plan = it.indexOf("보증") > -1 ? "보증금 " + (it.match(/\d+%/) || ["30%"])[0] : it.indexOf("선납") > -1 ? "선납금 " + (it.match(/\d+%/) || ["30%"])[0] : "초기비용 0원";
+    var opts = [].map.call(document.querySelectorAll('#optPop .opt_row.on[data-grp="opt"]'), function (r) { var n = r.querySelector("span"), e = r.querySelector("em"), pv = e ? Number(e.textContent.replace(/[^\d]/g, "")) : 0; return { n: n ? n.textContent.trim() : "", p: pv || null }; }).filter(function (o) { return o.n; });
+    if (!opts.length && rec && rec.opts) opts = rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()); }).map(function (o) { return { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; });
+    var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
+    var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null,
+      options: opts.slice(0, 40), ext: String(ext).slice(0, 80), int: String((rec && rec["int"]) || "").slice(0, 80), delivery: kind === "stock" ? "재고 차량 · 바로 출고" : kind === "fast" ? "빠른 인도" : "" };
+    if (/^(\.\.\/)?assets\/|^https:\/\//.test(src) && src.length <= 300) o.image = src;
+    return o;
   }
   function localMessage(c) {
     var k = c.conditions || {}, cond = [k.product, k.term ? k.term + "개월" : "", PLAN[k.plan] || "", k.dist ? "연 " + k.dist + "만 km" : ""].filter(Boolean).join(" · ");
@@ -46,7 +60,16 @@
   function openChat(c) {
     var T = window.CHAQ_TRACK, a = T ? T.attribution() : {}, k;   // 유입 경로(UTM·광고 클릭 ID)·GA/메타 식별값 → 서버 전환·매체별 성과
     for (k in a) if (a[k] != null) c[k] = a[k];
+    var AU = window.CHAQ_AUTH;
+    if (AU && BASE) return AU.me().then(function () {
+      if (!AU.required) return legacy(c);
+      return AU.require({ reason: "inquiry", pending: { action: "inquiry", data: pendingData(c) } }).then(function (m) { if (m) submitMember(c); else legacy(c); }).catch(function () {});
+    });
+    legacy(c);
+  }
+  function legacy(c) {
     if (!KEY) return openForm(c);
+    var T = window.CHAQ_TRACK;
     var done = function (msg, id) {
       try { if (T) T.lead(id, c); } catch (e) {}
       try { if (id) window.ChannelIO("updateUser", { profile: { lastInquiryId: id, lastCar: (c.carName + " " + (c.trimName || "")).trim() } }); } catch (e) {}
@@ -58,12 +81,73 @@
       .then(function (j) { done(j && j.message ? j.message : localMessage(c), j && j.id); })
       .catch(function () { done(localMessage(c)); });   // 서버가 안 돼도 상담은 열림
   }
+  // ---------------------------------------------------------------- 회원 문의: 견적 그대로 접수 → 카카오톡(알림톡) 견적서 → 카카오 상담
+  function pendingData(c) {
+    if (c.source !== "DETAIL") return { source: c.source, topic: c.topic || "", car: c.carName || "" };
+    return { source: "DETAIL", chips: [].map.call(document.querySelectorAll(".cond_wrap .filter_chip"), function (b, i) { return b.classList.contains("on") ? i : -1; }).filter(function (i) { return i > -1; }) };
+  }
+  function guideContext(topic, car) { return { source: "GUIDE", topic: topic || "", carName: car || "", spec: "", trimName: "", conditions: {}, options: [], color: "", pageUrl: location.href.slice(0, 500) }; }
+  var sending = false;
+  function submitMember(c) {
+    if (sending) return; sending = true;
+    var AU = window.CHAQ_AUTH, T = window.CHAQ_TRACK, body = {}, k;
+    for (k in c) if (c[k] != null && k !== "topic") body[k] = c[k];
+    if (c.topic) body.message = "[" + c.topic + "]";
+    var U = window.CHAQ_UTIL; if (U && U.toast) U.toast(c.source === "DETAIL" ? "견적을 카카오톡으로 보내는 중이에요…" : "상담을 접수하는 중이에요…");
+    AU.api("/api/inquiries", { method: "POST", json: body }).then(function (j) {
+      sending = false;
+      try { if (T) T.lead(j.id, c); } catch (x) {}
+      try { if (window.ChannelIO) window.ChannelIO("track", "견적문의", { quoteNo: j.id, car: (c.carName + " " + (c.trimName || "")).trim(), monthly: c.monthly || 0 }); } catch (x) {}
+      var list = lsGet(LS_INQ); list.unshift({ id: j.id, at: new Date().toISOString(), car: (c.carName + " " + (c.trimName || "")).trim(), cond: condLine(c), topic: c.topic || "", recId: c.recId || null, report: j.report || null }); lsSet(LS_INQ, list.slice(0, 20));
+      showDone(c, j);
+    }).catch(function (e) {
+      sending = false;
+      if (e.status === 401) return AU.me(true).then(function () { return AU.require({ reason: "inquiry" }); }).then(function (m) { if (m) submitMember(c); }).catch(function () {});
+      showError(e.message);
+    });
+  }
+  function reportHref(t) { return (/\/pages\//.test(location.pathname) ? "" : "pages/") + "quote-report.html?t=" + encodeURIComponent(t); }
+  function sheet(html) {
+    close();
+    if (!document.getElementById("iqfCss")) { var st = document.createElement("style"); st.id = "iqfCss"; st.textContent = CSS; document.head.appendChild(st); }
+    var bg = document.createElement("div"); bg.className = "iqf_bg"; opened = bg;
+    bg.innerHTML = '<div class="iqf" role="dialog" aria-modal="true">' + html + '</div>';
+    document.body.appendChild(bg); document.body.style.overflow = "hidden"; document.addEventListener("keydown", onKey);
+    bg.addEventListener("click", function (e) { if (e.target === bg || (e.target.closest && e.target.closest("[data-close]"))) close(); });
+    return bg;
+  }
+  function showDone(c, j) {
+    var st = window.CHAQ_AUTH.state() || {}, ch = st.kakaoChannel, m = st.member || {}, sent = j.kakao && j.kakao.sent;
+    var car = c.carName ? '<div class="iqf_car"><b>' + esc((c.carName + " " + (c.trimName || "")).trim()) + '</b>' + esc([c.spec, condLine(c)].filter(Boolean).join(" · ")) + '</div>' : "";
+    sheet('<div class="iqf_done"><i>✓</i><h3>' + (sent ? "카카오톡으로 견적서를 보냈어요" : c.source === "DETAIL" ? "견적 상담이 접수됐어요" : "상담 신청이 접수됐어요") + '</h3>' +
+      '<p>' + (sent ? esc(m.phone || "") + " 카카오톡 <b>차큐</b> 채널에서 견적서를 확인하고<br>채팅방에 궁금한 점을 남겨 주세요." : "담당 매니저가 확인 후 " + esc(m.phone || "남겨주신 번호") + "로<br>카카오톡 또는 전화로 연락드릴게요.") + '</p>' +
+      (j.id ? '<p style="font-size:12.5px;color:#80868b">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
+      '<div class="iqf_btns" style="flex-direction:column">' +
+      (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">카카오톡에서 상담 이어가기</a>' : '') +
+      (j.report ? '<a class="iqf_close" href="' + reportHref(j.report) + '" style="display:block;flex:none;text-align:center;text-decoration:none;border-radius:12px;padding:14px;font-weight:700">견적서 보기</a>' : '') +
+      '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
+  }
+  function showError(msg) {
+    sheet('<h3>접수하지 못했어요</h3><p class="iqf_sub">' + esc(msg || "잠시 후 다시 시도해 주세요.") + '</p><p class="iqf_sub">급하신 문의는 <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p><div class="iqf_btns"><button type="button" class="iqf_send" data-close>확인</button></div>');
+  }
+  // 카카오 로그인으로 페이지를 다녀온 뒤: 고르던 조건 그대로 돌려놓고 이어서 접수
+  document.addEventListener("chaq:login", function (e) {
+    var p = e.detail && e.detail.pending; if (!p || p.action !== "inquiry" || !p.data) return;
+    setTimeout(function () {
+      var d = p.data, AU = window.CHAQ_AUTH;
+      if (d.source === "DETAIL") {
+        var chips = document.querySelectorAll(".cond_wrap .filter_chip");
+        AU.withoutLimit(function () { (d.chips || []).forEach(function (i) { var b = chips[i]; if (b && !b.classList.contains("on")) b.click(); }); });
+        setTimeout(function () { submitMember(detailContext()); }, 250);
+      } else submitMember(guideContext(d.topic, d.car));
+    }, 300);
+  });
   // 기존 버튼의 안내(alert)보다 먼저 받아서 채널톡으로 (캡처 단계)
   document.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest('[data-pending-link][data-action="inquiry"]') : null; if (!b) return;
     e.preventDefault(); e.stopImmediatePropagation();
     if (b.classList.contains("detail_inquiry")) openChat(detailContext());
-    else { var tp = b.getAttribute("data-topic") || (b.querySelector("strong") ? b.querySelector("strong").textContent.trim() : ""); openChat({ source: "GUIDE", topic: tp, carName: b.getAttribute("data-car") || "", spec: "", trimName: "", conditions: {}, options: [], color: "", pageUrl: location.href.slice(0, 500) }); }
+    else { var tp = b.getAttribute("data-topic") || (b.querySelector("strong") ? b.querySelector("strong").textContent.trim() : ""); openChat(guideContext(tp, b.getAttribute("data-car") || "")); }
   }, true);
 
   // ---------------------------------------------------------------- 사이트 상담 신청 양식 (채널톡 키가 없을 때)

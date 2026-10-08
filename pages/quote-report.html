@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>차큐 견적서</title>
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+    <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
+    <script src="data/analytics.js"></script>
+    <style>
+        .qr_wrap { padding: 20px 16px 28px; background: #fff; }
+        .qr_head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; color: #18a85c; font-size: 13px; font-weight: 700; }
+        .qr_head small { color: #9aa0a6; font-weight: 500; }
+        .qr_car { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: #1c1f23; word-break: keep-all; }
+        .qr_spec { margin: 4px 0 0; color: #5f6368; font-size: 14px; word-break: keep-all; }
+        .qr_img { display: block; width: 100%; max-width: 420px; aspect-ratio: 5 / 3; margin: 12px auto 4px; object-fit: contain; }
+        .qr_month { display: flex; align-items: baseline; justify-content: space-between; margin: 14px 0 0; padding: 18px 16px; border-radius: 14px; background: #f1faf5; }
+        .qr_month span { color: #3c4043; font-size: 14px; font-weight: 700; }
+        .qr_month strong { color: #18a85c; font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+        .qr_month strong em { margin-left: 2px; font-size: 16px; font-style: normal; }
+        .qr_tbl { margin: 16px 0 0; padding: 4px 16px; border: 1px solid #eceef0; border-radius: 14px; }
+        .qr_tbl div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; font-size: 14px; }
+        .qr_tbl div:last-child { border-bottom: 0; }
+        .qr_tbl dt { color: #80868b; flex: none; }
+        .qr_tbl dd { margin: 0; color: #202124; font-weight: 600; text-align: right; word-break: keep-all; }
+        .qr_sec { margin: 22px 0 8px; font-size: 15px; font-weight: 800; color: #1c1f23; }
+        .qr_opts { margin: 0; padding: 0; list-style: none; }
+        .qr_opts li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #eceef0; font-size: 13.5px; color: #3c4043; }
+        .qr_opts li em { flex: none; font-style: normal; color: #5f6368; }
+        .qr_note { margin: 16px 0 0; color: #80868b; font-size: 12.5px; line-height: 1.55; }
+        .qr_cta { display: flex; flex-direction: column; gap: 8px; margin: 20px 0 0; }
+        .qr_cta a { display: block; padding: 15px; border-radius: 12px; font-size: 15.5px; font-weight: 700; text-align: center; text-decoration: none; }
+        .qr_cta .k { background: #FEE500; color: rgba(0,0,0,.85); }
+        .qr_cta .g { background: #18a85c; color: #fff; }
+        .qr_cta .l { background: #f1f3f4; color: #3c4043; }
+        .qr_empty { padding: 60px 20px; text-align: center; color: #5f6368; font-size: 14.5px; line-height: 1.6; }
+    </style>
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="history.length > 1 ? history.back() : location.href='../index.html'">뒤로</button>
+            <h1>견적서</h1>
+        </header>
+        <main><div class="qr_wrap" id="qr"><p class="qr_empty">견적서를 불러오는 중이에요…</p></div></main>
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="agreement.html">개인정보처리방침</a></p>
+        </footer>
+    </div>
+    <script src="data/auth.js"></script>
+    <script>
+        /* 견적서 보기 (알림톡 '견적서 보기' 버튼 주소): 문의 당시 견적 그대로 */
+        (function () {
+            var U = window.CHAQ_UTIL, esc = U.esc, won = U.won, el = document.getElementById('qr');
+            var BASE = String((window.CHAQ_API || {}).base || '').replace(/\/$/, ''), t = (location.search.match(/[?&]t=([A-Za-z0-9_-]{16,40})/) || [])[1];
+            var TEL = '1533-5663';
+            function fail(msg) { el.innerHTML = '<p class="qr_empty">' + esc(msg) + '<br><br><a href="../index.html" style="color:#18a85c;font-weight:700">차큐 홈으로</a> · <a href="tel:' + TEL.replace(/-/g, '') + '" style="color:#18a85c;font-weight:700">' + TEL + '</a></p>'; }
+            if (!t || !BASE) return fail('견적서 주소가 올바르지 않아요.');
+            function img(u) { if (!u) return ''; if (/^https:\/\//.test(u)) return u; return '../' + String(u).replace(/^(\.\.\/)+/, ''); }
+            function d8(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); }
+            fetch(BASE + '/api/pub/report/' + t).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (q) {
+                document.title = (q.carName || '차량') + ' 견적서 · 차큐';
+                var rows = [['상품', q.product], ['이용 기간', q.term], ['초기 비용', q.plan], ['주행 거리', q.dist], ['출고', q.delivery], ['차량 가격', q.vehiclePrice ? won(q.vehiclePrice) + '원' : ''], ['외장 색상', q.ext], ['내장 색상', q['int']]].filter(function (x) { return x[1]; });
+                var opts = (q.options || []).filter(function (o) { return o && o.n; });
+                var back = q.recId ? 'car-detail.html?id=' + encodeURIComponent(q.recId) : (q.trimId ? 'car-detail.html?trimId=' + encodeURIComponent(q.trimId) : '');
+                el.innerHTML = '<p class="qr_head"><span>차큐 견적서</span><small>#' + esc(q.no) + ' · ' + d8(q.at) + '</small></p>' +
+                    '<h2 class="qr_car">' + esc(((q.carName || '') + ' ' + (q.trimName || '')).trim() || '상담 문의') + '</h2>' + (q.spec ? '<p class="qr_spec">' + esc(q.spec) + '</p>' : '') +
+                    (q.image ? '<img class="qr_img" src="' + esc(img(q.image)) + '" alt="" onerror="this.remove()">' : '') +
+                    '<div class="qr_month"><span>월 납입금</span><strong>' + (q.monthly ? won(q.monthly) + '<em>원</em>' : '상담 시 안내') + '</strong></div>' +
+                    (rows.length ? '<dl class="qr_tbl">' + rows.map(function (x) { return '<div><dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
+                    (opts.length ? '<p class="qr_sec">추가 옵션 ' + opts.length + '개</p><ul class="qr_opts">' + opts.map(function (o) { return '<li><span>' + esc(o.n) + '</span>' + (o.p ? '<em>+' + won(o.p) + '원</em>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+                    '<p class="qr_note">' + d8(q.at) + ' 문의 당시 기준 견적이에요. 금융사 심사 결과, 재고·프로모션 변동에 따라 최종 조건은 달라질 수 있어요. 담당 매니저가 확인 후 안내드려요.</p>' +
+                    '<div class="qr_cta" id="qrCta">' + (back ? '<a class="l" href="' + back + '">이 차량 다시 보기</a>' : '') + '<a class="l" href="tel:' + TEL.replace(/-/g, '') + '">전화 상담 ' + TEL + '</a></div>';
+                var AU = window.CHAQ_AUTH; if (AU) AU.me().then(function () { var st = AU.state() || {}, ch = st.kakaoChannel; if (ch) document.getElementById('qrCta').insertAdjacentHTML('afterbegin', '<a class="k" href="' + esc(ch.chat) + '" target="_blank" rel="noopener">카카오톡으로 상담하기</a>'); });
+            }).catch(function () { fail('견적서를 찾을 수 없어요. 주소를 다시 확인해 주세요.'); });
+        })();
+    </script>
+</body>
+</html>

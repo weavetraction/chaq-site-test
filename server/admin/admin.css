@@ -161,3 +161,11 @@ input.saved { border-color: var(--green); }
 .pick_row.miss { background: #fff7f7; } .pick_row .no { width: 22px; color: var(--muted); font-size: 12px; } .pick_row .lb { flex: 1; font-size: 13px; }
 .hm_sec .picker input { width: 100%; }
 #iqTable td.cust { min-width: 120px; white-space: nowrap; } #iqTable td.cust .msg { display: block; max-width: 220px; white-space: normal; color: #444; }
+/* 회원·연동 */
+.ig_form { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin: 12px 0; }
+.ig_form fieldset { margin: 0; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 12px; }
+.ig_form legend { padding: 0 6px; font-weight: 700; }
+.ig_form label { display: block; margin: 8px 0; }
+.ig_form label > span { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+.ig_form input { width: 100%; box-sizing: border-box; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.ig_form small.hint { display: block; margin-top: 3px; }

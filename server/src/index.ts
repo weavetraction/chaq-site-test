@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import path from "node:path";
 import { config, assertConfig, ROOT } from "./config.js";
 import { publicRouter } from "./routes/public.js";
+import { memberRouter } from "./routes/member.js";
 import { adminRouter } from "./routes/admin.js";
 import { migrate } from "./scripts/migrate.js";
 import { pinoHttp } from "pino-http";
@@ -30,9 +31,11 @@ app.use(cookieParser());
 
 // 공개 API: 사이트 도메인에서 호출 (SITE_ORIGINS). 견적 데이터 스크립트는 어디서든 읽기 허용
 const allow = (origin?: string) => !origin || config.siteOrigins.length === 0 || config.siteOrigins.includes(origin) || (!config.isProd && origin === "null");   // null = 내 컴퓨터 파일로 열었을 때 (개발용)
-app.use("/api/inquiries", cors({ origin: (o, cb) => cb(null, allow(o)), methods: ["POST", "OPTIONS"] }));
+// 회원(로그인 쿠키)이 붙는 요청: 운영은 사이트와 같은 주소라 CORS 불필요 — 다른 주소(개발 등)에서는 허용 목록만, 쿠키 포함
+app.use(["/api/inquiries", "/api/me", "/api/auth"], cors({ origin: (o, cb) => cb(null, allow(o) && o ? o : !o), credentials: true, methods: ["GET", "POST", "OPTIONS"] }));
 app.use("/api/health", cors());
 
+app.use(memberRouter);
 app.use(publicRouter);
 app.use(adminRouter);
 // 관리자 화면 (정적 파일)

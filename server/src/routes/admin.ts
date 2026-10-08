@@ -14,6 +14,8 @@ import { adminHomeRouter } from "./admin-home.js";
 import { KINDS, Kind } from "../lib/quotes-format.js";
 import { vm } from "../lib/vm.js";
 import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
+import { integrationsForAdmin, saveIntegrations, IntegrationsInput } from "../lib/integrations.js";
+import { maskPhone } from "../lib/members.js";
 
 export const adminRouter = Router();
 const loginLimit = limiter("login", { windowMs: 15 * 60_000, limit: 20, message: { error: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요" } });
@@ -123,6 +125,23 @@ adminRouter.patch("/api/admin/inquiries/:id", wrap(async (req, res) => {
   const r = await updateInquiry(intParam(req.params.id), p.data);
   if (!r) return res.status(404).json({ error: "없음" });
   res.json(r);
+}));
+// ---------------------------------------------------------------- 회원 · 외부 연동 키
+adminRouter.get("/api/admin/members", wrap(async (req, res) => {
+  const qs = String(req.query.q || "").trim(), page = Math.max(1, Number(req.query.page) || 1), size = 50;
+  const params: unknown[] = []; let w = "WHERE m.status = 'ACTIVE'";
+  if (qs) { params.push(`%${qs}%`, qs.replace(/\D/g, "").length >= 4 ? `%${qs.replace(/\D/g, "")}%` : null, qs); w += ` AND (m.name ILIKE $1 OR m.nickname ILIKE $1 OR m.phone LIKE $2 OR CAST(m.id AS TEXT) = $3)`; }
+  const total = (await q(`SELECT COUNT(*)::int AS n FROM members m ${w}`, params)).rows[0].n;
+  params.push(size, (page - 1) * size);
+  const { rows } = await q(`SELECT m.id, m.name, m.nickname, m.phone, m.kakao_id IS NOT NULL AS kakao, m.marketing_agreed_at, m.created_at, m.last_login_at,
+      (SELECT COUNT(*)::int FROM inquiries i WHERE i.member_id = m.id) AS inquiries FROM members m ${w} ORDER BY m.created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
+  res.json({ total, page, size, rows: rows.map((r) => ({ ...r, phone: r.phone ? r.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3") : "", phoneMasked: maskPhone(r.phone) })) });
+}));
+adminRouter.get("/api/admin/integrations", wrap(async (_req, res) => res.json(await integrationsForAdmin())));
+adminRouter.put("/api/admin/integrations", wrap(async (req, res) => {
+  const p = IntegrationsInput.safeParse(req.body || {});
+  if (!p.success) return res.status(400).json({ error: "입력 형식 오류: " + p.error.issues.map((i) => i.path.join(".")).join(", ") });
+  res.json(await saveIntegrations(p.data));
 }));
 adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
   const { rows } = await q(`SELECT id, created_at, status, source, kind, rec_id, customer_name, phone, contact_time, message, car_name, trim_name, spec, conditions, monthly, options, color, memo, assignee, page_url, first_touch, last_touch FROM inquiries ORDER BY id DESC LIMIT 10000`);

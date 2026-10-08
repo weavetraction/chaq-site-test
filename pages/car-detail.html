@@ -759,7 +759,8 @@
         })();
     </script>
     <script>document.documentElement.classList.remove('chaq-detail-loading');   // 이 차량 정보 반영 완료 → 표시</script>
-    <script src="data/inquiry.js"></script>   <!-- 상담 문의: 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식 -->
+    <script src="data/auth.js"></script>   <!-- 회원: 카카오·휴대폰 가입 시트 · 비회원 조건 변경 제한 -->
+    <script src="data/inquiry.js"></script>   <!-- 상담 문의: 회원 → 카카오톡 견적서·상담 / 로그인 수단 없으면 채널톡·상담 신청 양식 -->
     <script>
         /* 견적 저장하기 · 최근 본 견적 — 로그인 없이 이 기기에 저장 (마이페이지에서 확인) */
         (function () {
