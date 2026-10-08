@@ -11,7 +11,7 @@ const Touch = z.object({
   kclid: z.string().max(300), landing: z.string().max(500), referrer: z.string().max(500), at: z.string().max(40),
 }).partial();
 export const InquiryInput = z.object({
-  source: z.enum(["DETAIL", "GUIDE", "ETC"]).default("DETAIL"),
+  source: z.enum(["DETAIL", "GUIDE", "FORM", "ETC"]).default("DETAIL"),   // FORM = 사이트 상담 신청 양식(차량 무관)
   kind: z.enum(["stock", "fast", "estimate"]).nullable().optional(),
   recId: z.string().max(40).nullable().optional(),
   trimId: z.string().max(200).nullable().optional(),
@@ -27,9 +27,17 @@ export const InquiryInput = z.object({
   // 광고 유입 (analytics.js 가 저장해 둔 처음/마지막 유입) + 매체 식별값
   firstTouch: Touch.optional(), lastTouch: Touch.optional(),
   gaClientId: z.string().max(100).nullable().optional(), fbp: z.string().max(200).nullable().optional(), fbc: z.string().max(300).nullable().optional(),
+  // 사이트 상담 신청 양식 (채널톡 없을 때): 연락처를 받으면 개인정보 수집·이용 동의 필수
+  name: z.string().trim().max(30).default(""),
+  phone: z.string().trim().max(20).default("").transform((v) => v.replace(/[^\d]/g, "")).refine((v) => !v || /^0\d{8,10}$/.test(v), "연락처 형식이 맞지 않습니다"),
+  contactTime: z.string().trim().max(30).default(""),
+  message: z.string().trim().max(1000).default(""),
+  privacyAgreed: z.boolean().optional(),
   website: z.string().max(200).optional(),         // 스팸 방지용 숨은 칸 (사람은 비워둠 — 채워져 있으면 저장하지 않고 조용히 200)
 });
 export type InquiryInputT = z.infer<typeof InquiryInput>;
+/** 010-1234-5678 형태 */
+export const fmtPhone = (d: string) => (d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : d.length === 10 ? (d.startsWith("02") ? `02-${d.slice(2, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`) : d.length === 9 ? `02-${d.slice(2, 5)}-${d.slice(5)}` : d);
 
 export const STATUS = ["NEW", "IN_PROGRESS", "CONTRACTED", "CLOSED", "SPAM"] as const;
 export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "상담 중", CONTRACTED: "계약", CLOSED: "종료", SPAM: "스팸" };
@@ -37,10 +45,12 @@ export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "
 const ipHash = (ip: string) => crypto.createHmac("sha256", config.jwtSecret).update(ip || "").digest("hex").slice(0, 16);
 
 export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string }) {
-  const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent, first_touch, last_touch, ga_client_id, fbp, fbc)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+  const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent, first_touch, last_touch, ga_client_id, fbp, fbc,
+      customer_name, phone, contact_time, message, privacy_agreed_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25) RETURNING *`,
     [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300),
-     i.firstTouch || {}, i.lastTouch || {}, i.gaClientId ?? null, i.fbp ?? null, i.fbc ?? null]);
+     i.firstTouch || {}, i.lastTouch || {}, i.gaClientId ?? null, i.fbp ?? null, i.fbc ?? null,
+     i.name, i.phone ? fmtPhone(i.phone) : "", i.contactTime, i.message, i.phone && i.privacyAgreed ? new Date() : null]);
   onLeadCreated(rows[0], { ip: meta.ip, ua: meta.ua });
   return rows[0] as { id: number; created_at: string };
 }
@@ -51,7 +61,8 @@ export async function listInquiries(f: { status?: string; q?: string; page?: num
   if (f.q) {
     params.push(`%${f.q}%`); const like = params.length;
     params.push(String(f.q).replace(/\D/g, "")); const idq = params.length;
-    where.push(`(car_name ILIKE $${like} OR spec ILIKE $${like} OR memo ILIKE $${like} OR rec_id ILIKE $${like} OR CAST(id AS TEXT) = $${idq})`);
+    params.push(String(f.q).replace(/\D/g, "").length >= 4 ? `%${String(f.q).replace(/\D/g, "")}%` : null); const ph = params.length;   // 숫자 4자리 이상일 때만 연락처 검색
+    where.push(`(car_name ILIKE $${like} OR spec ILIKE $${like} OR memo ILIKE $${like} OR rec_id ILIKE $${like} OR customer_name ILIKE $${like} OR message ILIKE $${like} OR regexp_replace(phone, '\\D', '', 'g') LIKE $${ph} OR CAST(id AS TEXT) = $${idq})`);
   }
   const size = Math.min(100, Math.max(1, f.size || 30)), page = Math.max(1, f.page || 1);
   const w = where.length ? "WHERE " + where.join(" AND ") : "";

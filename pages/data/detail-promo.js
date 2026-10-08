@@ -121,7 +121,7 @@
   function bindFaqGuide(box) {
     var dets = [].slice.call(box.querySelectorAll(".dfg .faq-list details"));   // 한 번에 하나만 펼침 (메인과 동일)
     dets.forEach(function (d) { d.addEventListener("toggle", function () { if (!d.open) return; dets.forEach(function (o) { if (o !== d && o.open) o.open = false; }); }); });
-    box.querySelectorAll(".dfg [data-pending-link]").forEach(function (el) { el.addEventListener("click", function () { alert("상담 링크는 최종 URL 전달 후 연결됩니다."); }); });   // 상세 페이지 문의 버튼과 동일 안내
+    // 상담 버튼([data-action=inquiry])은 inquiry.js 가 처리 (상담 신청 양식 또는 채널톡)
   }
   function sameHtml() {
     return '<div class="dp_band" aria-hidden="true"></div><section class="dp_same"><h3 class="dp_h">같은 조건,<br>다른 차량도 볼까요?</h3>' +

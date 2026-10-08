@@ -125,12 +125,12 @@ adminRouter.patch("/api/admin/inquiries/:id", wrap(async (req, res) => {
   res.json(r);
 }));
 adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
-  const { rows } = await q(`SELECT id, created_at, status, source, kind, rec_id, car_name, trim_name, spec, conditions, monthly, options, color, memo, assignee, page_url, first_touch, last_touch FROM inquiries ORDER BY id DESC LIMIT 10000`);
+  const { rows } = await q(`SELECT id, created_at, status, source, kind, rec_id, customer_name, phone, contact_time, message, car_name, trim_name, spec, conditions, monthly, options, color, memo, assignee, page_url, first_touch, last_touch FROM inquiries ORDER BY id DESC LIMIT 10000`);
   const esc = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };   // 엑셀 수식 실행 방지(= + - @ 로 시작하면 ' 붙임)
-  const head = ["번호", "접수일시", "상태", "유입", "구분", "견적ID", "차량", "등급", "사양", "조건", "월납입금", "옵션", "색상", "메모", "담당", "페이지",
+  const head = ["번호", "접수일시", "상태", "유입", "구분", "견적ID", "이름", "연락처", "연락 희망", "문의 내용", "차량", "등급", "사양", "조건", "월납입금", "옵션", "색상", "메모", "담당", "페이지",
     "유입_source", "유입_medium", "유입_campaign", "유입_term", "유입_content", "처음유입_source", "처음유입_medium", "처음유입_campaign", "광고클릭ID", "랜딩"];
   const clk = (t: any) => t.gclid ? "gclid" : t.fbclid ? "fbclid" : t.n_media || t.n_ad ? "naver" : t.kclid ? "kakao" : "";
-  const body = rows.map((r) => { const L = r.last_touch || {}, F = r.first_touch || {}; return [r.id, new Date(r.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }), STATUS_KO[r.status] || r.status, r.source, r.kind, r.rec_id, r.car_name, r.trim_name, r.spec, JSON.stringify(r.conditions), r.monthly, (r.options || []).join(" / "), r.color, r.memo, r.assignee, r.page_url,
+  const body = rows.map((r) => { const L = r.last_touch || {}, F = r.first_touch || {}; return [r.id, new Date(r.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }), STATUS_KO[r.status] || r.status, r.source, r.kind, r.rec_id, r.customer_name, r.phone, r.contact_time, r.message, r.car_name, r.trim_name, r.spec, JSON.stringify(r.conditions), r.monthly, (r.options || []).join(" / "), r.color, r.memo, r.assignee, r.page_url,
     L.source, L.medium, L.campaign, L.term, L.content, F.source, F.medium, F.campaign, clk(L), L.landing].map(esc).join(","); });
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent("차큐_상담문의.csv")}`);

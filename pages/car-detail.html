@@ -308,18 +308,7 @@
                     detPop.classList.add('is-open'); detPop.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; detPop.querySelector('.opt_body').scrollTop = 0;
                 });
             }
-            // 찜하기 토글
-            var like = document.getElementById('likeBtn');
-            like.addEventListener('click', function () {
-                var on = like.classList.toggle('is-on');
-                like.style.color = on ? '#18a85c' : '';
-            });
-            // 채널톡/문의 링크: 최종 URL 전달 전 안내
-            document.querySelectorAll('[data-pending-link]').forEach(function (el) {
-                el.addEventListener('click', function () {
-                    alert('상담 링크는 최종 URL 전달 후 연결됩니다.');
-                });
-            });
+            // 견적 저장하기: 지금 고른 조건·월 납입금을 이 기기에 저장 → 마이페이지 '내가 저장한 견적' (아래 스크립트에서 연결)
         })();
     </script>
     <script>
@@ -370,7 +359,7 @@
             } else if(colWrap){
                 var tags = ext.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">외장</em>':'')+'<i class="color-chip" data-color-code="'+esc(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; });
                 if(intc.length) tags = tags.concat(intc.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">내장</em>':'')+'<i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+'</span>'; }));
-                colWrap.innerHTML = tags.join('') || '<span class="color-tag">색상 정보 준비 중</span>';
+                colWrap.innerHTML = tags.join('') || '<span class="color-tag">상담 시 안내</span>';
             }
             // 옵션 상세: 선택 옵션(공식 옵션가) + 기본품목 수
             var opts = useVM ? VM.getTrimOptions(trimId,'SELECTABLE') : [];
@@ -455,7 +444,7 @@
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
             // 이미지 우선순위: trim VERIFIED → lineup VERIFIED → 차큐 직접 이미지(rec.img) → placeholder  (rec.trimId 는 STEP 8 매핑 후 채워짐)
             var recCK = (window.CHAQ_VM && rec.trimId && rec.ext) ? (window.CHAQ_VM.colorKeyForQuote || window.CHAQ_VM.colorKeyByName)(rec.trimId, rec.ext) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상
-            var recImg = (window.CHAQ_VM && rec.trimId) ? window.CHAQ_VM.resolveImageUrl(rec.trimId, [rec.img, PH], true, recCK) : (rec.img || PH);
+            var recImg = (window.CHAQ_VM && rec.trimId) ? window.CHAQ_VM.resolveImageUrl(rec.trimId, [rec.img, PH], true, recCK) : (rec.img || (window.CHAQ_VM && window.CHAQ_VM.imageByName && window.CHAQ_VM.imageByName(rec.brand, rec.model)) || PH);   // 트림 미연결: 같은 모델 대표 이미지
             if (window.CHAQ_VM && rec.trimId) window.chaqSwapCarImage = function(tid, ck){ var u = window.CHAQ_VM.resolveImageUrl(tid, [null], true, ck); if(!u) return; document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ if(im.getAttribute('src')!==u){ im.onerror=function(){ this.onerror=null; this.src=PH; }; im.src=u; } }); };
             document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ im.alt=name; im.src=recImg; im.onerror=function(){ this.onerror=null; this.src=PH; }; });
 
@@ -546,10 +535,10 @@
                 var cm=document.querySelector('.confirm-monthly strong');
                 var acqEl=document.getElementById('pAcq');
                 if(isLease){
-                    // 운용리스: 비용 데이터 준비중 (회색)
-                    if(hm){ hm.innerHTML='준비중'; hm.style.color='#8a8f96'; }
-                    if(cm){ cm.textContent='준비중'; cm.style.color='#8a8f96'; }
-                    if(acqEl){ acqEl.textContent='준비중'; acqEl.style.color='#8a8f96'; }
+                    // 운용리스: 월 납입금은 상담으로 안내 (회색 '별도문의' — 다른 '견적 없음' 표기와 동일)
+                    if(hm){ hm.innerHTML='별도문의'; hm.style.color='#8a8f96'; }
+                    if(cm){ cm.textContent='별도문의'; cm.style.color='#8a8f96'; }
+                    if(acqEl){ acqEl.textContent='상담 시 안내'; acqEl.style.color='#8a8f96'; }
                     return;
                 }
                 if(hm) hm.style.color='';
@@ -758,6 +747,26 @@
         (function(){ try { if (window.CHAQ_DETAIL_PROMO) window.CHAQ_DETAIL_PROMO.mount(); } catch (e) { if (window.console) console.warn('detail promo', e); } })();
     </script>
     <script>document.documentElement.classList.remove('chaq-detail-loading');   // 이 차량 정보 반영 완료 → 표시</script>
-    <script src="data/inquiry.js"></script>   <!-- 상담 문의 → 채널톡 (api-config.js 에 키가 있을 때만) -->
+    <script src="data/inquiry.js"></script>   <!-- 상담 문의: 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식 -->
+    <script>
+        /* 견적 저장하기 · 최근 본 견적 — 로그인 없이 이 기기에 저장 (마이페이지에서 확인) */
+        (function () {
+            var U = window.CHAQ_UTIL, I = window.CHAQ_INQUIRY; if (!U || !U.store) return;
+            function ctx() {
+                var c = I && I.detailContext ? I.detailContext() : {}, k = c.conditions || {};
+                return { id: c.recId || null, trimId: c.trimId || null, carName: ((c.carName || '') + ' ' + (c.trimName || '')).trim(), spec: c.spec || '',
+                    term: k.term || '60', plan: k.plan || '0', dist: k.dist || '2', price: c.monthly || null, product: k.product || '' };
+            }
+            var like = document.getElementById('likeBtn'); if (!like) return;
+            function paint(on) { like.classList.toggle('is-on', on); like.style.color = on ? '#18a85c' : ''; like.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+            var c0 = ctx(); U.store.addRecent(c0); paint(U.store.isSaved(c0));
+            like.addEventListener('click', function () {
+                var c = ctx();
+                if (U.store.isSaved(c)) { U.store.unsave(c); paint(false); U.toast('저장한 견적에서 뺐어요'); return; }
+                if (U.store.save(c)) { paint(true); U.toast('견적을 저장했어요 · 마이페이지에서 볼 수 있어요'); }
+                else U.toast('이 브라우저에서는 저장할 수 없어요');
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -168,8 +168,8 @@
                         '<strong class="est_name cn">'+(VM.carNameHtml ? VM.carNameHtml({trimId: repTrim}) : esc2(d.fullName))+'</strong>'+
                         '<span class="est_year">'+esc2(F.trim ? grp.label : '전체 등급')+(grp.trims.length>1?' · 세부 등급 '+grp.trims.length+'개':'')+'</span>'+
                         '<div class="ms_ready"><span class="ms_check">차량 선택 완료</span>'+
-                        '<p class="ms_desc">'+T.label+' 실시간 견적은 외부 데이터 연동 후 제공됩니다.</p></div>'+
-                        '<span class="ms_soon">견적 준비 중</span>';
+                        '<p class="ms_desc">'+T.label+' 견적은 상담으로 바로 안내해 드려요. 카드를 누르면 차량 상세를 볼 수 있어요.</p></div>'+
+                        '<span class="ms_soon" role="button" data-pending-link data-action="inquiry" data-topic="'+esc2(T.label+' 견적 상담')+'" data-car="'+esc2(d.fullName+(F.trim&&grp?' '+grp.label:''))+'">'+T.label+' 견적 상담 신청</span>';
                     return;
                 }
                 var rec = records.filter(matches)[0];
@@ -183,8 +183,8 @@
                     '<strong class="est_name">'+rec.brand+' '+rec.model+'</strong>'+
                     '<span class="est_year">'+rec.year+(rec.trim?(' · '+rec.trim):'')+'</span>'+
                     '<div class="ms_ready"><span class="ms_check">차량 선택 완료</span>'+
-                    '<p class="ms_desc">'+T.label+' 실시간 견적은 외부 데이터 연동 후 제공됩니다.</p></div>'+
-                    '<span class="ms_soon">견적 준비 중</span>';
+                    '<p class="ms_desc">'+T.label+' 견적은 상담으로 바로 안내해 드려요.</p></div>'+
+                    '<span class="ms_soon" role="button" data-pending-link data-action="inquiry" data-topic="'+esc2(T.label+' 견적 상담')+'" data-car="'+esc2(rec.brand+' '+rec.model)+'">'+T.label+' 견적 상담 신청</span>';
             }
 
             // 계약 조건 칩 (UI 유지용 — 선택 단계에서는 표시만)
@@ -266,9 +266,18 @@
                 document.body.style.overflow='hidden'; popBody.scrollTop=0;
             }
             function closePop(){ pop.classList.remove('is-open'); pop.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+            // 앞 단계를 안 고른 채 누르면: 안내 + 앞 단계 선택창 열기 (반응 없는 버튼처럼 보이지 않게)
+            function firstMissing(){ return !F.brand ? 'brand' : (!F.model ? 'model' : 'trim'); }
+            var STEP_KO = { brand: '브랜드', model: '모델', trim: '등급' };
             document.querySelectorAll('.filter_select[data-filter]').forEach(function(btn){
-                btn.addEventListener('click', function(){ openPop(btn.getAttribute('data-filter')); });
+                btn.addEventListener('click', function(){
+                    var t = btn.getAttribute('data-filter');
+                    if (btn.classList.contains('is-disabled')) { var m = firstMissing(); if (window.CHAQ_UTIL) window.CHAQ_UTIL.toast(STEP_KO[m] + '을(를) 먼저 선택해 주세요'); openPop(m); return; }
+                    openPop(t);
+                });
             });
+            // '차량 브랜드를 선택해주세요' 같은 안내 카드를 누르면 그 단계 선택창
+            if (estEl) estEl.addEventListener('click', function(e){ if (!estEl.classList.contains('est-empty') || !(F && (!F.brand || !F.model || !F.trim))) return; if (estEl.querySelector('.est_guide') && /선택해주세요/.test(estEl.textContent)) { e.preventDefault(); openPop(firstMissing()); } });
             document.querySelector('.fpop_close').addEventListener('click', closePop);
             popApply.addEventListener('click', function(){   // 전체 보기: 이 단계(와 하위 단계) 선택을 풀고 전체로
                 if(currentFilter){
@@ -355,5 +364,6 @@
             syncSelects(); updateFilterLock(); updateCondLock(); render();
         })();
     </script>
+    <script src="data/inquiry.js"></script>   <!-- 상담 문의: 채널톡 키가 있으면 채널톡, 없으면 사이트 상담 신청 양식 -->
 </body>
 </html>

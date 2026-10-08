@@ -213,6 +213,17 @@
     if (k) { k = remapColorKey(arr, k); if (arr.some(function (im) { return im.colorKey === k; })) return k; }
     return imageKeyByNames(arr, [name]) || k;
   }
+  /** 트림 연결이 안 된 견적(브랜드·모델 글자만): 같은 브랜드에서 이름이 들어맞는 모델의 대표 이미지 (없으면 null) */
+  function imageByName(brand, model) {
+    var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|[\s·\-_]+/g, ""); }, qb = n(brand), qm = n(model); if (!qm) return null;
+    var bs = D.brands.filter(function (b) { return qb && (n(b.nameKo) === qb || n(b.nameEn) === qb || n(b.nameKo).indexOf(qb) === 0); }); if (!bs.length) return null;
+    var best = null, bl = 0;
+    bs.forEach(function (b) { (IX.modelsByBrand[b.id] || []).forEach(function (m) { [m.nameKo, m.nameEn].forEach(function (nm) { var k = n(nm); if (k && k.length > bl && (qm === k || qm.indexOf(k) >= 0)) { best = m; bl = k.length; } }); }); });
+    if (!best) return null;
+    var ls = (IX.lineupsByModel[best.id] || []).slice().sort(function (a, b) { return (a.status === "INACTIVE") - (b.status === "INACTIVE") || (b.modelYear || 0) - (a.modelYear || 0); });
+    for (var i = 0; i < ls.length; i++) { var im = pickByColor(verifiedFirst(IX.imagesByLineup[ls[i].id]), null); if (im) return siteUrl(im.thumbnailUrl || im.imageUrl); }
+    return null;
+  }
   function getImageKey(trimId) { var t = getTrim(trimId); var l = t && IX.lineup[t.lineupId]; return (l && l.imageKey) || null; }
   /** 이미지 선택: trim → lineup 순, 각 단계에서 colorKey 일치 → 대표(default, colorKey 없음) → 첫 이미지. view 기본 side. 미검증 이미지는 자동 노출 안 함 */
   /** 색상키가 이미지 파일 키와 다를 때(제조사코드 ↔ 영문명 키 등) 색상명으로 이미지 키 찾기 */
@@ -397,7 +408,7 @@
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
     addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
-    dispName: dispName, nameParts: nameParts, carNameHtml: carNameHtml, optionPriceByName: optionPriceByName,
+    dispName: dispName, imageByName: imageByName, nameParts: nameParts, carNameHtml: carNameHtml, optionPriceByName: optionPriceByName,
     getSources: getSources, fromQuote: fromQuote, getQuotes: getQuotes, pickQuote: pickQuote, quoteView: quoteView, validate: validate
   };
   load(root.CHAQ_VEHICLE_MASTER || {});

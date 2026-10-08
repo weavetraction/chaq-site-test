@@ -160,3 +160,4 @@ input.saved { border-color: var(--green); }
 .pick_row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
 .pick_row.miss { background: #fff7f7; } .pick_row .no { width: 22px; color: var(--muted); font-size: 12px; } .pick_row .lb { flex: 1; font-size: 13px; }
 .hm_sec .picker input { width: 100%; }
+#iqTable td.cust { min-width: 120px; white-space: nowrap; } #iqTable td.cust .msg { display: block; max-width: 220px; white-space: normal; color: #444; }

@@ -2613,3 +2613,15 @@ html.chaq-detail-loading .local-car-detail::after{
 /* ⑨ 차량 카드 차명 두 줄 (redesign.css 와 같은 규칙 — 목록 페이지용) */
 .local-special-list .stock-copy small.cn, .local-special-list .cn, .cn { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
 .cn .cn_part { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: top; }
+/* 마이페이지(내 견적함): 이 기기 안내 · 상담 신청 내역 */
+.mypage .mp_profile .mp_pinfo { display: flex; flex-direction: column; gap: 4px; }
+.mypage .mp_profile .mp_pnote { color: #8a8f96; font-size: 13px; font-weight: 400; }
+.mypage .mp_inq { display: flex; flex-direction: column; gap: 8px; }
+.mypage .mp_inq_row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #f5f6f7; }
+.mypage .mp_inq_t { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.mypage .mp_inq_t strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.mypage .mp_inq_t small, .mypage .mp_inq_s small { color: #8a8f96; font-size: 12.5px; }
+.mypage .mp_inq_s { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 3px; }
+.mypage .mp_inq_s em { padding: 3px 8px; border-radius: 999px; background: #e8f7ef; color: #18a85c; font-size: 12px; font-style: normal; font-weight: 700; }
+/* 수입차할인·즉시출고 선택 카드: '견적 상담 신청' 버튼 (상담 신청 양식 열림) */
+.local-special-list.master-select .est_card .ms_soon[data-action="inquiry"] { background: #18a85c; color: #fff; text-align: center; cursor: pointer; }

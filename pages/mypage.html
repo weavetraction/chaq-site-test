@@ -17,20 +17,19 @@
         </header>
 
         <main>
-            <!-- 프로필 -->
-            <section class="mp_profile" id="mpProfile"></section>
+            <!-- 내 견적함 안내 (로그인 없이 이 기기에 저장) -->
+            <section class="mp_profile" id="mpProfile"><span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">로그인 없이 이 기기(브라우저)에 저장돼요</small></span></section>
 
-            <!-- 진행 현황 (심사/주문 상태 · CRM+차량 연동) -->
+            <!-- 상담 신청 내역 (이 기기에서 신청한 상담) -->
             <section class="mp_sec">
-                <div class="mp_sec_head"><h2>진행 현황</h2></div>
-                <div class="mp_status_tiles" id="mpStatusTiles"></div>
-                <div class="mp_orders" id="mpOrders"></div>
+                <div class="mp_sec_head"><h2>상담 신청 내역</h2><span class="mp_count" id="mpInqCount"></span></div>
+                <div class="mp_inq" id="mpInq"></div>
             </section>
 
             <!-- 내가 저장한 견적 -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>내가 저장한 견적</h2><span class="mp_count" id="mpSavedCount"></span></div>
-                <p class="mp_note">'확인하기'를 눌러 현재기준 견적을 다시 확인해주세요.</p>
+                <p class="mp_note">저장한 시점의 금액이에요. '확인하기'를 눌러 현재 기준 견적을 다시 확인해주세요.</p>
                 <div class="mp_saved" id="mpSaved"></div>
             </section>
 
@@ -71,11 +70,9 @@
     <script>/* 차량 데이터: 차큐 API(관리자에서 '사이트 반영'한 최신본) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/vm/core.js"><\/script>');})();</script>
     <script>window.CHAQ_VEHICLE_MASTER || document.write('<script src="data/vehicle-master.js"><\/script>');</script>
     <script src="data/vehicle-master-helper.js"></script>
-    <script src="data/mypage.js"></script>
     <script>
         (function(){
             var C = window.CHAQ || {stock:[],fast:[],estimate:[]};
-            var M = window.CHAQ_MYPAGE || {};
             var PH = "../assets/icons/car-placeholder.svg";
             var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
             var ALL = (C.stock||[]).concat(C.fast||[], C.estimate||[]);
@@ -87,87 +84,43 @@
             function condText(c){ return c.term+'개월 · '+planLabel(c.plan)+' · '+c.dist+'만km'; }
             function detailHref(id,c){ return 'car-detail.html?id='+id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist; }
 
-            // 프로필 — 이름 + 설정(톱니바퀴)만 노출
-            var pf = M.profile||{};
-            document.getElementById('mpProfile').innerHTML =
-                '<span class="mp_pinfo"><strong>'+esc(pf.name)+'님</strong></span>'+
-                '<button type="button" class="mp_setting" aria-label="개인정보 설정" onclick="location.href=\'settings.html\'"></button>';
+            var U = window.CHAQ_UTIL, ST = U.store;
+            function vmName(x){ var VM=window.CHAQ_VM; if(x.r) return (VM&&VM.carNameHtml)?VM.carNameHtml(x.r):esc(x.r.brand+' '+x.r.model); if(x.trimId&&VM&&VM.getTrim&&VM.getTrim(x.trimId)) return VM.carNameHtml({trimId:x.trimId}); return esc(x.carName||'차량'); }
+            function hrefOf(x,c){ return x.r ? detailHref(x.r.id,c) : (x.trimId ? 'car-detail.html?trimId='+encodeURIComponent(x.trimId)+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist : null); }
+            function imgOf(x){ return x.r ? carImg(x.r) : (x.trimId ? carImg({trimId:x.trimId}) : PH); }
+            function fmtDate(iso){ var d=new Date(iso); return isNaN(d)?'':(d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')); }
 
-            // 진행 현황 — 상태 타일
-            var STAGES = ['심사중','심사승인','약정','주문중','출고완료'];
-            var TILE = ['심사중','심사승인','약정','주문중'];
-            var orders = M.orders||[];
-            var counts = {}; TILE.forEach(function(s){ counts[s]=0; });
-            orders.forEach(function(o){ if(counts[o.status]!=null) counts[o.status]++; });
-            document.getElementById('mpStatusTiles').innerHTML = TILE.map(function(s){
-                return '<div class="mp_tile"><b>'+counts[s]+'</b><span>'+s+'</span></div>';
-            }).join('');
+            // 상담 신청 내역 (이 기기에서 접수한 상담)
+            var inq = (window.CHAQ_INQUIRY && window.CHAQ_INQUIRY.history) ? window.CHAQ_INQUIRY.history() : (function(){ try { return JSON.parse(localStorage.getItem('chaq_inquiries_v1')||'[]'); } catch(e){ return []; } })();
+            document.getElementById('mpInqCount').textContent = inq.length ? inq.length+'건' : '';
+            document.getElementById('mpInq').innerHTML = inq.map(function(q){
+                return '<div class="mp_inq_row"><span class="mp_inq_t"><strong>'+esc(q.car||q.topic||'일반 상담')+'</strong>'+(q.cond?'<small>'+esc(q.cond)+'</small>':'')+'</span><span class="mp_inq_s"><em>접수 완료</em><small>'+fmtDate(q.at)+(q.id?' · #'+q.id:'')+'</small></span></div>';
+            }).join('') || '<p class="mp_empty">신청한 상담이 없습니다. 아래 \'차큐에 문의하기\'나 차량 상세의 \'이 조건 그대로 문의하기\'로 신청할 수 있어요.</p>';
 
-            // 진행 현황 — 주문 카드 + 단계 스테퍼 + 담당 매니저
-            var MGR_PH = "../assets/icons/manager-avatar.svg";
-            document.getElementById('mpOrders').innerHTML = orders.map(function(o){
-                var r=car(o.id); var name=r?((window.CHAQ_VM&&window.CHAQ_VM.carName)?window.CHAQ_VM.carName(r):(r.brand+' '+r.model)):'차량'; var yearLine=r?(r.year||''):''; var trimLine=r?(r.trim||''):'';
-                var m=r?monthly(r,o):null;
-                var cur=STAGES.indexOf(o.status); if(cur<0) cur=0;
-                var steps=STAGES.map(function(st,i){
-                    var cls = i<cur ? 'done' : (i===cur ? 'active' : '');
-                    return '<span class="mp_step '+cls+'"><i></i><em>'+st+'</em></span>';
-                }).join('');
-                var mgr=o.mgr||{};
-                var mgrHtml = '<div class="mp_mgr">'+
-                    '<img class="mp_mgr_photo" src="'+(mgr.photo||MGR_PH)+'" alt="">'+
-                    '<div class="mp_mgr_info"><strong>'+esc(mgr.name||'-')+'</strong><em>'+esc(mgr.title||'')+'</em></div>'+
-                    '<button type="button" class="mp_mgr_chat" data-pending-link data-action="inquiry" aria-label="채팅 문의"></button>'+
-                '</div>';
-                return '<div class="mp_order">'+
-                    '<a class="mp_order_top" href="'+detailHref(o.id,o)+'">'+
-                        '<img class="mp_ocar" src="'+carImg(r)+'" alt="">'+
-                        '<div class="mp_oinfo">'+
-                        '<strong>'+esc(name)+'</strong>'+
-                        '<span class="mp_oyear">'+esc(yearLine)+'</span>'+
-                        '<span class="mp_otrim">'+esc(trimLine)+'</span>'+
-                        (m!=null?'<b>월 '+won(m)+'원</b>':'')+
-                        (m!=null?'<span class="mp_quote_btn" role="button" data-action="quote-view">견적서 확인하기</span>':'')+'</div>'+
-                        '<span class="mp_odate">'+esc(o.date)+' 신청</span>'+
-                    '</a>'+
-                    '<div class="mp_stepper">'+steps+'</div>'+
-                    mgrHtml+
-                '</div>';
-            }).join('') || '<p class="mp_empty">진행 중인 건이 없습니다.</p>';
-
-            // 내가 저장한 견적
-            var saved = M.savedQuotes||[];
+            // 내가 저장한 견적 (차량 상세 '견적 저장하기')
+            var saved = ST.saved().map(function(q){ return { q:q, r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; });
             document.getElementById('mpSavedCount').textContent = saved.length+'건';
-            document.getElementById('mpSaved').innerHTML = saved.map(function(q){
-                var r=car(q.id); if(!r) return '';
-                var m=(q.price!=null?q.price:monthly(r,q)); // 저장 당시 월비용(스냅샷) — 실시간 차량데이터 미연동
-                return '<a class="mp_qcard" href="'+detailHref(q.id,q)+'">'+
-                    '<img src="'+carImg(r)+'" alt="">'+
-                    '<span class="mp_qinfo"><small class="cn">'+((window.CHAQ_VM&&window.CHAQ_VM.carNameHtml)?window.CHAQ_VM.carNameHtml(r):esc(r.brand+' '+r.model))+'</small>'+
-                    '<strong>월 '+won(m)+'원</strong>'+
-                    '<span class="mp_qcond">'+esc(condText(q))+'</span></span>'+
+            document.getElementById('mpSaved').innerHTML = saved.map(function(x){
+                var q=x.q, c={term:q.term||'60',plan:q.plan||'0',dist:q.dist||'2'}, href=hrefOf(x,c);
+                var m = q.price!=null ? q.price : (x.r?monthly(x.r,c):null);   // 저장 당시 월 납입금(스냅샷)
+                return '<a class="mp_qcard"'+(href?' href="'+href+'"':'')+'>'+
+                    '<img src="'+imgOf(x)+'" alt="">'+
+                    '<span class="mp_qinfo"><small class="cn">'+vmName(x)+'</small>'+
+                    '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong>'+
+                    '<span class="mp_qcond">'+esc(condText(c))+'</span></span>'+
                     '<span class="mp_qcta">확인하기</span></a>';
-            }).join('') || '<p class="mp_empty">저장한 견적이 없습니다.</p>';
+            }).join('') || '<p class="mp_empty">저장한 견적이 없습니다. 차량 상세에서 \'견적 저장하기\'를 눌러 보세요.</p>';
 
-            // 최근 본 견적 (가로 스크롤)
-            var recent = (M.recentQuotes||[]);
-            document.getElementById('mpRecent').innerHTML = recent.map(function(id){
-                var r=car(id); if(!r) return '';
-                var m=monthly(r,{term:'60',plan:'0',dist:'2'});
-                return '<a class="mp_recent" href="'+detailHref(id,{term:'60',plan:'0',dist:'2'})+'">'+
-                    '<img src="'+carImg(r)+'" alt="">'+
-                    '<small class="cn">'+((window.CHAQ_VM&&window.CHAQ_VM.carNameHtml)?window.CHAQ_VM.carNameHtml(r):esc(r.brand+' '+r.model))+'</small>'+
-                    '<strong>월 '+won(m)+'원</strong></a>';
+            // 최근 본 견적 (가로 스크롤 · 이 기기에서 본 차량 상세)
+            var dc={term:'60',plan:'0',dist:'2'};
+            var recent = ST.recent().map(function(q){ return { r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; }).filter(function(x){ return x.r || x.trimId; });
+            document.getElementById('mpRecent').innerHTML = recent.map(function(x){
+                var m=x.r?monthly(x.r,dc):null, href=hrefOf(x,dc);
+                return '<a class="mp_recent"'+(href?' href="'+href+'"':'')+'>'+
+                    '<img src="'+imgOf(x)+'" alt="">'+
+                    '<small class="cn">'+vmName(x)+'</small>'+
+                    '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong></a>';
             }).join('') || '<p class="mp_empty">최근 본 견적이 없습니다.</p>';
-
-            // 상담/설정 등 준비중 링크
-            document.querySelectorAll('[data-pending-link]').forEach(function(el){
-                el.addEventListener('click', function(e){ e.preventDefault(); alert('상담 링크는 최종 URL 전달 후 연결됩니다.'); });
-            });
-            // 견적서 확인하기 (카드 링크로 전파 방지)
-            document.querySelectorAll('.mp_quote_btn').forEach(function(el){
-                el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); alert('견적서는 최종 연동 후 제공됩니다.'); });
-            });
         })();
     </script>
     <script src="data/inquiry.js"></script>   <!-- 상담 문의 → 채널톡 (api-config.js 에 키가 있을 때만) -->

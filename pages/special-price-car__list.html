@@ -363,9 +363,18 @@
                 document.body.style.overflow='hidden'; popBody.scrollTop=0;
             }
             function closePop(){ pop.classList.remove('is-open'); pop.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+            // 앞 단계를 안 고른 채 누르면: 안내 + 앞 단계 선택창 열기 (반응 없는 버튼처럼 보이지 않게)
+            function firstMissing(){ return !F.brand ? 'brand' : (!F.model ? 'model' : 'trim'); }
+            var STEP_KO = { brand: '브랜드', model: '모델', trim: '등급' };
             document.querySelectorAll('.filter_select[data-filter]').forEach(function(btn){
-                btn.addEventListener('click', function(){ openPop(btn.getAttribute('data-filter')); });
+                btn.addEventListener('click', function(){
+                    var t = btn.getAttribute('data-filter');
+                    if (btn.classList.contains('is-disabled')) { var m = firstMissing(); if (window.CHAQ_UTIL) window.CHAQ_UTIL.toast(STEP_KO[m] + '을(를) 먼저 선택해 주세요'); openPop(m); return; }
+                    openPop(t);
+                });
             });
+            // '차량 브랜드를 선택해주세요' 같은 안내 카드를 누르면 그 단계 선택창
+            if (estEl) estEl.addEventListener('click', function(e){ if (!estEl.classList.contains('est-empty') || !(F && (!F.brand || !F.model || !F.trim))) return; if (estEl.querySelector('.est_guide') && /선택해주세요/.test(estEl.textContent)) { e.preventDefault(); openPop(firstMissing()); } });
             document.querySelector('.fpop_close').addEventListener('click', closePop);
             popApply.addEventListener('click', function(){   // 전체 보기: 이 단계(와 하위 단계) 선택을 풀고 해당 범위 전체를 보여줌
                 if(currentFilter){

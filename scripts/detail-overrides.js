@@ -28,7 +28,7 @@
         if (!location.pathname.endsWith("special-price-car__list.html")) return;
         document.body.classList.add("special-price-list");
         document.querySelectorAll(".car_info .price").forEach(function (price) {
-            if (price.textContent.trim() === "상담문의") price.textContent = "준비중";
+            if (price.textContent.trim() === "상담문의") price.textContent = "별도문의";
         });
         document.querySelectorAll(".btn_inquiry, .moveInquiry").forEach(function (button) {
             button.innerHTML = "셀프 견적 분석";

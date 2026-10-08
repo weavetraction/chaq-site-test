@@ -11,8 +11,8 @@
     toastTimer=setTimeout(function(){toast.classList.remove("is-show");},2200);
   }
 
-  document.querySelectorAll("[data-pending-link]").forEach(function(button){
-    button.addEventListener("click",function(){showToast("채널톡 링크가 전달되면 바로 연결됩니다.");});
+  document.querySelectorAll("[data-pending-link]:not([data-action=\"inquiry\"])").forEach(function(button){
+    button.addEventListener("click",function(){showToast("곧 열릴 예정이에요. 궁금한 점은 상담으로 문의해 주세요.");});
   });
 
   var promo=document.getElementById("topPromo");

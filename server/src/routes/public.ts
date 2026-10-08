@@ -101,6 +101,9 @@ publicRouter.post("/api/inquiries", inquiryLimit, async (req, res, next) => {
     const parsed = InquiryInput.safeParse(req.body || {});
     if (!parsed.success) return res.status(400).json({ error: "입력 형식 오류", detail: parsed.error.issues.slice(0, 5).map((i) => i.path.join(".") + ": " + i.message) });
     if (parsed.data.website) return res.status(200).json({ id: 0, message: "" });      // 스팸 봇
+    const ph = parsed.data.phone.trim();
+    if (parsed.data.source === "FORM" && !ph) return res.status(400).json({ error: "연락처를 입력해 주세요" });
+    if (ph && parsed.data.privacyAgreed !== true) return res.status(400).json({ error: "개인정보 수집·이용에 동의해 주세요" });
     const r = await createInquiry(parsed.data, { ip: req.ip || "", ua: String(req.headers["user-agent"] || "") });
     res.status(201).json({ id: r.id, createdAt: r.created_at, message: channelMessage(parsed.data, r.id) });
   } catch (e) { next(e); }

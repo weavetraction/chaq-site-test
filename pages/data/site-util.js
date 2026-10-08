@@ -11,8 +11,11 @@
   function won(n) { return (n || 0).toLocaleString("ko-KR"); }
   /** 견적 레코드의 차량 이미지: 차량 데이터 이미지(재고 외장색 → 색상 이미지, 없으면 대표) → 없으면 대체 이미지 */
   function carImg(r) {
-    try { var VM = root.CHAQ_VM; return (VM && r && r.trimId && VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote && VM.colorKeyForQuote(r.trimId, r.ext))) || PH; }
-    catch (e) { return PH; }
+    try {
+      var VM = root.CHAQ_VM; if (!VM || !r) return PH;
+      if (r.trimId && VM.getTrim && VM.getTrim(r.trimId)) return VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote && VM.colorKeyForQuote(r.trimId, r.ext)) || PH;
+      return (VM.imageByName && VM.imageByName(r.brand, r.model)) || PH;   // 트림 미연결 견적: 같은 모델 대표 이미지
+    } catch (e) { return PH; }
   }
   /** 색상 이름 → 색상칩 대략 색 (차량 데이터에 HEX 가 없을 때) */
   function hex(name) {
@@ -37,5 +40,24 @@
     function frame(t) { var p = Math.min(1, (t - t0) / dur); var e = 1 - Math.pow(1 - p, 3); put(Math.round(from + (to - from) * e)); if (p < 1) requestAnimationFrame(frame); }
     requestAnimationFrame(frame);
   }
-  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, carImg: carImg, hex: hex, animateNum: animateNum };
+  /** 이 기기에 저장 (로그인 없이 마이페이지에서 보기) — 저장한 견적·최근 본 견적 */
+  var K_SAVED = "chaq_saved_v1", K_RECENT = "chaq_recent_v1";
+  function lsGet(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  var keyOf = function (x) { return x.id ? "q:" + x.id : "t:" + x.trimId; };
+  var store = {
+    saved: function () { return lsGet(K_SAVED); },
+    isSaved: function (x) { var k = keyOf(x); return lsGet(K_SAVED).some(function (s) { return keyOf(s) === k; }); },
+    save: function (x) { var k = keyOf(x), list = lsGet(K_SAVED).filter(function (s) { return keyOf(s) !== k; }); x.at = new Date().toISOString(); list.unshift(x); return lsSet(K_SAVED, list.slice(0, 30)); },
+    unsave: function (x) { var k = keyOf(x); return lsSet(K_SAVED, lsGet(K_SAVED).filter(function (s) { return keyOf(s) !== k; })); },
+    recent: function () { return lsGet(K_RECENT); },
+    addRecent: function (x) { if (!x || (!x.id && !x.trimId)) return; var k = keyOf(x), list = lsGet(K_RECENT).filter(function (s) { return keyOf(s) !== k; }); list.unshift({ id: x.id || null, trimId: x.trimId || null, carName: x.carName || "" }); lsSet(K_RECENT, list.slice(0, 12)); }
+  };
+  /** 화면 아래 짧은 안내 */
+  function toast(msg) {
+    var t = document.getElementById("chaqToast");
+    if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
+    t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
+  }
+  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

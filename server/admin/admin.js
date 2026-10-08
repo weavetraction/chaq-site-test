@@ -141,14 +141,15 @@
       var L = r.statusLabels, total = 0; Object.keys(r.counts).forEach(function (k) { total += r.counts[k]; });
       $("#newBadge").hidden = !r.counts.NEW; $("#newBadge").textContent = r.counts.NEW || "";
       $("#statusChips").innerHTML = '<button data-st="" class="' + (iqState.status ? "" : "on") + '">전체 ' + total + '</button>' + Object.keys(L).map(function (k) { return '<button data-st="' + k + '" class="' + (iqState.status === k ? "on" : "") + '">' + L[k] + ' ' + (r.counts[k] || 0) + '</button>'; }).join("");
-      $("#iqTable").innerHTML = '<tr><th>#</th><th>접수</th><th>상태</th><th>차량</th><th>조건</th><th>유입</th><th class="num">월 납입금</th><th>메모</th></tr>' + (r.rows.length ? r.rows.map(function (x) {
+      $("#iqTable").innerHTML = '<tr><th>#</th><th>접수</th><th>상태</th><th>고객</th><th>차량</th><th>조건</th><th>유입</th><th class="num">월 납입금</th><th>메모</th></tr>' + (r.rows.length ? r.rows.map(function (x) {
         var c = x.conditions || {}, cond = [c.product, c.term ? c.term + "개월" : "", PLAN[c.plan] || "", c.dist ? c.dist + "만 km" : ""].filter(Boolean).join(" · ");
-        return '<tr><td>' + x.id + '</td><td>' + dt(x.created_at) + '<br><small class="hint">' + (x.kind ? KIND[x.kind] : x.source === "GUIDE" ? "일반 상담" : "") + (x.rec_id ? " " + esc(x.rec_id) : "") + '</small></td>' +
+        return '<tr><td>' + x.id + '</td><td>' + dt(x.created_at) + '<br><small class="hint">' + (x.kind ? KIND[x.kind] : x.source === "GUIDE" || x.source === "FORM" ? "일반 상담" : "") + (x.rec_id ? " " + esc(x.rec_id) : "") + '</small></td>' +
           '<td><select data-id="' + x.id + '" class="st-' + x.status + '">' + Object.keys(L).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? " selected" : "") + '>' + L[k] + '</option>'; }).join("") + '</select></td>' +
+          '<td class="cust">' + (x.phone ? '<strong>' + esc(x.customer_name || "이름 없음") + '</strong><br><a href="tel:' + esc(String(x.phone).replace(/[^\d]/g, "")) + '">' + esc(x.phone) + '</a>' + (x.contact_time ? '<br><small class="hint">' + esc(x.contact_time) + '</small>' : '') + (x.message ? '<br><small class="msg">' + esc(x.message) + '</small>' : '') : '<small class="hint">채널톡 상담</small>') + '</td>' +
           '<td class="car"><strong>' + esc(x.car_name || "-") + ' ' + esc(x.trim_name) + '</strong>' + esc(x.spec) + (x.options && x.options.length ? '<br><small class="hint">옵션: ' + esc(x.options.join(", ")) + '</small>' : '') + (x.color ? '<br><small class="hint">색상: ' + esc(x.color) + '</small>' : '') + (/^https?:\/\//i.test(x.page_url || '') ? '<br><a href="' + esc(x.page_url) + '" target="_blank" rel="noopener">페이지 열기</a>' : '') + '</td>' +
           '<td>' + esc(cond) + '</td><td>' + touch(x.last_touch) + (x.first_touch && x.first_touch.source && x.first_touch.source !== (x.last_touch || {}).source ? '<br><small class="hint">처음: ' + touch(x.first_touch) + '</small>' : '') + '</td><td class="num">' + (x.monthly ? won(x.monthly) + "원" : "별도문의") + '</td>' +
           '<td><textarea data-memo="' + x.id + '" rows="2" placeholder="상담 메모">' + esc(x.memo) + '</textarea></td></tr>';
-      }).join("") : '<tr><td colspan="8" class="hint">문의가 없습니다</td></tr>');
+      }).join("") : '<tr><td colspan="9" class="hint">문의가 없습니다</td></tr>');
       var pages = Math.ceil(r.total / r.size);
       $("#iqPager").innerHTML = pages > 1 ? Array.from({ length: Math.min(pages, 20) }, function (_, i) { return '<button class="btn sm' + (i + 1 === r.page ? " primary" : "") + '" data-page="' + (i + 1) + '">' + (i + 1) + '</button>'; }).join("") : "";
     }).catch(function () {});
