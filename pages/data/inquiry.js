@@ -118,10 +118,11 @@
   function showDone(c, j) {
     var st = window.CHAQ_AUTH.state() || {}, ch = st.kakaoChannel, m = st.member || {}, sent = j.kakao && j.kakao.sent;
     var car = c.carName ? '<div class="iqf_car"><b>' + esc((c.carName + " " + (c.trimName || "")).trim()) + '</b>' + esc([c.spec, condLine(c)].filter(Boolean).join(" · ")) + '</div>' : "";
-    // 견적 문의(차량 상세) 완료: '카톡으로 견적서가 발송됐어요 :)' (대표 확정 261008) · 일반 상담은 '상담 신청이 접수됐어요'
+    // 견적 문의(차량 상세) 완료: '이 견적 그대로 신청되었어요 :)' (대표 확정 261008) · 일반 상담은 '상담 신청이 접수됐어요'
+    //   안내 문장: 알림톡 발송됨 → 채널에서 견적서 확인 / 미발송 + 카카오톡 채널 있음 → 채팅으로 상담 이어가기
     var isQuote = sent || c.source === "DETAIL";
-    sheet('<div class="iqf_done"><i>✓</i><h3>' + (isQuote ? "카톡으로 견적서가 발송됐어요 :)" : "상담 신청이 접수됐어요") + '</h3>' +
-      '<p>' + (isQuote ? "카카오톡 <b>차큐</b> 채널에서<br>견적서를 확인해 주세요." : "") + '</p>' +
+    sheet('<div class="iqf_done"><i>✓</i><h3>' + (isQuote ? "이 견적 그대로 신청되었어요 :)" : "상담 신청이 접수됐어요") + '</h3>' +
+      '<p>' + (sent ? "카카오톡 <b>차큐</b> 채널에서<br>견적서를 확인해 주세요." : ch ? "아래 버튼을 눌러 카카오톡에서<br>바로 상담을 이어가 주세요." : "") + '</p>' +
       (j.id ? '<p style="font-size:12.5px;color:#80868b">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
       '<div class="iqf_btns" style="flex-direction:column">' +
       (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">카카오톡에서 상담 이어가기</a>' : '') +
