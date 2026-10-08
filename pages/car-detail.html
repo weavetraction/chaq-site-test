@@ -367,7 +367,7 @@
             var ext = useVM ? VM.getTrimColors(trimId,'EXTERIOR') : [], intc = useVM ? VM.getTrimColors(trimId,'INTERIOR') : [];
             // 이미지: 차큐 자체 제작 이미지(세대 × 외장색). 초기 색 = 재고 견적 색상(이름 일치) → 기본 색(추가금 0 첫 색) → 대표(default) → placeholder
             var extD0 = Math.max(0, ext.findIndex(function(c){return !c.extraPrice;}));
-            var initCK = (qv && qv.quoteColors.length && VM.colorKeyByName(trimId, qv.quoteColors[0])) || (ext.length ? VM.colorKeyOf(ext[extD0].colorId) : null);
+            var initCK = (qv && qv.quoteColors.length && (VM.colorKeyForQuote || VM.colorKeyByName)(trimId, qv.quoteColors[0])) || (ext.length ? VM.colorKeyOf(ext[extD0].colorId) : null);
             var img = VM.resolveImageUrl(trimId, [PH], true, initCK);
             document.querySelectorAll('.detail_car_visual img').forEach(function(im){ im.alt=name; im.src=img; im.onerror=function(){ this.onerror=null; this.src=PH; }; });
             var credit = VM.imageCredit(trimId, initCK);
@@ -473,7 +473,7 @@
             var yr=document.querySelector('.detail_year'); if(yr) yr.textContent = spec || (rec.year+(rec.trim?(' · '+rec.trim):''));
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
             // 이미지 우선순위: trim VERIFIED → lineup VERIFIED → 차큐 직접 이미지(rec.img) → placeholder  (rec.trimId 는 STEP 8 매핑 후 채워짐)
-            var recCK = (window.CHAQ_VM && rec.trimId && rec.ext) ? window.CHAQ_VM.colorKeyByName(rec.trimId, rec.ext) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상
+            var recCK = (window.CHAQ_VM && rec.trimId && rec.ext) ? (window.CHAQ_VM.colorKeyForQuote || window.CHAQ_VM.colorKeyByName)(rec.trimId, rec.ext) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상
             var recImg = (window.CHAQ_VM && rec.trimId) ? window.CHAQ_VM.resolveImageUrl(rec.trimId, [rec.img, PH], true, recCK) : (rec.img || PH);
             if (window.CHAQ_VM && rec.trimId) window.chaqSwapCarImage = function(tid, ck){ var u = window.CHAQ_VM.resolveImageUrl(tid, [null], true, ck); if(!u) return; document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ if(im.getAttribute('src')!==u){ im.onerror=function(){ this.onerror=null; this.src=PH; }; im.src=u; } }); };
             document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ im.alt=name; im.src=recImg; im.onerror=function(){ this.onerror=null; this.src=PH; }; });
