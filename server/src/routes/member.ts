@@ -4,8 +4,8 @@ import { limiter } from "../lib/limits.js";
 import { wrap, HttpError } from "../lib/http.js";
 import { config } from "../config.js";
 import { q } from "../db.js";
-import { integrations, kakaoLoginOn, smsOn, loginAvailable } from "../lib/integrations.js";
-import { Agree, currentMember, publicMember, issueMember, clearMember, sendCode, verifyPhone, kakaoState, readKakaoState, kakaoExchange, kakaoLogin, withdraw, setMarketing } from "../lib/members.js";
+import { integrations, kakaoLoginOn, smsOn, alimtalkOn, loginAvailable } from "../lib/integrations.js";
+import { Agree, currentMember, publicMember, setSelfPhone, issueMember, clearMember, sendCode, verifyPhone, kakaoState, readKakaoState, kakaoExchange, kakaoLogin, withdraw, setMarketing } from "../lib/members.js";
 import { reportView } from "../lib/inquiries.js";
 
 export const memberRouter = Router();
@@ -32,10 +32,12 @@ const back = (ret: string, tag: string) => ret + (ret.includes("#") ? "&" : "#")
 // ---------------------------------------------------------------- 내 정보 (+ 로그인 수단·채널톡 연결값)
 memberRouter.get("/api/me", wrap(async (req, res) => {
   const m = await currentMember(req), i = await integrations();
+  const sms = smsOn(i) || (!config.isProd && process.env.DEV_SMS === "1");
+  const chId = (String(i.kakaoChannelId || "").match(/_[A-Za-z0-9]+/) || [""])[0];   // 채널 URL 을 통째로 넣었어도 _xxxx 만
   res.json({
-    member: publicMember(m),
-    auth: { kakao: kakaoLoginOn(i), sms: smsOn(i) || (!config.isProd && process.env.DEV_SMS === "1"), required: loginAvailable(i) },
-    kakaoChannel: i.kakaoChannelId ? { chat: `https://pf.kakao.com/${i.kakaoChannelId}/chat`, home: `https://pf.kakao.com/${i.kakaoChannelId}` } : null,
+    member: publicMember(m, !sms),
+    auth: { kakao: kakaoLoginOn(i), sms, selfPhone: !sms, alimtalk: alimtalkOn(i), required: loginAvailable(i) },   // selfPhone: 인증문자 준비 전 — 카카오 회원 번호 직접 입력
+    kakaoChannel: chId ? { chat: `https://pf.kakao.com/${chId}/chat`, home: `https://pf.kakao.com/${chId}` } : null,
   });
 }));
 memberRouter.get("/api/me/inquiries", wrap(async (req, res) => {
@@ -46,6 +48,14 @@ memberRouter.get("/api/me/inquiries", wrap(async (req, res) => {
 memberRouter.post("/api/me/marketing", wrap(async (req, res) => {
   const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
   await setMarketing(m.id, req.body?.on === true); res.json({ ok: true });
+}));
+memberRouter.post("/api/me/phone", codeLimit, wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  const i = await integrations();
+  if (smsOn(i) || (!config.isProd && process.env.DEV_SMS === "1")) throw new HttpError("휴대폰 인증으로 확인해 주세요", 400);
+  await setSelfPhone(m.id, req.body?.phone, req.body?.name);
+  const mm = await currentMember(req);
+  res.json({ member: publicMember(mm, true) });
 }));
 memberRouter.post("/api/me/withdraw", wrap(async (req, res) => {
   const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);

@@ -67,6 +67,7 @@
     cond: ["조건을 더 바꿔보시려면 가입이 필요해요", "비회원은 조건 변경 횟수가 정해져 있어요. 3초 가입하면 제한 없이 비교할 수 있어요."],
     mypage: ["차큐 시작하기", "가입하면 상담 내역과 견적서를 어디서든 확인할 수 있어요."],
     phone: ["휴대폰 번호 확인", "견적서를 카카오톡(알림톡)으로 보내드리려면 휴대폰 번호 확인이 필요해요."],
+    phoneSelf: ["연락받을 휴대폰 번호", "담당 매니저가 이 번호와 카카오톡으로 견적 상담을 도와드려요."],
   };
   var opened = null;
   function closeSheet() { if (!opened) return; var o = opened; opened = null; o.el.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); clearInterval(o.timer); if (o.reject) o.reject(new Error("closed")); }
@@ -78,13 +79,18 @@
     return new Promise(function (resolve, reject) {
       closeSheet();
       if (!document.getElementById("auCss")) { var st = document.createElement("style"); st.id = "auCss"; st.textContent = CSS; document.head.appendChild(st); }
-      var A = (state && state.auth) || {}, phoneOnly = mode === "phone", R = REASON[phoneOnly ? "phone" : reason] || REASON.mypage;
+      var A = (state && state.auth) || {}, phoneOnly = mode === "phone", selfMode = phoneOnly && !A.sms, R = REASON[selfMode ? "phoneSelf" : phoneOnly ? "phone" : reason] || REASON.mypage;
+      if (!A.alimtalk && R === REASON.inquiry) R = ["3초 가입하고 견적 상담받기", "가입하면 담당 매니저가 이 견적 그대로 카카오톡·전화로 상담을 도와드려요."];   // 알림톡 준비 전
       var bg = document.createElement("div"); bg.className = "au_bg";
       bg.innerHTML = '<div class="au" role="dialog" aria-modal="true" aria-labelledby="auTitle"><button type="button" class="au_x" aria-label="닫기">×</button>' +
         '<h3 id="auTitle">' + esc(R[0]) + '</h3><p class="au_sub">' + esc(R[1]) + '</p>' +
         (!phoneOnly && A.kakao ? '<button type="button" class="au_kakao">' + KAKAO_SVG + '카카오로 3초 만에 시작하기</button>' : '') +
         (!phoneOnly && A.kakao && A.sms ? '<div class="au_or">또는 휴대폰 번호로</div>' : '') +
-        (A.sms || phoneOnly ? '<div class="au_phone">' +
+        (selfMode ? '<div class="au_phone">' +   // 인증문자 준비 전: 카카오 회원이 번호 직접 입력
+          '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"></span></label>' +
+          '<label class="f">이름 <small style="font-weight:400;color:#80868b">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>' +
+          '<p class="au_hint">상담 연락에만 사용해요. 혜택 소식은 보내지 않아요.</p></div>' :
+        (A.sms || phoneOnly) ? '<div class="au_phone">' +
           '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"><button type="button" class="au_btn2 au_send">인증번호 받기</button></span></label>' +
           '<label class="f au_codewrap" hidden>인증번호<span class="au_row"><input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6자리 숫자"></span><p class="au_timer"></p></label>' +
           (phoneOnly ? '' : '<label class="f au_namewrap" hidden>이름 <small style="font-weight:400;color:#80868b">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>') +
@@ -95,7 +101,7 @@
           '<label><input type="checkbox" data-req="privacy"><span>[필수] 개인정보 수집·이용 동의<small>휴대폰 번호·이름(카카오 가입 시 카카오 회원번호·닉네임), 상담 차량·조건 / 회원 관리·견적 상담·알림톡 안내 / 회원 탈퇴 시까지 (상담 기록은 상담 종료 후 1년)</small></span><a href="' + agreementsHref() + '#privacy" target="_blank" rel="noopener">보기</a></label>' +
           '<label><input type="checkbox" data-opt="marketing">[선택] 혜택·이벤트 소식 받기 (카카오톡·문자)</label></div>') +
         '<p class="au_err" role="alert"></p>' +
-        (A.sms || phoneOnly ? '<button type="button" class="au_go" disabled>' + (phoneOnly ? "확인" : "인증하고 시작하기") + '</button>' : '') +
+        (A.sms || phoneOnly ? '<button type="button" class="au_go"' + (selfMode ? '' : ' disabled') + '>' + (phoneOnly ? "확인" : "인증하고 시작하기") + '</button>' : '') +
         (!A.kakao && !A.sms && !phoneOnly ? '<p class="au_note">지금은 온라인 가입이 어려워요. <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p>' : '') +
         '</div>';
       document.body.appendChild(bg); document.body.style.overflow = "hidden"; document.addEventListener("keydown", onKey);
@@ -126,6 +132,17 @@
       if (!ph) return;
       ph.addEventListener("input", function () { ph.value = fmtPhone(ph.value); });
       setTimeout(function () { try { (A.kakao && !phoneOnly ? kb : ph).focus(); } catch (e) {} }, 60);
+      if (selfMode) {   // 번호 직접 입력 → 저장 (인증문자 없음)
+        go.addEventListener("click", function () {
+          err.textContent = ""; var d = ph.value.replace(/\D/g, ""), nm = box.querySelector('input[name="name"]');
+          if (!/^01[016789]\d{7,8}$/.test(d)) { err.textContent = "휴대폰 번호를 정확히 입력해 주세요 (예: 010-1234-5678)"; ph.focus(); return; }
+          go.disabled = true; go.textContent = "저장 중…";
+          api("/api/me/phone", { method: "POST", json: { phone: d, name: nm ? nm.value.trim() : "" } })
+            .then(function (j) { return me(true).then(function () { var r = o.reject; o.reject = null; closeSheet(); resolve(j.member); }); })
+            .catch(function (e) { go.disabled = false; go.textContent = "확인"; err.textContent = e.message; });
+        });
+        return;
+      }
       function startTimer() {
         var end = Date.now() + 5 * 60000, t = box.querySelector(".au_timer"); clearInterval(o.timer);
         o.timer = setInterval(function () { var s = Math.max(0, Math.round((end - Date.now()) / 1000)); t.textContent = s ? "남은 시간 " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") : "인증 시간이 지났어요. 인증번호를 다시 받아 주세요"; if (!s) clearInterval(o.timer); }, 500);

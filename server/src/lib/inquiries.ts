@@ -53,17 +53,17 @@ export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "
 const ipHash = (ip: string) => crypto.createHmac("sha256", config.jwtSecret).update(ip || "").digest("hex").slice(0, 16);
 
 type MemberLite = { id: number; name: string; nickname: string; phone: string | null; privacy_agreed_at?: string | null } | null;
-export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string; member?: MemberLite }) {
+export async function createInquiry(i: InquiryInputT, meta: { ip: string; ua: string; member?: MemberLite; phoneVerified?: boolean }) {
   const m = meta.member || null;
   const name = m ? (m.name || m.nickname || i.name) : i.name, phone = m?.phone || i.phone;
   const token = crypto.randomBytes(16).toString("base64url");
   const { rows } = await q(`INSERT INTO inquiries (source, kind, rec_id, trim_id, car_name, spec, trim_name, conditions, monthly, options, color, page_url, channel_member_id, ip_hash, user_agent, first_touch, last_touch, ga_client_id, fbp, fbc,
-      customer_name, phone, contact_time, message, privacy_agreed_at, member_id, report_token, snapshot)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28) RETURNING *`,
+      customer_name, phone, contact_time, message, privacy_agreed_at, member_id, report_token, snapshot, phone_verified)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29) RETURNING *`,
     [i.source, i.kind ?? null, i.recId ?? null, i.trimId ?? null, i.carName, i.spec, i.trimName, i.conditions, i.monthly ?? null, JSON.stringify(i.options), i.color, i.pageUrl, m ? "m" + m.id : i.channelMemberId ?? null, ipHash(meta.ip), meta.ua.slice(0, 300),
      i.firstTouch || {}, i.lastTouch || {}, i.gaClientId ?? null, i.fbp ?? null, i.fbc ?? null,
      name, phone ? fmtPhone(phone) : "", i.contactTime, i.message, m ? (m.privacy_agreed_at || new Date()) : i.phone && i.privacyAgreed ? new Date() : null,
-     m ? m.id : null, token, JSON.stringify(i.snapshot || {})]);
+     m ? m.id : null, token, JSON.stringify(i.snapshot || {}), meta.phoneVerified !== false]);
   onLeadCreated(rows[0], { ip: meta.ip, ua: meta.ua });
   return rows[0] as { id: number; created_at: string; report_token: string };
 }

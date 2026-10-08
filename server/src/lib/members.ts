@@ -12,7 +12,7 @@ import { integrations, smsOn } from "./integrations.js";
 export const MEMBER_COOKIE = "chaq_member";
 const DAYS = 90;   // 로그인 유지 기간
 
-export type Member = { id: number; kakao_id: string | null; phone: string | null; name: string; nickname: string; marketing_agreed_at: string | null; created_at: string; status: string };
+export type Member = { id: number; kakao_id: string | null; phone: string | null; phone_unverified?: string | null; name: string; nickname: string; marketing_agreed_at: string | null; created_at: string; status: string };
 export const Agree = (o: any) => ({ terms: o?.terms === true, privacy: o?.privacy === true, marketing: o?.marketing === true });
 export type AgreeT = ReturnType<typeof Agree>;
 
@@ -38,7 +38,22 @@ export async function currentMember(req: Request): Promise<Member | null> {
     return (r.rows[0] as Member) || null;
   } catch { return null; }
 }
-export const publicMember = (m: Member | null) => (m ? { id: m.id, name: m.name || m.nickname || "", phone: maskPhone(m.phone), hasPhone: !!m.phone, kakao: !!m.kakao_id, marketing: !!m.marketing_agreed_at, since: m.created_at } : null);
+/** 연락처: 인증된 번호 우선. 인증문자가 아직 없을 때(selfPhone)만 직접 입력 번호(미인증)를 씀 — 인증문자가 켜지면 미인증 회원은 다음 문의 때 인증 */
+export function contactOf(m: Member | null, selfPhone: boolean) {
+  if (!m) return null;
+  if (m.phone) return { phone: m.phone, verified: true };
+  if (selfPhone && m.phone_unverified) return { phone: m.phone_unverified, verified: false };
+  return null;
+}
+export const publicMember = (m: Member | null, selfPhone = false) => {
+  if (!m) return null; const c = contactOf(m, selfPhone);
+  return { id: m.id, name: m.name || m.nickname || "", phone: maskPhone(c ? c.phone : null), hasPhone: !!c, phoneVerified: !!c?.verified, kakao: !!m.kakao_id, marketing: !!m.marketing_agreed_at, since: m.created_at };
+};
+/** 인증문자 준비 전: 카카오 회원이 휴대폰 번호를 직접 입력(미인증 — 상담 연락에만 사용, 혜택 소식 발송 안 함) */
+export async function setSelfPhone(id: number, phone: string, name = "") {
+  const p = phoneDigits(phone); if (!p) throw new HttpError("휴대폰 번호를 정확히 입력해 주세요 (예: 010-1234-5678)");
+  await q(`UPDATE members SET phone_unverified = $2, name = CASE WHEN $3 <> '' THEN $3 ELSE name END WHERE id = $1`, [id, p, String(name || "").trim().slice(0, 30)]);
+}
 
 async function touch(id: number) { await q(`UPDATE members SET last_login_at = now() WHERE id = $1`, [id]); }
 function needAgree(a: AgreeT) { if (!a.terms || !a.privacy) throw new HttpError("이용약관과 개인정보 수집·이용에 동의해 주세요", 400); }
@@ -88,7 +103,7 @@ export async function verifyPhone(phone: string, code: string, agree: AgreeT, cu
         await c.query(`DELETE FROM members WHERE id = $1`, [current.id]);
         return { id: owner.id };
       }
-      await c.query(`UPDATE members SET phone = $2 WHERE id = $1`, [current.id, p]);
+      await c.query(`UPDATE members SET phone = $2, phone_unverified = NULL WHERE id = $1`, [current.id, p]);
       return { id: current.id };
     }
     if (owner) return { id: owner.id };
@@ -146,7 +161,7 @@ export async function kakaoLogin(k: { kakaoId: string; phone: string; name: stri
 export async function withdraw(id: number) {
   await tx(async (c) => {
     await c.query(`UPDATE inquiries SET member_id = NULL WHERE member_id = $1`, [id]);
-    await c.query(`UPDATE members SET status = 'WITHDRAWN', withdrawn_at = now(), kakao_id = NULL, phone = NULL, name = '', nickname = '', marketing_agreed_at = NULL WHERE id = $1`, [id]);
+    await c.query(`UPDATE members SET status = 'WITHDRAWN', withdrawn_at = now(), kakao_id = NULL, phone = NULL, phone_unverified = NULL, name = '', nickname = '', marketing_agreed_at = NULL WHERE id = $1`, [id]);
   });
 }
 export async function setMarketing(id: number, on: boolean) {
