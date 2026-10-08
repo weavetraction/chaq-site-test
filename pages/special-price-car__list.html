@@ -143,6 +143,11 @@
                 return null;
             }
 
+            function monthlyExact(rec, c) {   // 견적조회 전용: 거리·기간·초기유형이 정확히 일치하는 칸만 (빈칸이면 null)
+                var t = rec.cost && rec.cost[c.dist] && rec.cost[c.dist][c.term];
+                return (t && t[c.plan] != null) ? t[c.plan] : null;
+            }
+
             var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / 차량 데이터 모드: brandId, modelId, 등급 묶음 key · all = '전체 보기'
             // ★ 차량 모델 선택 = 차량 데이터(Vehicle Master) 기준: 견적이 없는 차량도 모두 선택 가능, 숫자 = 이 목록의 견적 차량 수(0대 가능)
             //   등급 = 큰 항목(연료·엔진·인승·구동 묶음, data/trim-groups.js). 세부 트림은 차량 상세에서 선택
@@ -219,8 +224,9 @@
                     if (!F.brand && !F.all) { guide('차량 브랜드를 선택해주세요'); return; }
                     if (!F.model && !F.all) { guide('차량 모델을 선택해주세요'); return; }
                     if (!F.trim && !F.all)  { guide('차량 등급을 선택해주세요'); return; }
+                    // 견적조회 = 같은 차량의 금융사별 견적 중 '고른 조건 그대로'의 최저가 (다른 조건 값으로 대신하지 않음)
                     var best=null, bestM=Infinity;
-                    arr.forEach(function(r){ var m=monthly(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    arr.forEach(function(r){ var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
                     if (!best && USE_VM && F.model) {   // 견적 데이터가 없는 차량 → 월 납입금 '별도문의'
                         var eg = F.trim ? TG.groupByKey(F.model, F.trim) : null, er = eg ? { g: eg, tid: groupRep(eg) } : modelRep(F.model);
                         var ed = er && er.tid ? VM.describe(er.tid) : null;

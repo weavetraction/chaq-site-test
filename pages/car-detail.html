@@ -517,8 +517,17 @@
             var applyBtn=document.querySelector('#optPop .opt_apply'); if(applyBtn) applyBtn.addEventListener('click', function(){ window.CHAQ_OPT_APPLIED=true; setTimeout(recompute,0); });
 
             // ===== 조건 → 월납입금/잔가/인수비용 계산 =====
-            function monthly(c){ var d=rec.cost&&rec.cost[c.dist]; if(!d) return null; var t=d[c.term]||d[Object.keys(d)[0]]; if(!t) return null; if(t[c.plan]!=null) return t[c.plan]; for(var p in t) return t[p]; return null; }
-            function resid(c){ var d=rec.resid&&rec.resid[c.dist]; if(!d) return null; if(d[c.term]!=null) return d[c.term]; for(var k in d) return d[k]; return null; }
+            // 견적조회: 같은 차량(트림ID)의 금융사별 견적 중 '고른 조건 그대로'의 최저가 견적을 그때그때 고른다 (조건을 바꾸면 금융사가 바뀔 수 있음)
+            var EST_POOL = (/[?&]from=estimate(&|$)/.test(location.search) && rec.trimId && String(rec.id)[0]==='e')
+                ? (DATA.estimate||[]).filter(function(r){ return r.trimId===rec.trimId; }) : null;
+            function exactCost(r,c){ var t=r.cost&&r.cost[c.dist]&&r.cost[c.dist][c.term]; return (t&&t[c.plan]!=null)?t[c.plan]:null; }
+            function pickEst(c){ var b=null,bm=Infinity; EST_POOL.forEach(function(r){ var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); return b; }
+            function monthly(c){
+                if(EST_POOL){ var b=pickEst(c); if(b){ rec=b; window.CHAQ_DETAIL_QUOTE=b; } return b?exactCost(b,c):null; }   // 문의도 이 견적(금융사)으로 저장
+                var d=rec.cost&&rec.cost[c.dist]; if(!d) return null; var t=d[c.term]||d[Object.keys(d)[0]]; if(!t) return null; if(t[c.plan]!=null) return t[c.plan]; for(var p in t) return t[p]; return null; }
+            function resid(c){
+                if(EST_POOL){ var d0=rec.resid&&rec.resid[c.dist]; return (d0&&d0[c.term]!=null)?d0[c.term]:null; }   // 최저가로 고른 견적의 같은 거리·기간 잔가만
+                var d=rec.resid&&rec.resid[c.dist]; if(!d) return null; if(d[c.term]!=null) return d[c.term]; for(var k in d) return d[k]; return null; }
             function readCond(){
                 function on(g){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+g+'"].on'); return b?b.textContent:''; }
                 var term=(on('term').match(/[0-9]+/)||['60'])[0];
