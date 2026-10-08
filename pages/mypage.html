@@ -52,7 +52,6 @@
             </section>
         </main>
 
-        <p class="mp_withdraw" id="mpWithdraw" hidden><button type="button" id="mpWithdrawBtn">회원 탈퇴</button></p>
 
         <footer class="chaq-biz-footer">
             <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
@@ -142,8 +141,7 @@
                 var st = AU.state() || {}, m = st.member, A = st.auth || {};
                 if (m) {
                     prof.innerHTML = '<span class="mp_pinfo"><strong>'+esc(m.name || '차큐 회원')+'님</strong><small class="mp_pnote">'+esc(m.phone || '휴대폰 번호 확인 전')+(m.kakao?' · 카카오 로그인':'')+'</small></span>'+
-                        '<span class="mp_pact"><button type="button" class="mp_pbtn" data-act="logout">로그아웃</button></span>'+
-                        '<label class="mp_mkt"><input type="checkbox" data-act="mkt"'+(m.marketing?' checked':'')+'> 혜택·이벤트 소식 받기 (카카오톡·문자)</label>';
+                        '<button type="button" class="mp_setting" aria-label="개인정보 설정" onclick="location.href=\'settings.html\'"></button>';
                     AU.api('/api/me/inquiries').then(function(j){
                         var rows = (j.rows||[]).filter(function(r){ return r.status !== 'SPAM'; });
                         document.getElementById('mpInqCount').textContent = rows.length ? rows.length+'건' : '';

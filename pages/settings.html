@@ -2,13 +2,14 @@
 <html lang="ko">
 <head>
     <meta name="robots" content="noindex">
-    <script>location.replace("mypage.html");   /* 회원(로그인) 기능이 열리기 전까지 마이페이지(이 기기 내 견적함)로 */</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>개인정보 설정</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
+    <style>.local-sub.settings main{visibility:hidden}.local-sub.settings.is-ready main{visibility:visible}.set_note{margin:2px 0 0;color:#8a8f96;font-size:12.5px;line-height:1.6;word-break:keep-all}</style>
 </head>
 <body class="local-sub sub-white settings">
     <div class="sub_shell">
@@ -37,65 +38,17 @@
                 <div class="set_row">
                     <span class="set_social">
                         <span class="set_social_ico kakao" aria-hidden="true"></span>
-                        <span class="set_social_txt"><strong>카카오</strong><small id="kakaoState">연결됨</small></span>
+                        <span class="set_social_txt"><strong>카카오</strong><small id="kakaoState">-</small></span>
                     </span>
-                    <button type="button" class="set_link_btn" id="kakaoBtn">해지</button>
                 </div>
             </section>
 
-            <!-- 지원금 입금 계좌 관리 -->
-            <section class="set_group">
-                <h2 class="set_group_title">지원금 입금 계좌 관리</h2>
-                <p class="set_group_desc">출고 지원금·캐시백이 입금될 계좌입니다.</p>
-
-                <div class="set_saved_acct" id="savedAcct" hidden>
-                    <span class="set_saved_acct_ico" aria-hidden="true"></span>
-                    <span class="set_saved_acct_txt"><small>등록된 계좌</small><strong id="savedAcctText"></strong></span>
-                </div>
-
-                <div class="set_field">
-                    <label class="set_flabel" for="bankSel">은행 선택</label>
-                    <select class="set_select" id="bankSel">
-                        <option value="">은행을 선택하세요</option>
-                        <option>국민은행</option>
-                        <option>신한은행</option>
-                        <option>우리은행</option>
-                        <option>하나은행</option>
-                        <option>NH농협은행</option>
-                        <option>IBK기업은행</option>
-                        <option>카카오뱅크</option>
-                        <option>토스뱅크</option>
-                        <option>케이뱅크</option>
-                        <option>SC제일은행</option>
-                        <option>부산은행</option>
-                        <option>iM뱅크(대구)</option>
-                        <option>경남은행</option>
-                        <option>광주은행</option>
-                        <option>전북은행</option>
-                        <option>제주은행</option>
-                        <option>새마을금고</option>
-                        <option>신협</option>
-                        <option>우체국예금</option>
-                        <option>Sh수협은행</option>
-                        <option>KDB산업은행</option>
-                        <option>씨티은행</option>
-                    </select>
-                </div>
-
-                <div class="set_field">
-                    <label class="set_flabel" for="acctInput">계좌번호</label>
-                    <input type="text" class="set_input" id="acctInput" placeholder="'-' 없이 숫자만 입력" inputmode="numeric" maxlength="20" autocomplete="off">
-                </div>
-
-                <button type="button" class="set_btn" id="acctSaveBtn" data-action="account-save">저장하기</button>
-                <p class="set_msg" id="acctMsg" hidden></p>
-            </section>
-
+            <!-- 지원금 입금 계좌 관리: 서버 저장·약관(금융정보 수집) 준비 후 다시 연결 -->
             <!-- 알림 설정 -->
             <section class="set_group">
                 <h2 class="set_group_title">알림 설정</h2>
                 <div class="set_row">
-                    <span class="set_switch_txt"><strong>마케팅 정보 수신 동의</strong><small>혜택·이벤트·신차 소식을 보내드려요</small></span>
+                    <span class="set_switch_txt"><strong>마케팅 정보 수신 동의</strong><small>혜택·이벤트·신차 소식을<br>카카오톡·문자로 보내드려요</small></span>
                     <label class="set_toggle">
                         <input type="checkbox" id="mktToggle" aria-label="마케팅 정보 수신 동의">
                         <i></i>
@@ -107,6 +60,7 @@
             <section class="set_group is-plain">
                 <button type="button" class="set_logout" id="logoutBtn" data-action="logout">로그아웃</button>
                 <button type="button" class="set_withdraw" id="withdrawBtn" data-action="withdraw">탈퇴하기</button>
+                <p class="set_note">탈퇴하면 가입 정보가 지워지고 되돌릴 수 없어요.<br>진행 중인 상담 기록은 상담 종료 후 1년간 보관 후 파기돼요.</p>
             </section>
         </main>
 
@@ -117,66 +71,34 @@
         </footer>
     </div>
 
+    <script src="data/auth.js"></script>   <!-- 회원 정보·로그아웃·탈퇴 -->
     <script>
+        /* 개인정보 설정 (회원 전용): 이름·휴대폰(가린 번호)·카카오 연결 · 마케팅 수신 · 로그아웃 · 탈퇴 */
         (function () {
-            var $ = function (id) { return document.getElementById(id); };
-            var pf = (window.CHAQ_MYPAGE || {}).profile || {};
-
-            // 계정 정보 (이름 · 전화번호 일부) — CRM 회원정보 연동
-            $('setName').textContent = pf.name || '-';
-            $('setPhone').textContent = pf.phone || '-';
-
-            // 공통 안내 메시지
-            function showMsg(el, text, ok) {
-                el.textContent = text;
-                el.classList.toggle('is-err', !ok);
-                el.hidden = false;
-                clearTimeout(el._t);
-                if (ok) el._t = setTimeout(function () { el.hidden = true; }, 2600);
-            }
-
-            // 카카오 연결 / 해지 (소셜은 카카오만 지원)
-            var kakaoConnected = true;
-            function renderKakao() {
-                $('kakaoState').textContent = kakaoConnected ? '연결됨' : '연결 안 됨';
-                $('kakaoBtn').textContent = kakaoConnected ? '해지' : '연결하기';
-                $('kakaoBtn').classList.toggle('is-connect', !kakaoConnected);
-            }
-            $('kakaoBtn').addEventListener('click', function () {
-                kakaoConnected = !kakaoConnected;
-                renderKakao();
+            var $ = function (id) { return document.getElementById(id); }, AU = window.CHAQ_AUTH, U = window.CHAQ_UTIL;
+            if (!AU) return location.replace('mypage.html');
+            AU.me(true).then(function (m) {
+                var A = (AU.state() || {}).auth || {};
+                if (!m) return location.replace((A.kakao || A.sms) ? 'login.html?return=settings.html' : 'mypage.html');   // 비회원 → 로그인 (로그인 수단 준비 전이면 마이페이지)
+                $('setName').textContent = m.name || '-';
+                $('setPhone').textContent = m.phone ? m.phone + (m.phoneVerified === false ? ' (미인증)' : '') : '-';
+                $('kakaoState').textContent = m.kakao ? '연결됨' : '연결 안 됨';
+                $('mktToggle').checked = !!m.marketing;
+                document.body.classList.add('is-ready');
             });
-            renderKakao();
-
-            // 계좌번호 숫자만
-            $('acctInput').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
-
-            // 등록된(저장된) 계좌 표시
-            function maskAcct(n) { n = String(n || '').replace(/\D/g, ''); return n.length <= 7 ? n : n.slice(0, 4) + '····' + n.slice(-3); }
-            function renderSavedAcct(bank, number) {
-                if (!bank || !number) { $('savedAcct').hidden = true; return; }
-                $('savedAcctText').textContent = bank + ' ' + maskAcct(number);
-                $('savedAcct').hidden = false;
-            }
-            var savedAccount = (window.CHAQ_MYPAGE || {}).account;
-            if (savedAccount) { renderSavedAcct(savedAccount.bank, savedAccount.number); }
-
-            // 지원금 입금 계좌 저장
-            $('acctSaveBtn').addEventListener('click', function () {
-                if (!$('bankSel').value) { showMsg($('acctMsg'), '입금받을 은행을 선택해주세요.', false); return; }
-                if ($('acctInput').value.length < 8) { showMsg($('acctMsg'), '계좌번호를 정확히 입력해주세요.', false); return; }
-                renderSavedAcct($('bankSel').value, $('acctInput').value);
-                showMsg($('acctMsg'), '지원금 입금 계좌가 저장되었습니다.', true);
+            $('mktToggle').addEventListener('change', function () {
+                var el = this;
+                AU.api('/api/me/marketing', { method: 'POST', json: { on: el.checked } })
+                    .then(function () { U.toast(el.checked ? '혜택 소식을 보내드릴게요' : '혜택 소식 받기를 껐어요'); })
+                    .catch(function () { el.checked = !el.checked; U.toast('잠시 후 다시 시도해 주세요'); });
             });
-
-            // 로그아웃
             $('logoutBtn').addEventListener('click', function () {
-                if (confirm('로그아웃 하시겠어요?')) location.href = 'login.html';
+                if (!confirm('로그아웃 하시겠어요?')) return;
+                AU.logout().then(function () { location.replace('../index.html'); });
             });
-
-            // 회원 탈퇴
             $('withdrawBtn').addEventListener('click', function () {
-                if (confirm('정말 탈퇴하시겠어요?\n보유 쿠폰·견적·문의 내역이 모두 삭제됩니다.')) location.href = 'login.html';
+                if (!confirm('정말 탈퇴하시겠어요?\n가입 정보가 지워지고 되돌릴 수 없어요.\n(진행 중인 상담 기록은 상담 종료 후 1년간 보관 후 파기돼요)')) return;
+                AU.api('/api/me/withdraw', { method: 'POST' }).then(function () { U.toast('탈퇴가 완료됐어요'); setTimeout(function () { location.replace('../index.html'); }, 800); }).catch(function (e) { U.toast(e.message); });
             });
         })();
     </script>
