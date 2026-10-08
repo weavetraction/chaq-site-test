@@ -78,8 +78,8 @@
                 <div class="filter_group">
                     <span class="filter_sub">주행 거리</span>
                     <div class="filter_row">
-                        <button type="button" class="filter_chip" data-group="dist">1만 km</button>
-                        <button type="button" class="filter_chip on" data-group="dist">2만 km</button>
+                        <button type="button" class="filter_chip on" data-group="dist">1만 km</button>
+                        <button type="button" class="filter_chip" data-group="dist">2만 km</button>
                         <button type="button" class="filter_chip" data-group="dist">3만 km</button>
                     </div>
                 </div>
@@ -311,7 +311,9 @@
                     var D = window.CHAQ || {}, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1];
                     var rec = window.CHAQ_DETAIL_QUOTE || (idm ? (D.stock || []).concat(D.fast || [], D.estimate || []).filter(function (r) { return r.id === idm; })[0] : null);
                     var OP = rec ? window.CHAQ_OPT_PRICES(rec) : null;
-                    if (OP && OP.items.length) {
+                    if (rec && (!OP || !OP.items.filter(function (it) { return !it.none; }).length)) {   // 재고특가·빠른인도: 장착 옵션 없음
+                        html = '<p class="opt_note opt_none">추가옵션이 포함되어 있지 않습니다.</p>';
+                    } else if (OP && OP.items.length) {
                         var rows = '';
                         OP.items.forEach(function (it) {
                             if (it.none) { rows += '<div class="opt_row is-static"><span>추가 옵션 없음</span></div>'; return; }
@@ -551,7 +553,7 @@
                 function on(g){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+g+'"].on'); return b?b.textContent:''; }
                 var term=(on('term').match(/[0-9]+/)||['60'])[0];
                 var it=on('init'); var plan= it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0');
-                var dist= (on('dist').match(/(\d)만/)||[0,'2'])[1];   // 1만 / 2만 / 3만 km
+                var dist= (on('dist').match(/(\d)만/)||[0,'1'])[1];   // 1만 / 2만 / 3만 km
                 return {term:term,plan:plan,dist:dist};
             }
             function animateNum(el, to, em){ window.CHAQ_UTIL.animateNum(el, to, em, '원'); }
@@ -665,7 +667,7 @@
                 function cond() {
                     function on(gr){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+gr+'"].on'); return b?b.textContent:''; }
                     var it = on('init');
-                    return { term: (on('term').match(/[0-9]+/)||['60'])[0], plan: it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'), dist: (on('dist').match(/(\d)만/)||[0,'2'])[1] };
+                    return { term: (on('term').match(/[0-9]+/)||['60'])[0], plan: it.indexOf('보증')>-1?'b':(it.indexOf('선납')>-1?'s':'0'), dist: (on('dist').match(/(\d)만/)||[0,'1'])[1] };
                 }
                 function condQ(){ var c = cond(); return '&term='+c.term+'&plan='+c.plan+'&dist='+c.dist; }
                 // ---- 바텀시트 (옵션선택 팝업과 같은 디자인)
@@ -800,7 +802,7 @@
             function ctx() {
                 var c = I && I.detailContext ? I.detailContext() : {}, k = c.conditions || {};
                 return { id: c.recId || null, trimId: c.trimId || null, carName: ((c.carName || '') + ' ' + (c.trimName || '')).trim(), spec: c.spec || '',
-                    term: k.term || '60', plan: k.plan || '0', dist: k.dist || '2', price: c.monthly || null, product: k.product || '' };
+                    term: k.term || '60', plan: k.plan || '0', dist: k.dist || '1', price: c.monthly || null, product: k.product || '' };
             }
             var like = document.getElementById('likeBtn'); if (!like) return;
             function paint(on) { like.classList.toggle('is-on', on); like.style.color = on ? '#18a85c' : ''; like.setAttribute('aria-pressed', on ? 'true' : 'false'); }

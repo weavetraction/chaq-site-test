@@ -26,7 +26,7 @@
     function on(g) { var b = document.querySelector('.detail_conds .filter_chip[data-group="' + g + '"].on'); return b ? b.textContent : ""; }
     var term = (on("term").match(/[0-9]+/) || ["60"])[0], it = on("init");
     var plan = it.indexOf("보증") > -1 ? "b" : (it.indexOf("선납") > -1 ? "s" : "0");
-    var dist = (on("dist").match(/(\d)만/) || [0, "2"])[1];   // 1만 / 2만 / 3만 km
+    var dist = (on("dist").match(/(\d)만/) || [0, "1"])[1];   // 1만 / 2만 / 3만 km
     var lease = /운용리스/.test(on("type"));
     return { term: term, plan: plan, dist: dist, lease: lease };
   }

@@ -35,7 +35,7 @@
             <!-- 최근 본 견적 -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>최근 본 견적</h2></div>
-                <p class="mp_note">이 기기에서 최근에 본 차량이에요.<br>월 납입금은 60개월 · 초기비용 0원 · 연 2만 km 기준이에요.</p>
+                <p class="mp_note">내가 최근에 본 차량이에요.<br>월 납입금은 60개월 · 초기비용 0원 · 연 1만 km 기준이에요.</p>
                 <div class="mp_recent_scroll" id="mpRecent"></div>
             </section>
 
@@ -100,21 +100,33 @@
             }).join('') || '<p class="mp_empty">아직 신청한 상담이 없어요.<br>차량 상세의 \'이 조건 그대로 문의하기\'로 신청해 보세요.</p>';
 
             // 내가 저장한 견적 (차량 상세 '견적 저장하기')
-            var saved = ST.saved().map(function(q){ return { q:q, r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; });
-            document.getElementById('mpSavedCount').textContent = saved.length+'건';
-            document.getElementById('mpSaved').innerHTML = saved.map(function(x){
-                var q=x.q, c={term:q.term||'60',plan:q.plan||'0',dist:q.dist||'2'}, href=hrefOf(x,c);
-                var m = q.price!=null ? q.price : (x.r?monthly(x.r,c):null);   // 저장 당시 월 납입금(스냅샷)
-                return '<a class="mp_qcard"'+(href?' href="'+href+'"':'')+'>'+
-                    '<img src="'+imgOf(x)+'" alt="">'+
-                    '<span class="mp_qinfo"><small class="cn">'+vmName(x)+'</small>'+
-                    '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong>'+
-                    '<span class="mp_qcond">'+esc(condText(c))+'</span></span>'+
-                    '<span class="mp_qcta">확인하기</span></a>';
-            }).join('') || '<p class="mp_empty">아직 저장한 견적이 없어요.<br>차량 상세에서 \'견적 저장하기\'를 눌러 보세요.</p>';
+            var TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+            var savedList=[];
+            function renderSaved(){
+                savedList = ST.saved().map(function(q){ return { q:q, r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; });
+                document.getElementById('mpSavedCount').textContent = savedList.length+'건';
+                document.getElementById('mpSaved').innerHTML = savedList.map(function(x, i){
+                    var q=x.q, c={term:q.term||'60',plan:q.plan||'0',dist:q.dist||'1'}, href=hrefOf(x,c);
+                    var m = q.price!=null ? q.price : (x.r?monthly(x.r,c):null);   // 저장 당시 월 납입금(스냅샷)
+                    return '<a class="mp_qcard"'+(href?' href="'+href+'"':'')+'>'+
+                        '<img src="'+imgOf(x)+'" alt="">'+
+                        '<span class="mp_qinfo"><small class="cn">'+vmName(x)+'</small>'+
+                        '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong>'+
+                        '<span class="mp_qcond">'+esc(condText(c))+'</span></span>'+
+                        '<button type="button" class="mp_qdel" data-i="'+i+'" aria-label="저장한 견적 삭제">'+TRASH+'</button></a>';
+                }).join('') || '<p class="mp_empty">아직 저장한 견적이 없어요.<br>차량 상세에서 \'견적 저장하기\'를 눌러 보세요.</p>';
+            }
+            renderSaved();
+            // 휴지통: 카드 이동 없이 이 견적만 삭제
+            document.getElementById('mpSaved').addEventListener('click', function(e){
+                var b = e.target.closest ? e.target.closest('.mp_qdel') : null; if(!b) return;
+                e.preventDefault(); e.stopPropagation();
+                var x = savedList[+b.getAttribute('data-i')]; if(!x) return;
+                ST.unsave(x.q); renderSaved(); if (U.toast) U.toast('저장한 견적을 삭제했어요');
+            });
 
             // 최근 본 견적 (가로 스크롤 · 이 기기에서 본 차량 상세)
-            var dc={term:'60',plan:'0',dist:'2'};
+            var dc={term:'60',plan:'0',dist:'1'};
             var recent = ST.recent().map(function(q){ return { r: q.id ? car(q.id) : null, trimId:q.trimId, carName:q.carName }; }).filter(function(x){ return x.r || x.trimId; });
             document.getElementById('mpRecent').innerHTML = recent.map(function(x){
                 var m=x.r?monthly(x.r,dc):null, href=hrefOf(x,dc);

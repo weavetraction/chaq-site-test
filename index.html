@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#20a65a">
   <title>차큐 장기렌트</title>
   <link rel="preload" href="font/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261008-1">
+  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261009-1">
     <script src="pages/data/api-config.js"></script>
     <script src="pages/data/site-util.js"></script>
     <script src="pages/data/analytics.js"></script>
@@ -86,7 +86,7 @@
       <section class="stock-section content-pad section-space">
         <div class="section-heading">
           <h2>장기렌트 재고특가</h2>
-          <p>초기비용 0 · 주행거리 2만km · 60개월</p>
+          <p>초기비용 0 · 주행거리 1만km · 60개월</p>
         </div>
         <div class="price-filters" role="group" aria-label="월 납입금 필터">
           <span class="pf-label">월 이용료</span>
@@ -256,7 +256,7 @@
       function carNmH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : carNm(r); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
       function carNm(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명
   var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
-      function monthly(r){ try{ return r.cost['2']['60']['0']; }catch(e){ return null; } }
+      function monthly(r){ try{ return r.cost['1']['60']['0']; }catch(e){ return null; } }   // 기본 견적 기준: 60개월 · 초기비용 0원 · 연 1만 km
       function pg(m){ return m<500000?'30':(m<800000?'50':'80'); }
       var perGroup={'30':0,'50':0,'80':0}, picks=[];
       var stockPick = pickBy(C.stock, 'stock', function(r){ return r.id; }), stockCap = SEC('stock').count;
@@ -332,7 +332,7 @@
         fastEl.innerHTML=fastSrc.map(function(r){
           var m=monthly(r); m=(m==null)?0:m;
           var oc=(r.opts?r.opts.length:0);
-          return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=2" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
+          return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=1" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
             '<span class="stock-copy"><small class="cn">'+carNmH(r)+'</small>'+

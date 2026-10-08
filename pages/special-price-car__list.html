@@ -45,7 +45,8 @@
                     <div class="filter_group">
                         <span class="filter_sub">주행 거리</span>
                         <div class="filter_row">
-                            <button class="filter_chip on" type="button">2만 km</button>
+                            <button class="filter_chip on" type="button">1만 km</button>
+                            <button class="filter_chip" type="button">2만 km</button>
                             <button class="filter_chip" type="button">3만 km</button>
                         </div>
                     </div>
@@ -131,7 +132,7 @@
                 var term = (onText(groups[0]).match(/[0-9]+/)||['60'])[0];
                 var initTxt = onText(groups[1]);
                 var plan = initTxt.indexOf('보증')>-1 ? 'b' : (initTxt.indexOf('선납')>-1 ? 's' : '0');
-                var dist = onText(groups[2]).indexOf('3만')>-1 ? '3' : '2';
+                var dist = (onText(groups[2]).match(/(\d)만/)||[0,'1'])[1];   // 1만 / 2만 / 3만 km (기본 1만)
                 return {term:term, plan:plan, dist:dist};
             }
             function monthly(rec, c) {
@@ -336,7 +337,7 @@
                 if(hideZero()) rows=rows.filter(function(x){ return x.n>0; });
                 var html='';
                 function row(x){ return '<button type="button" class="fpop_row'+(x.n?'':' is-zero')+'" data-name="'+escT(x.id)+'" data-label="'+escT(x.name)+'"><span class="bname">'+escT(x.name)+(x.sub?'<small class="bsub">'+escT(x.sub)+'</small>':'')+'</span><span class="bcount">'+x.n+'</span></button>'; }
-                if(secs) secs.forEach(function(sname){ var rs=rows.filter(function(x){ return x.sec===sname; }); if(!rs.length) return; html+='<p class="fpop_sec">'+sname+'</p>'+rs.map(row).join(''); });
+                if(secs) secs.forEach(function(sname){ var rs=rows.filter(function(x){ return x.sec===sname; }); if(!rs.length) return; html+='<p class="fpop_sec">'+sname+'</p>'+(type==='brand'?'<div class="fpop_grid">'+rs.map(row).join('')+'</div>':rs.map(row).join('')); });   // 브랜드: 한 줄에 3개
                 else html=rows.map(row).join('');
                 if(!rows.length) html='<p class="fpop_empty">'+(hideZero()?'견적 차량이 없습니다. \'0대 제외\'를 끄면 전체 차량을 볼 수 있어요.':'선택할 수 있는 차량이 없습니다.')+'</p>';
                 return {html:html,total:total};
@@ -359,9 +360,11 @@
                 ['국산','수입',''].forEach(function(g){
                     if(!groups[g].length) return;
                     if(g) html+='<p class="fpop_sec">'+g+'</p>';
+                    if(type==='brand') html+='<div class="fpop_grid">';   // 브랜드: 한 줄에 3개
                     groups[g].forEach(function(n){
                         html+='<button type="button" class="fpop_row" data-name="'+esc(n)+'"><span class="bname">'+n+'</span><span class="bcount">'+d.counts[n]+'</span></button>';
                     });
+                    if(type==='brand') html+='</div>';
                 });
                 popBody.innerHTML=html;
                 popApply.textContent=(isEstimate?'':d.total+'대 ')+'전체 보기';

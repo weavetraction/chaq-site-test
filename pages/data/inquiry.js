@@ -49,7 +49,9 @@
     var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
     var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null,
       options: opts.slice(0, 40), ext: String(ext).slice(0, 80), int: String((rec && rec["int"]) || "").slice(0, 80), delivery: kind === "stock" ? "재고 차량 · 바로 출고" : kind === "fast" ? "빠른 인도" : "" };
-    if (/^(\.\.\/)?assets\/|^https:\/\//.test(src) && src.length <= 300) o.image = src;
+    // 이미지 주소는 '../' 없이 사이트 기준(assets/…)으로 — '../' 가 들어가면 AWS 방화벽(WAF)이 경로 공격으로 보고 문의 자체를 막음(261009 운영 확인)
+    src = src.replace(/^(\.\.\/)+/, "").replace(/^\//, "");
+    if (/^assets\/|^api\/pub\/media\/|^https:\/\//.test(src) && src.length <= 300) o.image = /^api\//.test(src) ? "/" + src : src;
     return o;
   }
   function localMessage(c) {
