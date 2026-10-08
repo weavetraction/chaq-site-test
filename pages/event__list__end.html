@@ -6,6 +6,7 @@
     <title>차큐 이벤트</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white">
@@ -52,7 +53,7 @@
             var list = all.filter(function(e){ return e.status===STATUS; });
             var wrap = document.getElementById('eventList');
             var empty = document.getElementById('eventEmpty');
-            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var esc = window.CHAQ_UTIL.esc;
             if(!list.length){ wrap.hidden=true; empty.hidden=false; return; }
             wrap.innerHTML = list.map(function(e){
                 return '<a class="event_card" href="event__detail.html?id='+encodeURIComponent(e.id)+'">'+

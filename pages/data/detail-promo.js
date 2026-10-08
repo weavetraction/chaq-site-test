@@ -10,7 +10,7 @@
   // 배너: 여러 장이면 배열에 추가 (1장이면 시안처럼 좌우가 보이도록 같은 배너를 이어 붙임)
   var BANNERS = [{ src: IMG + "detail-banner-quote.jpg", alt: "여러 곳에 견적을 요청할 필요 없이 내 조건에 딱 맞는 최저가 견적을 10초 만에 확인하세요! 재고부터 월 납입금까지 직접 비교해보세요.", href: null }];
 
-  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  var esc = root.CHAQ_UTIL.esc;   // 공통 site-util.js
   function norm(s) { return String(s || "").toLowerCase().replace(/[\s·\-_/()]+/g, ""); }
 
   // ---------------------------------------------------------------- 현재 차량·조건 (car-detail.html 과 같은 규칙)
@@ -35,7 +35,7 @@
   function monthlyLoose(r, c) { var d = r.cost && r.cost[c.dist]; if (!d) return null; var t = d[c.term] || d[Object.keys(d)[0]]; if (!t) return null; if (t[c.plan] != null) return t[c.plan]; for (var p in t) return t[p]; return null; }   // 페이지 표시값과 동일
   function familyOf(r) { var VM = root.CHAQ_VM; if (VM && r.trimId) { var d = VM.describe(r.trimId); if (d) return d.model.familyKey || d.model.id; } return norm(r.brand) + "|" + norm(r.model); }
   function vmName(r) { var VM = root.CHAQ_VM; if (!VM || !r.trimId) return null; var d = VM.describe(r.trimId); return d ? (d.brandName + " " + d.modelName) : null; }   // 짧은 차명(모델 단위)
-  function carImg(r) { var VM = root.CHAQ_VM; return (VM && r.trimId && VM.resolveImageUrl) ? (VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote ? VM.colorKeyForQuote(r.trimId, r.ext) : null) || PH) : PH; }
+  var carImg = root.CHAQ_UTIL.carImg;   // 공통 site-util.js
 
   /** 같은 조건 · 같은 월 납입금대(10만원 단위) 다른 차량. 없으면 월 납입금이 가까운 차량 */
   function sameCondCars(cur, c, max) {

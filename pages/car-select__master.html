@@ -6,6 +6,7 @@
     <title>차큐 차량선택</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-special-list master-select view-estimate">
@@ -123,7 +124,7 @@
             document.title = '차큐 ' + T.title;
 
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
-            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
 
             var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / VM: brandId, modelId, 등급 묶음 key(data/trim-groups.js) · all = '전체 보기'
             var TG = window.CHAQ_TRIM_GROUPS; if (!TG) USE_VM = false;
@@ -135,7 +136,7 @@
             if (zeroToggle && USE_VM) zeroToggle.checked = false;   // 기본: 차량 데이터의 모든 차량 노출
             function hideZero(){ return !!(zeroToggle && zeroToggle.checked); }
             function matches(r){ return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model)&&(!F.trim||r.trim===F.trim); }
-            function esc2(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var esc2 = window.CHAQ_UTIL.esc;
 
             var listEl = document.getElementById('stockList');
             var estEl = document.getElementById('estCard');
@@ -198,7 +199,7 @@
             var popBody=document.getElementById('fpopBody');
             var popApply=document.getElementById('fpopApply');
             var currentFilter=null;
-            function esc(x){return String(x).replace(/"/g,'&quot;');}
+            var esc = window.CHAQ_UTIL.esc;
             function optionList(type){
                 var base = records.filter(function(r){
                     if (type==='brand') return true;

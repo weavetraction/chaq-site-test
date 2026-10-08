@@ -8,6 +8,7 @@
     <script>document.documentElement.classList.add('chaq-detail-loading'); setTimeout(function(){ document.documentElement.classList.remove('chaq-detail-loading'); }, 5000);</script>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-car-detail">
@@ -343,19 +344,9 @@
             var useVM = !qv || qv.vmUsable;               // 연식 차이 2년 이상이면 VM 옵션·색상·기본품목 노출 안 함 (1년 이내는 기준 연식 표기)
             var vmYearTag = (qv && !qv.sameYear && qv.vmUsable) ? (" ("+qv.vmModelYear+"년형 공식 가격표 기준)") : "";
             var PH = "../assets/icons/car-placeholder.svg";
-            var won=function(n){return (n||0).toLocaleString('ko-KR');};
-            function esc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
-            function hex(name){
-                var n=String(name||'');
-                if(/화이트|white|스노우|아이보리|백/i.test(n)) return '#eef0f2';
-                if(/블랙|black|느와르|오닉스|원톤|모노톤/i.test(n)) return '#1b1b1d';
-                if(/그레이|gray|grey|실버|silver|건메탈|메탈릭|metallic/i.test(n)) return '#9aa0a6';
-                if(/네이비|navy|블루|blue/i.test(n)) return '#3b5aa6';
-                if(/레드|red|버건디|루비|burgundy/i.test(n)) return '#b8352f';
-                if(/그린|green|카키|세이지|khaki/i.test(n)) return '#3d7a4e';
-                if(/브라운|브론즈|베이지|탄|카퍼|골드|gold|brown|bronze|beige|코냑/i.test(n)) return '#8a6d4b';
-                return '#d0d3d7';
-            }
+            var won = window.CHAQ_UTIL.won;
+            var esc = window.CHAQ_UTIL.esc;
+            var hex = window.CHAQ_UTIL.hex;   // 색상명 → 색상칩(공통 site-util.js)
             // 이름 · 라인업 · 등급
             var name = d.fullName;
             document.querySelector('.detail_header h1').textContent = name;
@@ -444,7 +435,7 @@
             var rec = window.CHAQ_DETAIL_QUOTE || (idm ? all.filter(function(r){return r.id===idm;})[0] : null);
             if (!rec) rec = (DATA.stock&&DATA.stock[0]) || all[0];
             if (!rec) return;
-            var won=function(n){return (n||0).toLocaleString('ko-KR');};
+            var won = window.CHAQ_UTIL.won;
             // 포함 사항(선팅·블박·탁송): 견적 데이터에 Y/N 이 있으면 그대로, 없으면 기본 표시(모두 포함). 견적조회 진입은 '실시간 최저가' 태그 유지
             if (rec.incl && !/[?&]from=estimate(&|$)/.test(location.search)) {
                 var incW = document.querySelector('.detail_includes'), incAny = false;
@@ -453,17 +444,7 @@
                     var incL = incW.querySelector('.include-label'); if (incL && !incAny) incL.textContent = '선팅·블박·탁송 별도';
                 }
             }
-            function hex(name){
-                var n=String(name||'');
-                if(/화이트|white|스노우|아이보리|백/.test(n)) return '#eef0f2';
-                if(/블랙|black|느와르|오닉스|원톤/.test(n)) return '#1b1b1d';
-                if(/그레이|gray|grey|실버|silver|건메탈|메탈릭/.test(n)) return '#9aa0a6';
-                if(/네이비|navy|블루|blue/.test(n)) return '#3b5aa6';
-                if(/레드|red|버건디|루비/.test(n)) return '#b8352f';
-                if(/그린|green|카키/.test(n)) return '#3d7a4e';
-                if(/브라운|브론즈|베이지|탄|카퍼|골드|gold/.test(n)) return '#8a6d4b';
-                return '#d0d3d7';
-            }
+            var hex = window.CHAQ_UTIL.hex;   // 색상명 → 색상칩(공통 site-util.js)
             var name = (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(rec) : (rec.brand+' '+rec.model);   // 차량 데이터와 연결된 견적은 카탈로그 차명
             if (!VMQ) {
             document.querySelector('.detail_header h1').textContent = name;
@@ -556,16 +537,7 @@
                 var dist= (on('dist').match(/(\d)만/)||[0,'2'])[1];   // 1만 / 2만 / 3만 km
                 return {term:term,plan:plan,dist:dist};
             }
-            function animateNum(el, to, em){
-                if(!el) return;
-                var from=parseInt((el.textContent||'').replace(/[^0-9]/g,''))||0;
-                if(to==null){ el.innerHTML=em?'—<em>원</em>':'—원'; return; }
-                var dur=480, t0=performance.now();
-                function put(v){ el.innerHTML = won(v)+(em?'<em>원</em>':'원'); }
-                if(from===to){ put(to); return; }
-                function frame(t){ var p=Math.min(1,(t-t0)/dur); var e=1-Math.pow(1-p,3); put(Math.round(from+(to-from)*e)); if(p<1) requestAnimationFrame(frame); }
-                requestAnimationFrame(frame);
-            }
+            function animateNum(el, to, em){ window.CHAQ_UTIL.animateNum(el, to, em, '원'); }
             function recompute(){
                 var c=readCond();
                 var typeBtn=document.querySelector('.detail_conds .filter_chip[data-group="type"].on');
@@ -648,7 +620,7 @@
                 var t = tid ? VM.getTrim(tid) : null, g = tid ? TG.groupOfTrim(tid) : null;
                 if (!t && !(isStock && rec)) return;
                 var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
-                var won = function(n){ return (n||0).toLocaleString('ko-KR'); };
+                var won = window.CHAQ_UTIL.won;
                 var man = function(n){ return n ? (Math.round(n/10000)).toLocaleString('ko-KR')+'만원' : ''; };
                 var CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>';
                 function priceOf(tr, r){ var lp = tr && VM.getListPrice ? VM.getListPrice(tr.id) : null; return (lp && lp.price) || (r && r.base) || null; }   // 트림 가격(차량 데이터 기본가), 없으면 견적 차량가

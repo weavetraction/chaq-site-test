@@ -6,6 +6,7 @@
     <title>차큐 재고특가</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-special-list">
@@ -119,19 +120,10 @@
             if (isEstimate) document.body.classList.add('view-estimate');
 
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
-            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
 
-            var won = function (n) { return (n||0).toLocaleString('ko-KR'); };
-            function animateNum(el, to, em){
-                if(!el) return;
-                var from=parseInt((el.textContent||'').replace(/[^0-9]/g,''))||0;
-                if(to==null){ el.innerHTML=em?'—<em>원</em>':'—'; return; }
-                var dur=480, t0=performance.now();
-                function set(v){ el.innerHTML = won(v)+(em?'<em>원</em>':'원'); }
-                if(from===to){ set(to); return; }
-                function frame(t){ var p=Math.min(1,(t-t0)/dur); var e=1-Math.pow(1-p,3); set(Math.round(from+(to-from)*e)); if(p<1) requestAnimationFrame(frame); }
-                requestAnimationFrame(frame);
-            }
+            var won = window.CHAQ_UTIL.won;
+            function animateNum(el, to, em){ window.CHAQ_UTIL.animateNum(el, to, em); }
 
             function cond() {
                 var groups = document.querySelectorAll('.filter_panel .filter_group');
@@ -184,7 +176,7 @@
             function modelRep(mid){ var gs = TG.groups(mid); return gs.length ? { g: gs[0], tid: groupRep(gs[0]) } : null; }
             function vmCount(pred){ var n=0; records.forEach(function(r){ var k=VMK[r.id]; if(k && pred(k)) n++; }); return n; }
             function vmImg(tid){ try { return (tid && VM.resolveImageUrl(tid,[PH],true)) || PH; } catch(e){ return PH; } }
-            function escT(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var escT = window.CHAQ_UTIL.esc;
             function carNameH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : escT(carName(r)); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
             function carName(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명 (차량 데이터 연결 시)
             function trimTag(r){   // 재고특가·빠른인도 카드: 옵션 태그 옆 세부 등급 태그 (차량 데이터 트림명, 묶음에 나온 구동·인승 표기 제외)
@@ -299,7 +291,7 @@
             var popBody=document.getElementById('fpopBody');
             var popApply=document.getElementById('fpopApply');
             var currentFilter=null;
-            function esc(x){return String(x).replace(/"/g,'&quot;');}
+            var esc = window.CHAQ_UTIL.esc;
             function optionList(type){
                 var base = records.filter(function(r){
                     if (type==='brand') return true;

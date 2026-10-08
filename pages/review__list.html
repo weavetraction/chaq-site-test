@@ -6,6 +6,7 @@
     <title>차큐 이용 후기</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white review-page">
@@ -66,7 +67,7 @@
                 wrap.parentNode.insertBefore(bar, wrap);
                 if (hit.length) list = hit;
             }
-            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var esc = window.CHAQ_UTIL.esc;
             function stars(n){ return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5-n); }
 
             wrap.innerHTML = list.map(function(r){

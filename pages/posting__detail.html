@@ -6,6 +6,7 @@
     <title>차큐 아티클</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white">
@@ -44,7 +45,7 @@
             var a = list.filter(function(x){ return x.id===id; })[0] || list[0];
             var view = document.getElementById('articleView');
             if(!a){ view.innerHTML='<p class="detail_empty">아티클을 찾을 수 없습니다.</p>'; return; }
-            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+            var esc = window.CHAQ_UTIL.esc;
             document.title = '차큐 아티클 · ' + a.title;
             var sections = a.html ? '<section class="dv_sec dv_rich">'+a.html+'</section>' : (a.body||[]).map(function(b){
                 return '<section class="dv_sec"><h3>'+esc(b.h)+'</h3><p>'+esc(b.p)+'</p></section>';

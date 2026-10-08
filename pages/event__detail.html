@@ -6,6 +6,7 @@
     <title>차큐 이벤트</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white">
@@ -44,7 +45,7 @@
             var e = list.filter(function(x){ return x.id===id; })[0] || list[0];
             var view = document.getElementById('eventView');
             if(!e){ view.innerHTML='<p class="detail_empty">이벤트를 찾을 수 없습니다.</p>'; return; }
-            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+            var esc = window.CHAQ_UTIL.esc;
             document.title = '차큐 이벤트 · ' + e.title;
             var ended = e.status==='end';
             var sections = e.html ? '<section class="dv_sec dv_rich">'+e.html+'</section>' : (e.body||[]).map(function(b){

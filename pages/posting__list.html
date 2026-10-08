@@ -6,6 +6,7 @@
     <title>차큐 아티클</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white">
@@ -44,7 +45,7 @@
         (function(){
             var list = (window.CHAQ_CONTENT && window.CHAQ_CONTENT.articles) || [];
             var wrap = document.getElementById('articleList');
-            function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var esc = window.CHAQ_UTIL.esc;
             wrap.innerHTML = list.map(function(a){
                 return '<a class="thumb_card" href="posting__detail.html?id='+encodeURIComponent(a.id)+'">'+
                     '<span class="tc_thumb"><img src="'+a.img+'" alt="" loading="lazy"></span>'+

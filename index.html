@@ -8,6 +8,7 @@
   <link rel="preload" href="font/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="stylesheets/redesign.css?v=20261008-1">
     <script src="pages/data/api-config.js"></script>
+    <script src="pages/data/site-util.js"></script>
     <script src="pages/data/analytics.js"></script>
 </head>
 <body>
@@ -254,7 +255,7 @@
       var PH='assets/icons/car-placeholder.svg';
       function carNmH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : carNm(r); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
       function carNm(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명
-  function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+  var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
       function monthly(r){ try{ return r.cost['2']['60']['0']; }catch(e){ return null; } }
       function pg(m){ return m<500000?'30':(m<800000?'50':'80'); }
       var perGroup={'30':0,'50':0,'80':0}, picks=[];
@@ -283,7 +284,7 @@
       // C) '자주 묻는 질문' — 전체 FAQ 데이터 중 일부 선택(카테고리별 대표 1개)
       var Fq=window.CHAQ_FAQ||{cats:[],items:[]};
       var faqEl=document.getElementById('faqPreview');
-      function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+      var esc = window.CHAQ_UTIL.esc;
       if(faqEl && Fq.items.length){
         var seen={}, sel=[];
         var faqPick = pickBy(Fq.items, 'faq', function(it){ return it.id; });

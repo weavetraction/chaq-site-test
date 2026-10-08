@@ -6,6 +6,7 @@
     <title>차큐 마이페이지</title>
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-sub sub-white mypage">
@@ -76,11 +77,11 @@
             var C = window.CHAQ || {stock:[],fast:[],estimate:[]};
             var M = window.CHAQ_MYPAGE || {};
             var PH = "../assets/icons/car-placeholder.svg";
-            function carImg(r){ try { return (window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.resolveImageUrl(r.trimId,[PH],true,(window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(r.trimId,r.ext)))) || PH; } catch(e){ return PH; } }   // 차량 데이터 이미지(모델별) → 없으면 플레이스홀더
+            var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
             var ALL = (C.stock||[]).concat(C.fast||[], C.estimate||[]);
-            function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+            var esc = window.CHAQ_UTIL.esc;
             function car(id){ for(var i=0;i<ALL.length;i++){ if(ALL[i].id===id) return ALL[i]; } return null; }
-            function won(n){ return (n||0).toLocaleString('ko-KR'); }
+            var won = window.CHAQ_UTIL.won;
             function monthly(r,c){ try{ var t=r.cost[c.dist][c.term]; return (t[c.plan]!=null)?t[c.plan]:t['0']; }catch(e){ return null; } }
             function planLabel(p){ return p==='b'?'보증금':(p==='s'?'선납금':'초기비용 0원'); }
             function condText(c){ return c.term+'개월 · '+planLabel(c.plan)+' · '+c.dist+'만km'; }

@@ -6,7 +6,7 @@
 (function (root) {
   "use strict";
   function norm(s) { return String(s == null ? "" : s).toLowerCase().replace(/[\s·\-_/()]+/g, ""); }
-  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  var esc = root.CHAQ_UTIL.esc;   // 공통 site-util.js
   function VM() { return root.CHAQ_VM || null; }
 
   /** "현대 팰리세이드" / (brand, model) → Vehicle Master modelId. 정확 일치만 (추정 금지) */
