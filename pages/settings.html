@@ -30,6 +30,15 @@
                     <span class="set_label">휴대폰 번호</span>
                     <span class="set_value" id="setPhone">-</span>
                 </div>
+                <div class="set_row">
+                    <span class="set_label">출생 연도</span>
+                    <span class="set_value" id="setBirth">-</span>
+                </div>
+                <div class="set_row">
+                    <span class="set_label">차량 인수 주소</span>
+                    <span class="set_value" id="setAddr" style="text-align:right;word-break:keep-all">-</span>
+                </div>
+                <p class="set_hint" style="margin:6px 0 0;color:#8a8f96;font-size:12.5px;line-height:1.6;word-break:keep-all">출생 연도는 운전자 연령 조건에 맞는 견적 안내에, 차량 인수 주소는 계약 후 차량 탁송 안내에 사용돼요. 카카오 가입 시 동의한 경우에만 표시돼요.</p>
             </section>
 
             <!-- 연결된 소셜 계정 (카카오만 지원) -->
@@ -82,6 +91,8 @@
                 $('setName').textContent = m.name || '-';
                 $('setPhone').textContent = m.phone ? m.phone + (m.phoneVerified === false ? ' (미인증)' : '') : '-';
                 $('kakaoState').textContent = m.kakao ? '연결됨' : '연결 안 됨';
+                $('setBirth').textContent = m.birthYear ? m.birthYear + '년생' : '-';
+                $('setAddr').textContent = m.shipAddress && m.shipAddress.base ? m.shipAddress.base + (m.shipAddress.detail ? ' ' + m.shipAddress.detail : '') : '-';
                 $('mktToggle').checked = !!m.marketing;
                 document.body.classList.add('is-ready');
             });

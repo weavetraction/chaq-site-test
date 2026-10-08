@@ -12,7 +12,8 @@ import { integrations, smsOn } from "./integrations.js";
 export const MEMBER_COOKIE = "chaq_member";
 const DAYS = 90;   // 로그인 유지 기간
 
-export type Member = { id: number; kakao_id: string | null; phone: string | null; phone_unverified?: string | null; name: string; nickname: string; marketing_agreed_at: string | null; created_at: string; status: string };
+export type ShipAddress = { receiver: string; phone: string; zip: string; base: string; detail: string };
+export type Member = { id: number; kakao_id: string | null; phone: string | null; phone_unverified?: string | null; birth_year?: string | null; ship_address?: ShipAddress | null; name: string; nickname: string; marketing_agreed_at: string | null; created_at: string; status: string };
 export const Agree = (o: any) => ({ terms: o?.terms === true, privacy: o?.privacy === true, marketing: o?.marketing === true });
 export type AgreeT = ReturnType<typeof Agree>;
 
@@ -47,7 +48,8 @@ export function contactOf(m: Member | null, selfPhone: boolean) {
 }
 export const publicMember = (m: Member | null, selfPhone = false) => {
   if (!m) return null; const c = contactOf(m, selfPhone);
-  return { id: m.id, name: m.name || m.nickname || "", phone: maskPhone(c ? c.phone : null), hasPhone: !!c, phoneVerified: !!c?.verified, kakao: !!m.kakao_id, marketing: !!m.marketing_agreed_at, since: m.created_at };
+  return { id: m.id, name: m.name || m.nickname || "", phone: maskPhone(c ? c.phone : null), hasPhone: !!c, phoneVerified: !!c?.verified, kakao: !!m.kakao_id, marketing: !!m.marketing_agreed_at, since: m.created_at,
+    birthYear: m.birth_year || null, shipAddress: m.ship_address ? { receiver: m.ship_address.receiver, base: m.ship_address.base, detail: m.ship_address.detail ? "(상세 주소 등록됨)" : "" } : null };
 };
 /** 인증문자 준비 전: 카카오 회원이 휴대폰 번호를 직접 입력(미인증 — 상담 연락에만 사용, 혜택 소식 발송 안 함) */
 export async function setSelfPhone(id: number, phone: string, name = "") {
@@ -135,10 +137,25 @@ export async function kakaoExchange(code: string, redirectUri: string) {
   const uj: any = await u.json().catch(() => ({}));
   if (!u.ok || !uj.id) throw new HttpError("카카오 회원 정보를 읽지 못했어요", 502);
   const ka = uj.kakao_account || {};
-  return { kakaoId: String(uj.id), phone: phoneDigits(ka.phone_number), name: String(ka.name || "").slice(0, 30), nickname: String(ka.profile?.nickname || uj.properties?.nickname || "").slice(0, 30) };
+  const by = String(ka.birthyear || "").replace(/\D/g, "");
+  return { kakaoId: String(uj.id), phone: phoneDigits(ka.phone_number), name: String(ka.name || "").slice(0, 30), nickname: String(ka.profile?.nickname || uj.properties?.nickname || "").slice(0, 30),
+    birthYear: /^(19|20)\d{2}$/.test(by) ? by : "", ship: await kakaoShipAddress(tj.access_token) };
+}
+/** 카카오 배송지(선택 동의) — 기본 배송지 1개. 동의 안 했거나 없으면 null (가입은 그대로 진행) */
+async function kakaoShipAddress(token: string): Promise<ShipAddress | null> {
+  try {
+    const r = await fetch("https://kapi.kakao.com/v1/user/shipping_address", { headers: { authorization: `Bearer ${token}` } });
+    if (!r.ok) return null;
+    const j: any = await r.json().catch(() => ({}));
+    const list: any[] = Array.isArray(j.shipping_addresses) ? j.shipping_addresses : [];
+    const a = list.find((x) => x && x.is_default) || list[0];
+    if (!a || !a.base_address) return null;
+    const cut = (v: unknown, n: number) => String(v || "").trim().slice(0, n);
+    return { receiver: cut(a.receiver_name, 30), phone: phoneDigits(a.receiver_phone_number1) || cut(a.receiver_phone_number1, 20), zip: cut(a.zone_number || a.zip_code, 10), base: cut(a.base_address, 200), detail: cut(a.detail_address, 200) };
+  } catch { return null; }
 }
 /** 카카오 회원 → 우리 회원 (없으면 가입: 동의 필요) */
-export async function kakaoLogin(k: { kakaoId: string; phone: string; name: string; nickname: string }, agree: AgreeT) {
+export async function kakaoLogin(k: { kakaoId: string; phone: string; name: string; nickname: string; birthYear?: string; ship?: ShipAddress | null }, agree: AgreeT) {
   const id = await tx(async (c) => {
     const byKakao = (await c.query(`SELECT * FROM members WHERE kakao_id = $1 FOR UPDATE`, [k.kakaoId])).rows[0] as Member | undefined;
     if (byKakao) {
@@ -153,6 +170,8 @@ export async function kakaoLogin(k: { kakaoId: string; phone: string; name: stri
       [k.kakaoId, byPhone ? null : k.phone || null, k.name, k.nickname, agree.marketing ? new Date() : null]);
     return r.rows[0].id as number;
   });
+  // 선택 동의항목(출생 연도·배송지): 받은 경우에만 최신값으로 (안 받으면 기존 값 유지)
+  if (k.birthYear || k.ship) await q(`UPDATE members SET birth_year = COALESCE($2, birth_year), ship_address = COALESCE($3::jsonb, ship_address) WHERE id = $1`, [id, k.birthYear || null, k.ship ? JSON.stringify(k.ship) : null]);
   await touch(id);
   return id;
 }
@@ -161,7 +180,7 @@ export async function kakaoLogin(k: { kakaoId: string; phone: string; name: stri
 export async function withdraw(id: number) {
   await tx(async (c) => {
     await c.query(`UPDATE inquiries SET member_id = NULL WHERE member_id = $1`, [id]);
-    await c.query(`UPDATE members SET status = 'WITHDRAWN', withdrawn_at = now(), kakao_id = NULL, phone = NULL, phone_unverified = NULL, name = '', nickname = '', marketing_agreed_at = NULL WHERE id = $1`, [id]);
+    await c.query(`UPDATE members SET status = 'WITHDRAWN', withdrawn_at = now(), kakao_id = NULL, phone = NULL, phone_unverified = NULL, birth_year = NULL, ship_address = NULL, name = '', nickname = '', marketing_agreed_at = NULL WHERE id = $1`, [id]);
   });
 }
 export async function setMarketing(id: number, on: boolean) {

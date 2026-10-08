@@ -133,7 +133,7 @@ adminRouter.get("/api/admin/members", wrap(async (req, res) => {
   if (qs) { params.push(`%${qs}%`, qs.replace(/\D/g, "").length >= 4 ? `%${qs.replace(/\D/g, "")}%` : null, qs); w += ` AND (m.name ILIKE $1 OR m.nickname ILIKE $1 OR m.phone LIKE $2 OR m.phone_unverified LIKE $2 OR CAST(m.id AS TEXT) = $3)`; }
   const total = (await q(`SELECT COUNT(*)::int AS n FROM members m ${w}`, params)).rows[0].n;
   params.push(size, (page - 1) * size);
-  const { rows } = await q(`SELECT m.id, m.name, m.nickname, m.phone, m.phone_unverified, m.kakao_id IS NOT NULL AS kakao, m.marketing_agreed_at, m.created_at, m.last_login_at,
+  const { rows } = await q(`SELECT m.id, m.name, m.nickname, m.phone, m.phone_unverified, m.birth_year, m.ship_address, m.kakao_id IS NOT NULL AS kakao, m.marketing_agreed_at, m.created_at, m.last_login_at,
       (SELECT COUNT(*)::int FROM inquiries i WHERE i.member_id = m.id) AS inquiries FROM members m ${w} ORDER BY m.created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
   res.json({ total, page, size, rows: rows.map((r) => ({ ...r, phoneVerified: !!r.phone, phone: (r.phone || r.phone_unverified || "").replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3"), phoneMasked: maskPhone(r.phone || r.phone_unverified) })) });
 }));
