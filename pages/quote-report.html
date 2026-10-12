@@ -70,7 +70,7 @@
                 var opts = all.filter(function (o) { return !isD(o); }), discs = all.filter(function (o) { return isD(o); });
                 var optSum = opts.reduce(function (a, o) { return a + (o.p > 0 ? o.p : 0); }, 0);
                 var priceRows = (q.basePrice || discs.length) && q.vehiclePrice
-                    ? [['기본 차량가', q.basePrice ? won(q.basePrice) + '원' : ''], ['옵션 가격', q.basePrice ? won(optSum) + '원' : '']]
+                    ? [[discs.length || /^[sf]/.test(String(q.recId || '')) ? '정가 (공식 가격표)' : '기본 차량가', q.basePrice ? won(q.basePrice) + '원' : ''], ['옵션 가격', q.basePrice ? won(optSum) + '원' : '']]
                         .concat(discs.map(function (o) { return [o.n, o.p < 0 ? U.discWon(o.p) : '상담 시 안내', 'qr_disc']; }))
                         .concat([['차량 총가격', won(q.vehiclePrice) + '원']])
                     : [['차량 가격', q.vehiclePrice ? won(q.vehiclePrice) + '원' : '']];

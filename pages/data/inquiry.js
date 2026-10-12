@@ -55,7 +55,7 @@
     }
     // 할인 항목(예: 대리점 할인 5% −3,031,500원)은 옵션 뒤에 음수 금액 그대로 → 견적서에서 '할인' 줄
     if (rec && rec.opts) rec.opts.forEach(function (o) { if (o && o.n && isDisc(o)) opts.push({ n: String(o.n).slice(0, 120), p: Number(o.p) < 0 ? Math.round(Number(o.p)) : null }); });
-    var bp = window.CHAQ_DETAIL_BASE, basePrice = typeof bp === "number" && bp > 0 ? Math.round(bp) : null;
+    var bp = window.CHAQ_DETAIL_BASE, basePrice = typeof bp === "number" && bp > 0 && window.CHAQ_DETAIL_DECOMPOSED !== false ? Math.round(bp) : null;   // 분해 표시 아닌 재고(미매칭)는 기본가 없이 총차량가만 (#37)
     var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
     var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null, basePrice: basePrice, estimated: window.CHAQ_DETAIL_ESTIMATED === true, optionExtra: window.CHAQ_DETAIL_ESTIMATED === true ? Math.round(Number(window.CHAQ_DETAIL_OPT_EXTRA) || 0) : undefined,
       options: opts.slice(0, 40), ext: String(ext).slice(0, 80), int: String((rec && rec["int"]) || "").slice(0, 80), delivery: kind === "stock" ? "재고 차량 · 바로 출고" : kind === "fast" ? "빠른 인도" : "" };

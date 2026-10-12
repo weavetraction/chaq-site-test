@@ -93,9 +93,9 @@
         <section class="detail_card">
             <p class="cond_label">차량 가격</p>
             <div class="detail_price_table">
-                <div class="detail_price_row"><span>기본 가격</span><strong id="pBase">26,850,000원</strong></div>
-                <div class="detail_price_row"><span>옵션 가격</span><strong id="pOpt">1,440,000원</strong></div>
-                <div class="detail_price_row"><span>할인가</span><strong id="pDisc">0원</strong></div>
+                <div class="detail_price_row" id="rowBase"><span>기본 가격</span><strong id="pBase">26,850,000원</strong></div>
+                <div class="detail_price_row" id="rowOpt"><span>옵션 가격</span><strong id="pOpt">1,440,000원</strong></div>
+                <div class="detail_price_row" id="rowDisc"><span>할인</span><strong id="pDisc">0원</strong></div>
                 <div class="detail_price_row total"><span>차량 총가격<i class="chip_help tag_help" data-help="totalPrice" aria-label="차량 총가격 설명">!</i></span><strong id="pTotal">28,290,000원</strong></div>
                 <div class="detail_price_row total"><span>인수 시 총 비용<i class="chip_help tag_help" data-help="acqCost" aria-label="인수 시 총 비용 설명">!</i></span><strong id="pAcq">27,576,000원</strong></div>
             </div>
@@ -491,6 +491,18 @@
                 row.classList.add('is-disc'); row.querySelector('span').textContent = ds[0].n; row.querySelector('strong').textContent = ds[0].price != null ? U.discWon(ds[0].price) : '상담 시 안내';
                 var after = row;
                 ds.slice(1).forEach(function(d){ var r2 = document.createElement('div'); r2.className = 'detail_price_row is-disc'; r2.innerHTML = '<span></span><strong></strong>'; r2.firstChild.textContent = d.n; r2.lastChild.textContent = d.price != null ? U.discWon(d.price) : '상담 시 안내'; after.parentNode.insertBefore(r2, after.nextSibling); after = r2; });
+            })();
+            // (RL-19 #37, 08 §2) 재고특가·빠른인도 상세 '정가 → 옵션 → 할인 → 총차량가': 할인 줄이 있거나 옵션이 전부 마스터 매칭이면 분해 표시(기본 가격 라벨 = 정가).
+            //   미매칭 옵션(기타(…))이 있는 재고 행은 정가·할인을 알 수 없으므로 '차량 총가격'만 표시(W7·W5 — 연식·옵션 미매칭)
+            (function(){
+                var kind = String(rec.id||'')[0]; if(kind!=='s' && kind!=='f') return;
+                var unmatched = OPS.items.some(function(it){ return it.other; });
+                var decomposed = (OPS.discs||[]).length>0 || !unmatched;
+                var rb=document.getElementById('rowBase'), ro=document.getElementById('rowOpt'), rd=document.getElementById('rowDisc');
+                if(decomposed){ if(rb) rb.querySelector('span').textContent = '정가 (공식 가격표)'; window.CHAQ_DETAIL_DECOMPOSED = true; return; }
+                window.CHAQ_DETAIL_DECOMPOSED = false;
+                [rb, ro, rd].forEach(function(r){ if(r) r.style.display='none'; });
+                document.querySelectorAll('.detail_price_row.is-disc').forEach(function(r){ r.style.display='none'; });
             })();
             var panel=document.getElementById('optionPanel');
             if(panel && !VMQ){
