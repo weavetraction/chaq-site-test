@@ -25,6 +25,7 @@
         .qr_tbl div:last-child { border-bottom: 0; }
         .qr_tbl dt { color: #80868b; flex: none; }
         .qr_tbl dd { margin: 0; color: #202124; font-weight: 600; text-align: right; word-break: keep-all; }
+        .qr_tbl .qr_disc dd { color: #f04452; }
         .qr_sec { margin: 22px 0 8px; font-size: 15px; font-weight: 800; color: #1c1f23; }
         .qr_opts { margin: 0; padding: 0; list-style: none; }
         .qr_opts li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #eceef0; font-size: 13.5px; color: #3c4043; }
@@ -64,14 +65,22 @@
             function d8(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); }
             fetch(BASE + '/api/pub/report/' + t).then(function (r) { if (!r.ok) throw new Error(); return r.json(); }).then(function (q) {
                 document.title = (q.carName || '차량') + ' 견적서 · 차큐';
-                var rows = [['상품', q.product], ['이용 기간', q.term], ['초기 비용', q.plan], ['주행 거리', q.dist], ['출고', q.delivery], ['차량 가격', q.vehiclePrice ? won(q.vehiclePrice) + '원' : ''], ['외장 색상', q.ext], ['내장 색상', q['int']]].filter(function (x) { return x[1]; });
-                var opts = (q.options || []).filter(function (o) { return o && o.n; });
+                // 옵션 금액이 음수 = 할인 항목(예: 대리점 할인 5%) → 옵션 목록이 아니라 차량 가격의 '할인' 줄
+                var all = (q.options || []).filter(function (o) { return o && o.n; }), isD = U.isDisc || function (o) { return o.p < 0; };
+                var opts = all.filter(function (o) { return !isD(o); }), discs = all.filter(function (o) { return isD(o); });
+                var optSum = opts.reduce(function (a, o) { return a + (o.p > 0 ? o.p : 0); }, 0);
+                var priceRows = (q.basePrice || discs.length) && q.vehiclePrice
+                    ? [['기본 차량가', q.basePrice ? won(q.basePrice) + '원' : ''], ['옵션 가격', q.basePrice ? won(optSum) + '원' : '']]
+                        .concat(discs.map(function (o) { return [o.n, o.p < 0 ? U.discWon(o.p) : '상담 시 안내', 'qr_disc']; }))
+                        .concat([['차량 총가격', won(q.vehiclePrice) + '원']])
+                    : [['차량 가격', q.vehiclePrice ? won(q.vehiclePrice) + '원' : '']];
+                var rows = [['상품', q.product], ['이용 기간', q.term], ['초기 비용', q.plan], ['주행 거리', q.dist], ['출고', q.delivery]].concat(priceRows, [['외장 색상', q.ext], ['내장 색상', q['int']]]).filter(function (x) { return x[1]; });
                 var back = q.recId ? 'car-detail.html?id=' + encodeURIComponent(q.recId) : (q.trimId ? 'car-detail.html?trimId=' + encodeURIComponent(q.trimId) : '');
                 el.innerHTML = '<p class="qr_head"><span>차큐 견적서</span><small>#' + esc(q.no) + ' · ' + d8(q.at) + '</small></p>' +
                     '<h2 class="qr_car">' + esc(((q.carName || '') + ' ' + (q.trimName || '')).trim() || '상담 문의') + '</h2>' + (q.spec ? '<p class="qr_spec">' + esc(q.spec) + '</p>' : '') +
                     (q.image ? '<img class="qr_img" src="' + esc(img(q.image)) + '" alt="" onerror="this.remove()">' : '') +
                     '<div class="qr_month"><span>월 납입금</span><strong>' + (q.monthly ? won(q.monthly) + '<em>원</em>' : '상담 시 안내') + '</strong></div>' +
-                    (rows.length ? '<dl class="qr_tbl">' + rows.map(function (x) { return '<div><dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
+                    (rows.length ? '<dl class="qr_tbl">' + rows.map(function (x) { return '<div' + (x[2] ? ' class="' + x[2] + '"' : '') + '><dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
                     (opts.length ? '<p class="qr_sec">추가 옵션 ' + opts.length + '개</p><ul class="qr_opts">' + opts.map(function (o) { return '<li><span>' + esc(o.n) + '</span>' + (o.p ? '<em>+' + won(o.p) + '원</em>' : '') + '</li>'; }).join('') + '</ul>' : '') +
                     '<p class="qr_note">' + d8(q.at) + ' 문의 당시 기준 견적이에요. 금융사 심사 결과, 재고·프로모션 변동에 따라 최종 조건은 달라질 수 있어요. 담당 매니저가 확인 후 안내드려요.</p>' +
                     '<div class="qr_cta" id="qrCta">' + (back ? '<a class="l" href="' + back + '">이 차량 다시 보기</a>' : '') + '<a class="l" href="tel:' + TEL.replace(/-/g, '') + '">전화 상담 ' + TEL + '</a></div>';

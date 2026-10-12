@@ -128,13 +128,14 @@ async function computeSummary(c: pg.PoolClient, batchId: number, kinds: Kind[], 
     const cur = await c.query(`SELECT rec_id, data FROM quote_rows WHERE batch_id = $1 AND kind = $2`, [batchId, k]);
     const pub = await c.query(`SELECT r.rec_id, r.data FROM published_sets p JOIN quote_rows r ON r.batch_id = p.batch_id AND r.kind = p.kind WHERE p.kind = $1`, [k]);
     const old = new Map(pub.rows.map((r) => [r.rec_id, r.data]));
-    let added = 0, changedPrice = 0, unlinked = 0;
+    let added = 0, changedPrice = 0, unlinked = 0, discounted = 0;
     for (const r of cur.rows) {
+      if ((r.data.opts || []).some((o: any) => Number(o?.p) < 0)) discounted++;   // 할인 항목(음수 옵션) 있는 행 — 오류 아님, 미리보기에 건수만
       const o = old.get(r.rec_id); if (!o) added++; else if (JSON.stringify(o.cost) !== JSON.stringify(r.data.cost) || o.base !== r.data.base) changedPrice++;
       if (!r.data.trimId) unlinked++;
     }
     const now = new Set(cur.rows.map((r) => r.rec_id));
-    per[k] = { rows: cur.rows.length, published: pub.rows.length, added, removed: [...old.keys()].filter((x) => !now.has(x)).length, changedPrice, unlinked };
+    per[k] = { rows: cur.rows.length, published: pub.rows.length, added, removed: [...old.keys()].filter((x) => !now.has(x)).length, changedPrice, unlinked, discounted };
   }
   return { kinds: per, problems: problems.slice(0, 200), problemCount: problems.length, blockingErrors: 0, strict } as any;
 }
@@ -243,7 +244,7 @@ export function cleanRecordInput(inp: any, prev: QuoteRecord | null): QuoteRecor
   if ("rem" in inp) { const r = toInt(inp.rem, "재고수"); if (r === null) delete rec.rem; else rec.rem = r; }
   if ("opts" in inp) {
     if (!Array.isArray(inp.opts)) throw new QuoteError("옵션 형식 오류");
-    rec.opts = inp.opts.map((o: any) => ({ n: s(o?.n, 120), p: toInt(o?.p, "옵션가격") })).filter((o: any) => o.n).map((o: any) => (o.p ? { n: o.n, p: o.p } : { n: o.n }));
+    rec.opts = inp.opts.map((o: any) => ({ n: s(o?.n, 120), p: toInt(o?.p, "옵션가격", -1_000_000_000) }))   // 음수 = 할인 항목(대리점 할인 등).filter((o: any) => o.n).map((o: any) => (o.p ? { n: o.n, p: o.p } : { n: o.n }));
   }
   if ("incl" in inp) {
     const incl: Incl = {};

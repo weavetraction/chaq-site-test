@@ -30,7 +30,8 @@
     var kind = rec ? (String(rec.id)[0] === "f" ? "fast" : String(rec.id)[0] === "e" ? "estimate" : "stock") : (from || null);
     var it = onChip("init"), m = txt(".detail_monthly strong").replace(/[^\d]/g, "");
     var opts = [].map.call(document.querySelectorAll('#optPop .opt_row.on[data-grp="opt"] span'), function (s) { return s.textContent.trim(); });
-    if (!opts.length && rec && rec.opts) opts = rec.opts.map(function (o) { return o.n; });
+    var isDisc = (window.CHAQ_UTIL || {}).isDisc || function () { return false; };   // 할인 항목(음수 금액)은 옵션 이름에서 제외 — 스냅샷에 금액과 함께 따로
+    if (!opts.length && rec && rec.opts) opts = rec.opts.filter(function (o) { return !isDisc(o); }).map(function (o) { return o.n; });
     var col = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec ? [rec.ext, rec["int"]].filter(Boolean).join(" / ") : "");
     return {
       source: "DETAIL", kind: kind, recId: rec ? rec.id : null, trimId: (rec && rec.trimId) || (tm ? decodeURIComponent(tm) : null),
@@ -45,9 +46,13 @@
     var img = document.querySelector(".detail_car_visual img"), src = img ? img.getAttribute("src") || "" : "";
     var it = onChip("init").replace(/\s+/g, ""), plan = it.indexOf("보증") > -1 ? "보증금 " + (it.match(/\d+%/) || ["30%"])[0] : it.indexOf("선납") > -1 ? "선납금 " + (it.match(/\d+%/) || ["30%"])[0] : "초기비용 0원";
     var opts = [].map.call(document.querySelectorAll('#optPop .opt_row.on[data-grp="opt"]'), function (r) { var n = r.querySelector("span"), e = r.querySelector("em"), pv = e ? Number(e.textContent.replace(/[^\d]/g, "")) : 0; return { n: n ? n.textContent.trim() : "", p: pv || null }; }).filter(function (o) { return o.n; });
-    if (!opts.length && rec && rec.opts) opts = rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()); }).map(function (o) { return { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; });
+    var U = window.CHAQ_UTIL || {}, isDisc = U.isDisc || function () { return false; };
+    if (!opts.length && rec && rec.opts) opts = rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()) && !isDisc(o); }).map(function (o) { return { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; });
+    // 할인 항목(예: 대리점 할인 5% −3,031,500원)은 옵션 뒤에 음수 금액 그대로 → 견적서에서 '할인' 줄
+    if (rec && rec.opts) rec.opts.forEach(function (o) { if (o && o.n && isDisc(o)) opts.push({ n: String(o.n).slice(0, 120), p: Number(o.p) < 0 ? Math.round(Number(o.p)) : null }); });
+    var bp = window.CHAQ_DETAIL_BASE, basePrice = typeof bp === "number" && bp > 0 ? Math.round(bp) : null;
     var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
-    var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null,
+    var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null, basePrice: basePrice,
       options: opts.slice(0, 40), ext: String(ext).slice(0, 80), int: String((rec && rec["int"]) || "").slice(0, 80), delivery: kind === "stock" ? "재고 차량 · 바로 출고" : kind === "fast" ? "빠른 인도" : "" };
     // 이미지 주소는 '../' 없이 사이트 기준(assets/…)으로 — '../' 가 들어가면 AWS 방화벽(WAF)이 경로 공격으로 보고 문의 자체를 막음(261009 운영 확인)
     src = src.replace(/^(\.\.\/)+/, "").replace(/^\//, "");

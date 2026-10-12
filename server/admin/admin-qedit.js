@@ -43,7 +43,7 @@
       '<div class="tbl_wrap"><table class="tbl qe"><tr><th>ID</th><th>차량 (차량 데이터 기준)</th><th>연식/사양</th><th>색상</th>' + (S.kind !== "estimate" ? '<th class="num">재고</th>' : '') + '<th class="num">차량가</th><th class="num">최저 월</th><th class="num">옵션</th><th>포함</th><th></th></tr>' +
       rows.map(function (r) {
         return '<tr class="' + (r.trim_id ? "" : "unl") + '"><td>' + esc(r.rec_id) + '</td><td>' + (r.trim_id ? '<b>' + esc(r.brand + " " + r.model) + '</b> ' + esc(r.trim) : '<b class="down">미연결</b> <small>' + esc(r.brand + " " + r.model + " " + r.trim) + '</small>') + '</td><td><small>' + esc(r.year) + '</small></td><td><small>' + esc([r.ext, r.int].filter(Boolean).join(" / ") || "차량 데이터 기준") + '</small></td>' +
-          (S.kind !== "estimate" ? '<td class="num">' + (r.rem == null ? "" : r.rem) + '</td>' : '') + '<td class="num">' + won(r.base) + '</td><td class="num">' + won(r.min_monthly) + '</td><td class="num">' + (r.opt_count || '<span class="hint">마스터</span>') + '</td><td>' + inclTxt(r.incl) + '</td>' +
+          (S.kind !== "estimate" ? '<td class="num">' + (r.rem == null ? "" : r.rem) + '</td>' : '') + '<td class="num">' + won(r.base) + '</td><td class="num">' + won(r.min_monthly) + '</td><td class="num">' + (r.opt_count || '<span class="hint">마스터</span>') + (+r.disc_sum ? '<br><small class="hint">할인 ' + won(r.disc_sum) + '</small>' : '') + '</td><td>' + inclTxt(r.incl) + '</td>' +
           '<td class="row gap"><button class="btn sm" data-edit="' + esc(r.rec_id) + '">수정</button><button class="btn sm danger" data-del="' + esc(r.rec_id) + '">삭제</button></td></tr>';
       }).join("") + '</table></div>';
     $("#qeFilter").oninput = function () { S.filter = this.value; var p = this.selectionStart; render(); var el = $("#qeFilter"); el.focus(); el.setSelectionRange(p, p); };
@@ -83,7 +83,7 @@
         '<div class="row between"><h3>장착 옵션 <small>— 비워두면 사이트가 차량 데이터의 선택 옵션(공식 가격)을 보여줍니다</small></h3><button type="button" class="btn sm" id="qeOptAdd">+ 옵션</button></div><datalist id="qeOptList"></datalist><div id="qeOpts"></div>' +
         '<h3>월 납입금 · 잔존가치 (원) <small>— 없는 조건은 비워두면 사이트에 \'별도문의\'</small></h3><div class="tbl_wrap">' + grid + '</div>';
       m.hidden = false;
-      var optRow = function (o) { return '<div class="row gap opt_line"><input class="opt_n" list="qeOptList" value="' + esc(o.n || "") + '" placeholder="옵션명"><input class="num_in opt_p" value="' + (o.p ? won(o.p) : "") + '" placeholder="가격 (모르면 비움)"><button type="button" class="btn sm danger opt_x">×</button></div>'; };
+      var optRow = function (o) { return '<div class="row gap opt_line"><input class="opt_n" list="qeOptList" value="' + esc(o.n || "") + '" placeholder="옵션명"><input class="num_in opt_p" value="' + (o.p ? won(o.p) : "") + '" placeholder="가격 (모르면 비움 · 할인은 -금액)"><button type="button" class="btn sm danger opt_x">×</button></div>'; };
       $("#qeOpts").innerHTML = (r.opts || []).map(optRow).join("");
       $("#qeOptAdd").onclick = function () { $("#qeOpts").insertAdjacentHTML("beforeend", optRow({})); };
       $("#qeOpts").onclick = function (e) { if (e.target.classList.contains("opt_x")) e.target.parentNode.remove(); };

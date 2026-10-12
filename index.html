@@ -270,7 +270,7 @@
       var listEl=document.getElementById('stockList');
       if(listEl){
         listEl.innerHTML = picks.map(function(o){
-          var r=o.r, oc=(r.opts?r.opts.length:0);
+          var r=o.r, oc=(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0));
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'" data-price-group="'+o.g+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
@@ -331,7 +331,7 @@
         var fastSrc = pickBy(C.fast, 'fast', function(r){ return r.id; }) || (C.fast||[]); if(SEC('fast').count) fastSrc = fastSrc.slice(0, SEC('fast').count);
         fastEl.innerHTML=fastSrc.map(function(r){
           var m=monthly(r); m=(m==null)?0:m;
-          var oc=(r.opts?r.opts.length:0);
+          var oc=(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0));
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=1" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
             '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+

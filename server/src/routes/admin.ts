@@ -77,7 +77,8 @@ adminRouter.get("/api/admin/batches/:id", wrap(async (req, res) => {
   const where = req.query.unlinked ? "AND trim_id IS NULL" : "";
   const kind = KINDS.includes(req.query.kind as Kind) ? req.query.kind : null;
   const { rows } = await q(`SELECT kind, rec_id, trim_id, link_status, data->>'brand' AS brand, data->>'model' AS model, data->>'year' AS year, data->>'trim' AS trim,
-      data->>'ext' AS ext, data->>'int' AS int, data->>'fin' AS fin, (data->>'base')::bigint AS base, (data->>'rem')::int AS rem, data->'incl' AS incl, jsonb_array_length(COALESCE(data->'opts','[]'::jsonb)) AS opt_count,
+      data->>'ext' AS ext, data->>'int' AS int, data->>'fin' AS fin, (data->>'base')::bigint AS base, (data->>'rem')::int AS rem, data->'incl' AS incl, (SELECT COUNT(*) FROM jsonb_array_elements(COALESCE(data->'opts','[]'::jsonb)) o WHERE NOT (COALESCE(o->>'p', '') ~ '^-' OR ((o->>'n') LIKE '%할인%' AND COALESCE((o->>'p')::numeric, 0) <= 0)))::int AS opt_count,
+      (SELECT COALESCE(SUM((o->>'p')::numeric), 0) FROM jsonb_array_elements(COALESCE(data->'opts','[]'::jsonb)) o WHERE (o->>'p') ~ '^-')::bigint AS disc_sum,
       (SELECT MIN(v::bigint) FROM jsonb_each(COALESCE(data->'cost','{}'::jsonb)) d, jsonb_each(d.value) t, jsonb_each_text(t.value) p(k, v)) AS min_monthly
     FROM quote_rows WHERE batch_id = $1 ${where} ${kind ? "AND kind = $2" : ""} ORDER BY kind, sort_order LIMIT 2000`, kind ? [id, kind] : [id]);
   res.json({ batch: b, rows: rows.map((r) => ({ ...r, trimLabel: vm.get(r.trim_id)?.label || null })) });

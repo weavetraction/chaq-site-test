@@ -39,7 +39,9 @@ export const InquiryInput = z.object({
     image: z.string().max(300).refine((v) => /^(assets\/|\.\.\/assets\/|\/api\/pub\/media\/|https:\/\/)/.test(v), "이미지 주소").optional(),
     product: z.string().max(20), term: z.string().max(20), plan: z.string().max(30), dist: z.string().max(20),
     vehiclePrice: z.number().int().nonnegative().max(2_000_000_000).nullable(),
-    options: z.array(z.object({ n: z.string().max(120), p: z.number().int().nonnegative().max(500_000_000).nullable().optional() })).max(40),
+    basePrice: z.number().int().nonnegative().max(2_000_000_000).nullable(),   // 기본 차량가 (총가격 = 기본 + 옵션 + 할인)
+    // 옵션 금액이 음수면 할인 항목(예: 대리점 할인 5% −3,031,500원) — 견적서에서 '할인' 줄로 표시
+    options: z.array(z.object({ n: z.string().max(120), p: z.number().int().min(-500_000_000).max(500_000_000).nullable().optional() })).max(40),
     ext: z.string().max(80), int: z.string().max(80), delivery: z.string().max(60), finance: z.string().max(40),
   }).partial().optional(),
 });
@@ -78,7 +80,7 @@ export async function reportView(token: string) {
     no: x.id, at: x.created_at, kind: x.kind, recId: x.rec_id, trimId: x.trim_id, source: x.source,
     carName: x.car_name, spec: x.spec, trimName: x.trim_name, image: s.image || null,
     product: s.product || c.product || "", term: s.term || (c.term ? c.term + "개월" : ""), plan: s.plan || PLAN_KO[c.plan] || "", dist: s.dist || (c.dist ? "연 " + c.dist + "만 km" : ""),
-    monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null,
+    monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null, basePrice: s.basePrice ?? null,
     options: Array.isArray(s.options) && s.options.length ? s.options : (x.options || []).map((n: string) => ({ n, p: null })),
     ext: s.ext || x.color || "", int: s.int || "", delivery: s.delivery || "", finance: s.finance || "",
   };

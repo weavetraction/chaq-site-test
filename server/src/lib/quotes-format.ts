@@ -36,7 +36,7 @@ export const BASE_COLUMNS: { key: string; header: string; width: number; note?: 
   { key: "fin", header: "금융사", width: 12 },
   { key: "rem", header: "재고수", width: 7, note: "재고특가·빠른인도: 0 이면 목록에서 숨김" },
   { key: "base", header: "차량가", width: 12, note: "원 단위 숫자" },
-  { key: "opts", header: "옵션", width: 40, note: "옵션명:가격 | 옵션명:가격 (가격 없으면 옵션명만)" },
+  { key: "opts", header: "옵션", width: 40, note: "옵션명:가격 | 옵션명:가격 (가격 없으면 옵션명만, 할인은 음수 — 예: 대리점 할인 5%:-3031500)" },
   ...INCL_KEYS.map(([k, ko]) => ({ key: "incl." + k, header: ko, width: 6, note: `${ko} 포함 Y / 미포함 N (비우면 사이트 기본: 포함)` })),
   { key: "trimId", header: "차량데이터 트림ID", width: 30, note: "비워두면 같은 차량명으로 자동 연결 — 안 되면 관리자 화면에서 지정" },
 ];
@@ -47,8 +47,9 @@ export const ALL_HEADERS = [...BASE_COLUMNS.map((c) => c.header), ...COST_COLUMN
 export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map((o) => (o.p ? `${o.n}:${o.p}` : o.n)).join(" | "); }
 export function textToOpts(s: unknown): QuoteRecord["opts"] {
   return String(s ?? "").split(/\s*\|\s*|\r?\n/).map((x) => x.trim()).filter(Boolean).map((x) => {
-    const m = x.match(/^(.*?)\s*:\s*([\d,]+)\s*원?$/);
-    return m ? { n: m[1].trim(), p: Number(m[2].replace(/,/g, "")) } : { n: x };
+    // 금액이 음수면 할인 항목 (예: '대리점 할인 5%:-3031500') — 사이트에서 옵션이 아니라 '할인' 줄로 표시
+    const m = x.match(/^(.*?)\s*:\s*([-−–]?)\s*([\d,]+)\s*원?$/);
+    return m ? { n: m[1].trim(), p: (m[2] ? -1 : 1) * Number(m[3].replace(/,/g, "")) } : { n: x };
   });
 }
 

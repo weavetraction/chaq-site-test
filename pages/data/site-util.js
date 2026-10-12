@@ -11,6 +11,26 @@
   function won(n) { return (n || 0).toLocaleString("ko-KR"); }
   /** 차량가 짧게: 만원 단위로 떨어지면 '4,287만원', 아니면 원 단위 그대로 (반올림으로 다른 금액처럼 보이지 않게) */
   function priceShort(n) { n = +n || 0; return n % 10000 ? won(n) + "원" : won(n / 10000) + "만원"; }
+  /** 견적 옵션 칸의 할인 항목: 금액이 음수(예: '대리점 할인 5%:-3031500'), 또는 금액 없이 이름에 '할인' → 옵션이 아니라 별도 할인 줄 */
+  function isDisc(o) { var p = o ? Number(o.p) : NaN; return !!o && (p < 0 || (/할인/.test(String(o.n || "")) && !(p > 0))); }
+  /** 장착 옵션(할인 제외) · 할인 항목 · 할인 합계(음수) */
+  function splitOpts(rec) {
+    var all = (rec && rec.opts) || [], opts = [], discs = [], disc = 0;
+    all.forEach(function (o) { if (!o || !o.n) return; if (isDisc(o)) { discs.push(o); if (Number(o.p) < 0) disc += Number(o.p); } else opts.push(o); });
+    return { opts: opts, discs: discs, disc: disc };
+  }
+  /** 할인 금액 표기: −3,031,500원 */
+  function discWon(n) { return "\u2212" + won(Math.abs(+n || 0)) + "원"; }
+  /** 차량 총가격 = 기본 차량가 + 옵션가(견적 금액, 없으면 차량 데이터 공식가) + 할인(음수) — 상세 가격 영역과 같은 계산 (목록 '차량가' 정렬용) */
+  function carTotal(rec) {
+    if (!rec) return 0;
+    var VM = root.CHAQ_VM, base = rec.base;
+    if (base == null && VM && rec.trimId && VM.getListPrice) { var lp = VM.getListPrice(rec.trimId); if (lp) base = lp.price; }
+    if (base == null) return 0;
+    var sp = splitOpts(rec), sum = 0;
+    sp.opts.forEach(function (o) { if (/^무옵션$/.test(String(o.n).trim())) return; var p = Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : (VM && VM.optionPriceByName && rec.trimId ? VM.optionPriceByName(rec.trimId, o.n) || 0 : 0); sum += p; });
+    return base + sum + sp.disc;
+  }
   /** 견적 레코드의 차량 이미지: 차량 데이터 이미지(재고 외장색 → 색상 이미지, 없으면 대표) → 없으면 대체 이미지 */
   function carImg(r) {
     try {
@@ -62,5 +82,5 @@
     if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
-  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, priceShort: priceShort, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, priceShort: priceShort, isDisc: isDisc, splitOpts: splitOpts, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

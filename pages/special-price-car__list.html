@@ -203,9 +203,11 @@
                 var v = sortSel ? sortSel.value : 'default';
                 var byCar = v.indexOf('carPrice')===0;
                 var desc = v.endsWith('Desc');
+                // 차량가 정렬 = 차량 총가격(기본 + 옵션 + 할인, 상세 가격 영역과 같은 계산)
+                var tot = {}, U = window.CHAQ_UTIL, carP = function(r){ if(!(r.id in tot)) tot[r.id] = U && U.carTotal ? U.carTotal(r) : (r.base||0); return tot[r.id]; };
                 arr.sort(function(a,b){
-                    var av = byCar ? (a.base||0) : (monthly(a,c)||0);
-                    var bv = byCar ? (b.base||0) : (monthly(b,c)||0);
+                    var av = byCar ? carP(a) : (monthly(a,c)||0);
+                    var bv = byCar ? carP(b) : (monthly(b,c)||0);
                     return desc ? bv-av : av-bv;
                 });
                 return arr;
@@ -277,7 +279,7 @@
                         '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'">'+
                         '<span class="stock-copy"><small class="cn">'+carNameH(r)+'</small>'+
                         '<strong>월 '+won(m)+'원</strong>'+
-                        '<b><span class="opt-tag">옵션 <em>'+(r.opts?r.opts.length:0)+'</em>개</span>'+trimTag(r)+
+                        '<b><span class="opt-tag">옵션 <em>'+(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0))+'</em>개</span>'+trimTag(r)+
                         '</b></span>'+
                         '<span class="stock-cta">상세견적</span></a>';
                 });
