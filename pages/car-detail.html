@@ -532,7 +532,7 @@
                 if(opts.length){ html+='<p class="opt_sec">장착 옵션 (견적 기준)</p>'+opts.map(function(o){return '<button type="button" class="opt_row opt-multi on" data-grp="opt" data-fixed="1"><span>'+escH(o.n)+'</span>'+(o.p?('<em>+'+won(o.p)+'원</em>'):'<em>포함</em>')+'</button>';}).join(''); }
                 else if(vmOpt.length){ html+='<p class="opt_sec">추가 옵션'+escH(vmTag)+'</p>'+vmOpt.map(function(o){return '<button type="button" class="opt_row opt-multi" data-grp="opt" data-price="'+(o.price||0)+'"><span>'+escH(o.name)+'</span>'+(o.price!=null?('<em>+'+won(o.price)+'원</em>'):'<em>가격 확인</em>')+'</button>';}).join(''); }
                 else if(qv && !qv.vmUsable){ html+='<p class="opt_sec">추가 옵션</p><p class="opt_note" style="font-size:12px;color:#8a8f96;padding:4px 0 8px">견적 차량('+escH(rec.year||'')+')의 옵션 정보가 아직 없습니다. 기준정보는 '+escH(String((rec.vmLink&&rec.vmLink.vmModelYear)||''))+'년형입니다.</p>'; }
-                if(vmOpt.length || vmExt.some(function(c){return c.extraPrice;})) html+='<p class="opt_note" style="font-size:12px;color:#8a8f96;padding:8px 0 0">선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.</p>';
+                if(vmOpt.length || vmExt.some(function(c){return c.extraPrice;})) html+='<p class="opt_note" id="optPopNote" style="font-size:12px;color:#8a8f96;padding:8px 0 0">선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.</p>';
                 body.innerHTML=html;
                 body.querySelectorAll('.opt_row').forEach(function(row){
                     row.addEventListener('click',function(){
@@ -587,6 +587,21 @@
                 if(cm) cm.style.color='';
                 if(acqEl) acqEl.style.color='';
                 var m=monthly(c), rv=resid(c);
+                // 견적조회 옵션 증분 역산(07-1 v1.7): 행에 옵션증분계수(optCoef, 원/100만원)가 있으면 선택 옵션·색상 추가금만큼 월 납입금·잔가를 예상값으로 올림. 계수가 없으면 기본 사양 월납 그대로(옵션 미반영 안내)
+                var extra0=selExtra(), kc=(EST_POOL && rec.optCoef && rec.optCoef[c.dist] && rec.optCoef[c.dist][c.term]) ? rec.optCoef[c.dist][c.term][c.plan] : null;
+                var estimated=false;
+                if(EST_POOL && m!=null && extra0>0 && kc!=null){
+                    m = m + Math.round(extra0/1e6*kc/10)*10;
+                    if(rv!=null && rec.base){ rv = Math.round(rv/rec.base*(rec.base+extra0)/100)*100; }
+                    estimated=true;
+                }
+                window.CHAQ_DETAIL_ESTIMATED = estimated; window.CHAQ_DETAIL_OPT_EXTRA = extra0;
+                (function(){ var l1=document.querySelector('.detail_monthly small'), l2=document.querySelector('.confirm-monthly span'), note=document.getElementById('optPopNote');
+                    if(l1) l1.textContent = estimated ? '옵션 포함 예상 월 납입금' : '월 납입금';
+                    if(l2) l2.textContent = estimated ? '옵션 포함 예상 월납입금' : '선택 조건 확정 월납입금';
+                    var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent='옵션 추가금을 반영한 예상 금액이에요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
+                    if(note) note.textContent = (EST_POOL && rec.optCoef) ? '선택한 옵션·색상 추가금은 차량 총가격과 월 납입금(예상)에 반영됩니다. 문의 시 실제 견적으로 확정돼요.' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.';
+                })();
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
                 if(m==null){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의

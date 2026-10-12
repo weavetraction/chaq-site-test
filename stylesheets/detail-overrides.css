@@ -2657,3 +2657,7 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_price_row.is-disc span { word-break: keep-all; }
 .local-car-detail .detail_price_row.is-disc strong,
 .local-car-detail .opt_detail_pop .opt_row.opt_disc em { color: #f04452; }
+
+/* 견적조회 옵션 포함 예상 월납 안내 (07-1 v1.7) */
+.local-car-detail .confirm-monthly { flex-wrap: wrap; }
+.local-car-detail .confirm-monthly .est_hint { flex-basis: 100%; margin: 2px 0 0; color: #8a8f96; font-size: 12px; font-weight: 400; line-height: 1.5; word-break: keep-all; }

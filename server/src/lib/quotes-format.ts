@@ -14,6 +14,7 @@ export type QuoteRecord = {
   opts: { n: string; p?: number }[]; base: number | null; rem?: number; cost: Record<string, Record<string, Record<string, number>>>;
   resid: Record<string, Record<string, number>>; vehiclePrice?: number | null; trimId?: string | null; vmLink?: unknown;
   incl?: Incl;   // 포함 사항 (선팅·블박·탁송) — 없으면 사이트 기본 표시
+  optCoef?: Record<string, Record<string, Record<string, number>>> | null;   // 옵션 증분 계수 (원/100만원, cost 와 같은 [거리][기간][초기유형] 모양) — 견적조회 옵션 선택 시 예상 월납 역산용(07-1 v1.7)
 };
 export const INCL_KEYS = [["tint", "선팅"], ["blackbox", "블박"], ["delivery", "탁송"]] as const;
 export type Incl = Partial<Record<(typeof INCL_KEYS)[number][0], boolean>>;
@@ -42,7 +43,32 @@ export const BASE_COLUMNS: { key: string; header: string; width: number; note?: 
 ];
 export const COST_COLUMNS = DISTS.flatMap((d) => TERMS.flatMap((t) => PLANS.map(([pk, pko]) => ({ d, t, pk, header: costCol(d, t, pko) }))));
 export const RESID_COLUMNS = DISTS.flatMap((d) => TERMS.map((t) => ({ d, t, header: residCol(d, t) })));
-export const ALL_HEADERS = [...BASE_COLUMNS.map((c) => c.header), ...COST_COLUMNS.map((c) => c.header), ...RESID_COLUMNS.map((c) => c.header)];
+/** 뒤쪽 추가 열 (월납·잔가 열 순서를 바꾸지 않도록 맨 끝) */
+export const OPT_COEF_HEADER = "옵션증분계수";
+export const EXTRA_COLUMNS: { key: string; header: string; width: number; note?: string }[] = [
+  { key: "optCoef", header: OPT_COEF_HEADER, width: 44, note: "옵션 100만원당 월 납입금 증가(원) 27칸을 | 로 연결 — 순서 = 월납 27열 순서(1만·2만·3만 × 36·48·60 × 0원·보증금·선납금). 견적기 금융사는 견적기로 산출, 비우면 금융사 공통 계수 → 그것도 없으면 옵션 선택 시 월납은 기본 사양 기준" },
+];
+export const ALL_HEADERS = [...BASE_COLUMNS.map((c) => c.header), ...COST_COLUMNS.map((c) => c.header), ...RESID_COLUMNS.map((c) => c.header), ...EXTRA_COLUMNS.map((c) => c.header)];
+/** 옵션증분계수 ↔ 텍스트 (27칸, 월납 열 순서) */
+export function coefToText(k: QuoteRecord["optCoef"]) {
+  if (!k) return "";
+  const vals = COST_COLUMNS.map((c) => { const v = k?.[c.d]?.[c.t]?.[c.pk]; return v == null ? "" : String(v); });
+  return vals.some(Boolean) ? vals.join("|") : "";
+}
+export function textToCoef(s: unknown): { coef: QuoteRecord["optCoef"]; error?: string } {
+  const raw = String(s ?? "").trim();
+  if (!raw) return { coef: null };
+  const parts = raw.split("|").map((x) => x.trim());
+  if (parts.length !== COST_COLUMNS.length) return { coef: null, error: `${OPT_COEF_HEADER}: 27칸이어야 함 (${parts.length}칸)` };
+  const coef: NonNullable<QuoteRecord["optCoef"]> = {}; let n = 0;
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i] === "") continue;
+    const v = Number(parts[i].replace(/[,\s원]/g, ""));
+    if (!Number.isFinite(v) || v < 0 || v > 200000) return { coef: null, error: `${OPT_COEF_HEADER}: ${i + 1}번째 값 오류 (${parts[i]})` };
+    const c = COST_COLUMNS[i]; ((coef[c.d] ||= {})[c.t] ||= {})[c.pk] = Math.round(v); n++;
+  }
+  return { coef: n ? coef : null };
+}
 
 export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map((o) => (o.p ? `${o.n}:${o.p}` : o.n)).join(" | "); }
 export function textToOpts(s: unknown): QuoteRecord["opts"] {
@@ -64,6 +90,7 @@ export function recordToRow(kind: Kind, r: QuoteRecord): Record<string, unknown>
   }
   for (const c of COST_COLUMNS) { const v = r.cost?.[c.d]?.[c.t]?.[c.pk]; row[c.header] = v ?? ""; }
   for (const c of RESID_COLUMNS) { const v = r.resid?.[c.d]?.[c.t]; row[c.header] = v ?? ""; }
+  row[OPT_COEF_HEADER] = coefToText(r.optCoef);
   return row;
 }
 
@@ -117,6 +144,7 @@ export function rowToRecord(row: Record<string, unknown>, rowNo: number): Parsed
   const incl: Incl = {};
   for (const [k, ko] of INCL_KEYS) { const v = yn(row[ko]); if (v === "bad") errors.push(`${ko}: Y 또는 N`); else if (v !== null) incl[k] = v; }
   if (Object.keys(incl).length) rec.incl = incl;
+  const kc = textToCoef(row[OPT_COEF_HEADER]); if (kc.error) errors.push(kc.error); else if (kc.coef) rec.optCoef = kc.coef;
   const trimIdGiven = str(row["차량데이터 트림ID"]) || null;
   return { kind: (kind || "estimate") as Kind, rec, rowNo, errors, trimIdGiven };
 }

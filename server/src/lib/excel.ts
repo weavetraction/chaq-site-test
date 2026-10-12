@@ -1,6 +1,6 @@
 // 견적 데이터 엑셀 양식 만들기·읽기 (exceljs)
 import ExcelJS from "exceljs";
-import { ALL_HEADERS, BASE_COLUMNS, COST_COLUMNS, RESID_COLUMNS, KINDS, Kind, QuoteRecord, recordToRow, rowToRecord, ParsedRow } from "./quotes-format.js";
+import { ALL_HEADERS, BASE_COLUMNS, COST_COLUMNS, RESID_COLUMNS, EXTRA_COLUMNS, KINDS, Kind, QuoteRecord, recordToRow, rowToRecord, ParsedRow } from "./quotes-format.js";
 
 export const SHEET = "견적데이터";
 
@@ -11,6 +11,7 @@ export async function buildWorkbook(data: Partial<Record<Kind, QuoteRecord[]>>, 
     ...BASE_COLUMNS.map((c) => ({ header: c.header, key: c.header, width: c.width })),
     ...COST_COLUMNS.map((c) => ({ header: c.header, key: c.header, width: 15 })),
     ...RESID_COLUMNS.map((c) => ({ header: c.header, key: c.header, width: 15 })),
+    ...EXTRA_COLUMNS.map((c) => ({ header: c.header, key: c.header, width: c.width })),
   ];
   const head = ws.getRow(1); head.height = 30;
   head.eachCell((cell, i) => {
@@ -18,7 +19,8 @@ export async function buildWorkbook(data: Partial<Record<Kind, QuoteRecord[]>>, 
     cell.font = { bold: true, color: { argb: "FFFFFFFF" }, name: "Arial", size: 10 };
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: isCost ? "FF1F7A4D" : i > BASE_COLUMNS.length ? "FF4B5563" : "FF111827" } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-    const note = BASE_COLUMNS[i - 1]?.note; if (note) cell.note = note;
+    const extraIdx = i - 1 - BASE_COLUMNS.length - COST_COLUMNS.length - RESID_COLUMNS.length;
+    const note = extraIdx >= 0 ? EXTRA_COLUMNS[extraIdx]?.note : BASE_COLUMNS[i - 1]?.note; if (note) cell.note = note;
   });
   for (const k of KINDS) for (const r of data[k] || []) ws.addRow(recordToRow(k, r));
   if (opts.example) ws.addRow({ ...recordToRow("stock", { id: "", brand: "현대", model: "그랜저", year: "2027년형 가솔린 2.5", trim: "익스클루시브", ext: "어비스 블랙 펄", int: "블랙 모노톤", fuel: "가솔린", seg: "준대형", fin: "○○캐피탈", opts: [{ n: "빌트인 캠 2 플러스", p: 650000 }, { n: "파노라마 선루프" }], base: 46940000, rem: 3, cost: { "2": { "60": { "0": 648400, "b": 572400, "s": 403200 } } }, resid: { "2": { "60": 29921000 } } }) });
@@ -34,6 +36,7 @@ export async function buildWorkbook(data: Partial<Record<Kind, QuoteRecord[]>>, 
     ["옵션", "옵션명:가격 | 옵션명:가격 — 가격을 모르면 옵션명만 (사이트에서 공식 옵션가로 보완)"],
     ["차량데이터 트림ID", "비워두면 브랜드·모델·연식·등급이 같은 기존 차량의 트림으로 자동 연결. 안 되는 행은 관리자 화면에서 검색해 지정"],
     ["재고수", "재고특가·빠른인도에서 0 이면 목록에 안 보입니다"],
+    ["옵션증분계수", "견적조회 전용. 옵션 100만원당 월 납입금 증가(원) 27칸을 | 로 연결 (순서 = 월납 27열). 견적기 금융사는 견적기로 기본가·+300만 2점을 돌려 산출. 비우면 사이트가 옵션 선택 시 월 납입금을 기본 사양 기준으로 보여줍니다"],
     ["반영", "업로드 → 미리보기 확인(신규·삭제·금액 변경·미연결) → '사이트 반영' 을 눌러야 실제 사이트에 나갑니다. 이전 업로드를 다시 반영하면 되돌리기"],
   ].forEach((r) => { const row = guide.addRow(r); row.getCell(1).font = { bold: true, name: "Arial" }; row.getCell(2).font = { name: "Arial" }; row.getCell(2).alignment = { wrapText: true }; });
   return wb;

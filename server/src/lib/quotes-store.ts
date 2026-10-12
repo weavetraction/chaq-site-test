@@ -3,7 +3,7 @@ import type pg from "pg";
 import { q, tx } from "../db.js";
 import { setState, getState } from "./state.js";
 import { vm } from "./vm.js";
-import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl } from "./quotes-format.js";
+import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl, textToCoef, coefToText } from "./quotes-format.js";
 
 type Published = Record<Kind, QuoteRecord[]>;
 /** 견적ID 의 번호 부분 (s15 → 15, 형식이 다르면 NULL) */
@@ -245,6 +245,11 @@ export function cleanRecordInput(inp: any, prev: QuoteRecord | null): QuoteRecor
   if ("opts" in inp) {
     if (!Array.isArray(inp.opts)) throw new QuoteError("옵션 형식 오류");
     rec.opts = inp.opts.map((o: any) => ({ n: s(o?.n, 120), p: toInt(o?.p, "옵션가격", -1_000_000_000) }))   // 음수 = 할인 항목(대리점 할인 등).filter((o: any) => o.n).map((o: any) => (o.p ? { n: o.n, p: o.p } : { n: o.n }));
+  }
+  if ("optCoef" in inp) {   // 관리자 화면·API: 27칸 텍스트 또는 cost 모양 객체, null 이면 삭제
+    if (inp.optCoef == null || inp.optCoef === "") delete rec.optCoef;
+    else if (typeof inp.optCoef === "string") { const kc = textToCoef(inp.optCoef); if (kc.error) throw new QuoteError(kc.error); if (kc.coef) rec.optCoef = kc.coef; else delete rec.optCoef; }
+    else { const kc = textToCoef(coefToText(inp.optCoef)); if (kc.error) throw new QuoteError(kc.error); if (kc.coef) rec.optCoef = kc.coef; else delete rec.optCoef; }
   }
   if ("incl" in inp) {
     const incl: Incl = {};
