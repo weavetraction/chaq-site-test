@@ -43,7 +43,7 @@ export const InquiryInput = z.object({
     estimated: z.boolean().optional(),   // 견적조회에서 옵션을 골라 월 납입금을 계수로 역산한 '예상' 값인지 (07-1 v1.7)
     optionExtra: z.number().int().nonnegative().max(500_000_000).optional(),   // 역산에 넣은 선택 옵션·색상 추가금 합
     // 옵션 금액이 음수면 할인 항목(예: 대리점 할인 5% −3,031,500원) — 견적서에서 '할인' 줄로 표시
-    options: z.array(z.object({ n: z.string().max(120), p: z.number().int().min(-500_000_000).max(500_000_000).nullable().optional() })).max(40),
+    options: z.array(z.object({ n: z.string().max(120), p: z.number().int().min(-500_000_000).max(500_000_000).nullable().optional(), id: z.string().max(120).optional() })).max(40),   // id = 마스터 옵션ID (RL-19 #36)
     ext: z.string().max(80), int: z.string().max(80), delivery: z.string().max(60), finance: z.string().max(40),
   }).partial().optional(),
 });

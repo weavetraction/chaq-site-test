@@ -168,29 +168,19 @@
     <script>/* API 상세본을 못 읽었으면 사이트 파일 */ (function () { var VM = window.CHAQ_VM, mid = window.CHAQ_DETAIL_MID; if (VM && mid && VM.isDetailLoaded && !VM.isDetailLoaded(mid)) document.write('<script src="data/vm/' + encodeURIComponent(mid) + '.js"><\/script>'); })();</script>
     <script>
         /* 재고 장착 옵션 금액 (옵션 상세 팝업 · 아래 '옵션 가격' 공통 — 두 곳이 항상 같은 합계)
-           견적 금액 → 없으면 차량 데이터의 공식 옵션가(이름 일치 → 비슷한 이름) → 없으면 '별도문의'(합계 제외)
+           옵션ID(마스터) → 견적 금액, 없으면 공식 옵션가 / ID 없는 옵션은 이름 정확 일치만 / 미매칭은 '기타(원문명)' + 견적 금액(없으면 '별도문의', 합계 제외)
            할인 항목(음수 금액, 예: '대리점 할인 5%:-3031500')은 옵션이 아니라 discs·disc(음수 합)로 따로 — 총가격 = 기본 + 옵션 + 할인 */
         window.CHAQ_OPT_PRICES = function (rec) {
-            var VM = window.CHAQ_VM;
-            var nz = function (x) { return String(x || '').toLowerCase().replace(/시그니쳐/g, '시그니처').replace(/plus/g, '플러스').replace(/krell/g, '크렐').replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2').replace(/Ⅲ/g, '3').replace(/(^|\s)iii(?=\s|$)/g, '$13').replace(/(^|\s)ii(?=\s|$)/g, '$12').replace(/(^|\s)i(?=\s|$)/g, '$11').replace(/[\s·,&+()\[\]\-_\/."'″]/g, ''); };
-            var vo = (VM && rec && rec.trimId && VM.getTrimOptions) ? VM.getTrimOptions(rec.trimId, 'SELECTABLE') : [];
-            var vmPrice = function (n) {
-                var k = nz(n); if (!k) return null;
-                var hit = vo.filter(function (v) { return nz(v.name) === k; })[0];
-                if (!hit) hit = vo.filter(function (v) { var x = nz(v.name), a = Math.min(x.length, k.length), b = Math.max(x.length, k.length); return a >= 3 && a / b >= 0.6 && (x.indexOf(k) > -1 || k.indexOf(x) > -1); })[0];
-                if (!hit && /[(（]/.test(n)) return vmPrice(String(n).replace(/[(（][^)）]*[)）]?/g, ' '));   // 괄호 속 조건 문구 빼고 다시
-                return hit && hit.price != null ? hit.price : null;
-            };
+            var VM = window.CHAQ_VM, U = window.CHAQ_UTIL || {};
             var out = { items: [], sum: 0, cnt: 0, priceable: 0, discs: [], disc: 0 };
-            var U = window.CHAQ_UTIL || {};
             ((rec && rec.opts) || []).forEach(function (o, idx) {
                 if (U.isDisc && U.isDisc(o)) { var dp = Number(o.p) < 0 ? Number(o.p) : null; out.discs.push({ n: o.n, price: dp, idx: idx }); if (dp != null) out.disc += dp; return; }   // 할인 항목(음수 금액): 옵션 아님 · 공식 옵션가 채움 제외
                 if (/^무옵션$/.test(String(o.n || '').trim())) { out.items.push({ n: o.n, none: true, price: null, idx: idx }); return; }
-                var q = o.pSrc === 'VM' ? null : o.p;   // 다른 스크립트가 채운 공식가(pSrc=VM)는 다시 계산
-                var pr = q != null && q !== '' && +q ? +q : null;
-                if (pr == null && VM && VM.optionPriceByName && rec.trimId) pr = VM.optionPriceByName(rec.trimId, o.n) || null;   // 공식 옵션가(이름 일치)
-                if (pr == null) pr = vmPrice(o.n);                                                                                 // 비슷한 이름
-                out.items.push({ n: o.n, price: pr, src: q != null && q !== '' && +q ? 'QUOTE' : (pr != null ? 'VM' : null), idx: idx });
+                // (RL-19 #36) 마스터 옵션ID 참조: ID → 마스터 옵션(표시명·공식가) / ID 없으면 이름 정확 일치 / 미매칭 '기타(원문명)' + 견적 금액만 (근사매칭·공식가 자동 채움 없음)
+                var r = (VM && VM.resolveOption) ? VM.resolveOption(rec.trimId, o) : null;
+                var q = o.pSrc === 'VM' ? null : (Number(o.p) > 0 ? Number(o.p) : null);
+                var pr = r ? r.price : q;
+                out.items.push({ n: r ? r.n : o.n, raw: o.n, id: r ? r.id : (o.id || null), other: r ? r.other : !o.id, price: pr, src: q != null ? 'QUOTE' : (pr != null ? 'VM' : null), idx: idx });
                 out.priceable++; if (pr != null) { out.sum += pr; out.cnt++; }
             });
             return out;
@@ -325,7 +315,7 @@
                         });
                         html = '<p class="opt_sec">장착 옵션 ' + OP.items.length + '개</p>' + rows +
                             (OP.cnt ? '<div class="opt_row is-static opt_total"><span>옵션 합계' + (OP.cnt < OP.priceable ? ' <small>(금액 확인된 ' + OP.cnt + '개)</small>' : '') + '</span><em>' + OP.sum.toLocaleString('ko-KR') + '원</em></div>' : '') +
-                            discHtml + '<p class="opt_note">옵션 비용은 견적 금액 기준이며, 견적에 없는 항목은 공식 가격표의 옵션가입니다.</p>';
+                            discHtml + '<p class="opt_note">옵션 비용은 견적 금액 기준이며, 견적에 없는 항목은 공식 가격표의 옵션가입니다.' + (OP.items.some(function (it) { return it.other; }) ? ' 기타(…) 항목은 공식 가격표에 없는 옵션·용품이에요.' : '') + '</p>';
                     }
                     detPop.querySelector('.opt_body').innerHTML = html || '<p class="opt_note">옵션 정보가 없습니다.</p>';
                     detPop.classList.add('is-open'); detPop.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; detPop.querySelector('.opt_body').scrollTop = 0;
@@ -370,7 +360,7 @@
             var ext = useVM ? VM.getTrimColors(trimId,'EXTERIOR') : [], intc = useVM ? VM.getTrimColors(trimId,'INTERIOR') : [];
             // 이미지: 차큐 자체 제작 이미지(세대 × 외장색). 초기 색 = 재고 견적 색상(이름 일치) → 기본 색(추가금 0 첫 색) → 대표(default) → placeholder
             var extD0 = Math.max(0, ext.findIndex(function(c){return !c.extraPrice;}));
-            var initCK = (qv && qv.quoteColors.length && (VM.colorKeyForQuote || VM.colorKeyByName)(trimId, qv.quoteColors[0])) || (ext.length ? VM.colorKeyOf(ext[extD0].colorId) : null);
+            var initCK = (qv && (qv.quoteColors.length || (pk && pk.rec.extId)) && (VM.colorKeyForQuote || VM.colorKeyByName)(trimId, qv.quoteColors[0], pk && pk.rec.extId)) || (ext.length ? VM.colorKeyOf(ext[extD0].colorId) : null);
             var img = VM.resolveImageUrl(trimId, [PH], true, initCK);
             document.querySelectorAll('.detail_car_visual img').forEach(function(im){ im.alt=name; im.src=img; im.onerror=function(){ this.onerror=null; this.src=PH; }; });
             var credit = VM.imageCredit(trimId, initCK);
@@ -378,7 +368,7 @@
             window.chaqSwapCarImage = function(tid, ck){ var u = VM.resolveImageUrl(tid, [null], true, ck); if(!u) return; document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ if(im.getAttribute('src')!==u){ im.onerror=function(){ this.onerror=null; this.src=PH; }; im.src=u; } }); };
             var colWrap=document.querySelector('.detail_colors');
             if(colWrap && qv && qv.quoteColors.length){   // 재고 차량 색상은 견적 기준
-                colWrap.innerHTML = [[pk && pk.rec.ext, '외장', 'EXTERIOR'], [pk && pk.rec['int'], '내장', 'INTERIOR']].filter(function(x){return x[0];}).map(function(x){ return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0], trimId, x[2])+'"></i>'+esc(x[0])+'</span>'; }).join('') || qv.quoteColors.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+hex(c, trimId)+'"></i>'+esc(c)+'</span>'; }).join('');
+                colWrap.innerHTML = [[pk && pk.rec.ext, '외장', 'EXTERIOR', pk && pk.rec.extId], [pk && pk.rec['int'], '내장', 'INTERIOR', pk && pk.rec.intId]].filter(function(x){return x[0];}).map(function(x){ return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0], trimId, x[2], x[3])+'"></i>'+esc(x[0])+'</span>'; }).join('') || qv.quoteColors.map(function(c){ return '<span class="color-tag"><i class="color-chip" style="background:'+hex(c, trimId)+'"></i>'+esc(c)+'</span>'; }).join('');
             } else if(colWrap){
                 var tags = ext.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">외장</em>':'')+'<i class="color-chip" data-color-code="'+esc(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+(c.extraPrice?('(+'+won(c.extraPrice)+')'):'')+'</span>'; });
                 if(intc.length) tags = tags.concat(intc.map(function(c,i){ return '<span class="color-tag">'+(i===0?'<em class="ct_kind">내장</em>':'')+'<i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i>'+esc(c.name)+'</span>'; }));
@@ -402,7 +392,7 @@
             if(body){
                 var html='<p class="opt_sec">등급</p>'+VM.getTrimsByModel(d.model.id,{salesChannels:['GENERAL','RENTAL']}).map(function(t){ return '<button type="button" class="opt_row'+(t.id===trimId?' on':'')+'" data-grp="trim" data-trim="'+esc(t.id)+'"><span>'+esc(VM.trimLabel(t.id))+'</span>'+(t.id===trimId?'<em>선택</em>':'')+'</button>'; }).join('');
                 if(ext.length){ var d0=Math.max(0,ext.findIndex(function(c){return !c.extraPrice;})); html+='<p class="opt_sec">색상</p>'+ext.map(function(c,i){ return '<button type="button" class="opt_row'+(i===d0?' on':'')+'" data-grp="color" data-color-key="'+esc(VM.colorKeyOf(c.colorId)||'')+'" data-price="'+(c.extraPrice||0)+'"><i class="color-chip" style="background:'+(c.hex||hex(c.name))+'"></i><span>'+esc(c.name)+'</span>'+(c.extraPrice?('<em>+'+won(c.extraPrice)+'원</em>'):'')+'</button>'; }).join(''); }
-                if(opts.length){ html+='<p class="opt_sec">추가 옵션'+esc(vmYearTag)+'</p>'+opts.map(function(o){ return '<button type="button" class="opt_row opt-multi" data-grp="opt" data-price="'+(o.price||0)+'"><span>'+esc(o.name)+'</span>'+(o.price!=null?('<em>+'+won(o.price)+'원</em>'):'<em>가격 확인</em>')+'</button>'; }).join(''); }
+                if(opts.length){ html+='<p class="opt_sec">추가 옵션'+esc(vmYearTag)+'</p>'+opts.map(function(o){ return '<button type="button" class="opt_row opt-multi" data-grp="opt" data-opt-id="'+esc(o.optionId||'')+'" data-price="'+(o.price||0)+'"><span>'+esc(o.name)+'</span>'+(o.price!=null?('<em>+'+won(o.price)+'원</em>'):'<em>가격 확인</em>')+'</button>'; }).join(''); }
                 else if(qv && !useVM){ html+='<p class="opt_sec">추가 옵션</p><p class="opt_note" style="font-size:12px;color:#8a8f96;padding:4px 0 8px">견적 차량('+esc(qv.yearLabel||'')+')의 옵션 정보가 아직 없습니다.</p>'; }
                 if(qv && (opts.length || ext.some(function(c){return c.extraPrice;}))) html+='<p class="opt_note" style="font-size:12px;color:#8a8f96;padding:8px 0 0">선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.</p>';
                 body.innerHTML=html;
@@ -466,7 +456,7 @@
             var yr=document.querySelector('.detail_year'); if(yr) yr.textContent = spec || (rec.year+(rec.trim?(' · '+rec.trim):''));
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
             // 이미지 우선순위: trim VERIFIED → lineup VERIFIED → 차큐 직접 이미지(rec.img) → placeholder  (rec.trimId 는 STEP 8 매핑 후 채워짐)
-            var recCK = (window.CHAQ_VM && rec.trimId && rec.ext) ? (window.CHAQ_VM.colorKeyForQuote || window.CHAQ_VM.colorKeyByName)(rec.trimId, rec.ext) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상
+            var recCK = (window.CHAQ_VM && rec.trimId && (rec.ext || rec.extId)) ? (window.CHAQ_VM.colorKeyForQuote || window.CHAQ_VM.colorKeyByName)(rec.trimId, rec.ext, rec.extId) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상 (색상ID 우선, RL-19 #36)
             var recImg = (window.CHAQ_VM && rec.trimId) ? window.CHAQ_VM.resolveImageUrl(rec.trimId, [rec.img, PH], true, recCK) : (rec.img || (window.CHAQ_VM && window.CHAQ_VM.imageByName && window.CHAQ_VM.imageByName(rec.brand, rec.model)) || PH);   // 트림 미연결: 같은 모델 대표 이미지
             if (window.CHAQ_VM && rec.trimId) window.chaqSwapCarImage = function(tid, ck){ var u = window.CHAQ_VM.resolveImageUrl(tid, [null], true, ck); if(!u) return; document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ if(im.getAttribute('src')!==u){ im.onerror=function(){ this.onerror=null; this.src=PH; }; im.src=u; } }); };
             document.querySelectorAll('.detail_car_visual img, .est_visual img').forEach(function(im){ im.alt=name; im.src=recImg; im.onerror=function(){ this.onerror=null; this.src=PH; }; });
@@ -476,8 +466,8 @@
             var colWrap=document.querySelector('.detail_colors');
             var vmC = window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getTrimColors;
             if(colWrap && colors.length){
-                colWrap.innerHTML = [[rec.ext,'외장','EXTERIOR'],[rec['int'],'내장','INTERIOR']].filter(function(x){return x[0];}).map(function(x){
-                    return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0], rec.trimId, x[2])+'"></i>'+String(x[0]).replace(/</g,'&lt;')+'</span>';
+                colWrap.innerHTML = [[rec.ext,'외장','EXTERIOR',rec.extId],[rec['int'],'내장','INTERIOR',rec.intId]].filter(function(x){return x[0];}).map(function(x){
+                    return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hex(x[0], rec.trimId, x[2], x[3])+'"></i>'+String(x[0]).replace(/</g,'&lt;')+'</span>';
                 }).join('');
             } else if(colWrap && vmC){   // 견적에 색상이 없으면 차량 데이터(마스터)의 색상
                 var vx = window.CHAQ_VM.getTrimColors(rec.trimId,'EXTERIOR'), vi = window.CHAQ_VM.getTrimColors(rec.trimId,'INTERIOR');
@@ -504,11 +494,12 @@
             })();
             var panel=document.getElementById('optionPanel');
             if(panel && !VMQ){
-                if(priced.length){
-                    panel.innerHTML = priced.map(function(o){return o.n+' &nbsp;+'+won(o.p)+'원';}).join('<br>')+
+                var shown = OPS.items.filter(function(it){ return !it.none; }), escP = function(x){ return String(x==null?'':x).replace(/</g,'&lt;'); };
+                if(shown.some(function(it){ return it.price != null; })){
+                    panel.innerHTML = shown.map(function(it){return escP(it.n)+(it.price!=null?' &nbsp;+'+won(it.price)+'원':'');}).join('<br>')+
                         '<br><b>총 옵션가 &nbsp;'+won(optSum)+'원</b>';
-                } else if(opts.length){
-                    panel.innerHTML = opts.map(function(o){return '· '+o.n;}).join('<br>');
+                } else if(shown.length){
+                    panel.innerHTML = shown.map(function(it){return '· '+escP(it.n);}).join('<br>');
                 } else {
                     // 견적에 옵션이 없으면 차량 데이터(마스터)의 선택 옵션·공식 옵션가
                     var vmO = (window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getTrimOptions) ? window.CHAQ_VM.getTrimOptions(rec.trimId,'SELECTABLE') : [];
@@ -527,10 +518,10 @@
                 var vmTag = (qv && !qv.sameYear && qv.vmUsable) ? (' ('+qv.vmModelYear+'년형 공식 가격표 기준)') : '';
                 var escH = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
                 var html='<p class="opt_sec">등급</p><button type="button" class="opt_row on" data-grp="trim"><span>'+escH(rec.trim||(qv&&qv.trimLabel)||'기본')+'</span><em>선택</em></button>';
-                if(colors.length){ html+='<p class="opt_sec">색상</p>'+colors.map(function(c,i){return '<button type="button" class="opt_row'+(i===0?' on':'')+'" data-grp="color" data-color-key="'+escH((rec.trimId&&window.CHAQ_VM&&window.CHAQ_VM.colorKeyByName(rec.trimId,c))||'')+'" data-price="0"><i class="color-chip" style="background:'+hex(c, rec.trimId, i===0&&rec.ext?'EXTERIOR':'INTERIOR')+'"></i><span>'+escH(c)+'</span></button>';}).join(''); }
-                else if(vmExt.length){ var d0=Math.max(0,vmExt.findIndex(function(c){return !c.extraPrice;})); html+='<p class="opt_sec">색상</p>'+vmExt.map(function(c,i){return '<button type="button" class="opt_row'+(i===d0?' on':'')+'" data-grp="color" data-color-key="'+escH(window.CHAQ_VM.colorKeyOf(c.colorId)||'')+'" data-price="'+(c.extraPrice||0)+'"><i class="color-chip" data-color-code="'+escH(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i><span>'+escH(c.name)+'</span>'+(c.extraPrice?('<em>+'+won(c.extraPrice)+'원</em>'):'')+'</button>';}).join(''); }
-                if(opts.length){ html+='<p class="opt_sec">장착 옵션 (견적 기준)</p>'+opts.map(function(o){return '<button type="button" class="opt_row opt-multi on" data-grp="opt" data-fixed="1"><span>'+escH(o.n)+'</span>'+(o.p?('<em>+'+won(o.p)+'원</em>'):'<em>포함</em>')+'</button>';}).join(''); }
-                else if(vmOpt.length){ html+='<p class="opt_sec">추가 옵션'+escH(vmTag)+'</p>'+vmOpt.map(function(o){return '<button type="button" class="opt_row opt-multi" data-grp="opt" data-price="'+(o.price||0)+'"><span>'+escH(o.name)+'</span>'+(o.price!=null?('<em>+'+won(o.price)+'원</em>'):'<em>가격 확인</em>')+'</button>';}).join(''); }
+                if(colors.length){ var cids=[]; if(rec.ext) cids.push(rec.extId||null); if(rec['int']) cids.push(rec.intId||null); html+='<p class="opt_sec">색상</p>'+colors.map(function(c,i){ var isExt=(i===0&&rec.ext); return '<button type="button" class="opt_row'+(i===0?' on':'')+'" data-grp="color" data-color-id="'+escH(cids[i]||'')+'" data-color-key="'+escH((isExt&&rec.trimId&&window.CHAQ_VM&&window.CHAQ_VM.colorKeyForQuote&&window.CHAQ_VM.colorKeyForQuote(rec.trimId,c,cids[i]))||'')+'" data-price="0"><i class="color-chip" style="background:'+hex(c, rec.trimId, isExt?'EXTERIOR':'INTERIOR', cids[i])+'"></i><span>'+escH(c)+'</span></button>';}).join(''); }
+                else if(vmExt.length){ var d0=Math.max(0,vmExt.findIndex(function(c){return !c.extraPrice;})); html+='<p class="opt_sec">색상</p>'+vmExt.map(function(c,i){return '<button type="button" class="opt_row'+(i===d0?' on':'')+'" data-grp="color" data-color-id="'+escH(c.colorId||'')+'" data-color-key="'+escH(window.CHAQ_VM.colorKeyOf(c.colorId)||'')+'" data-price="'+(c.extraPrice||0)+'"><i class="color-chip" data-color-code="'+escH(c.manufacturerCode||'')+'" style="background:'+(c.hex||hex(c.name))+'"></i><span>'+escH(c.name)+'</span>'+(c.extraPrice?('<em>+'+won(c.extraPrice)+'원</em>'):'')+'</button>';}).join(''); }
+                if(opts.length){ html+='<p class="opt_sec">장착 옵션 (견적 기준)</p>'+OPS.items.filter(function(it){ return !it.none; }).map(function(it){return '<button type="button" class="opt_row opt-multi on" data-grp="opt" data-fixed="1" data-opt-id="'+escH(it.id||'')+'"><span>'+escH(it.n)+'</span>'+(it.price?('<em>+'+won(it.price)+'원</em>'):'<em>포함</em>')+'</button>';}).join(''); }
+                else if(vmOpt.length){ html+='<p class="opt_sec">추가 옵션'+escH(vmTag)+'</p>'+vmOpt.map(function(o){return '<button type="button" class="opt_row opt-multi" data-grp="opt" data-opt-id="'+escH(o.optionId||'')+'" data-price="'+(o.price||0)+'"><span>'+escH(o.name)+'</span>'+(o.price!=null?('<em>+'+won(o.price)+'원</em>'):'<em>가격 확인</em>')+'</button>';}).join(''); }
                 else if(qv && !qv.vmUsable){ html+='<p class="opt_sec">추가 옵션</p><p class="opt_note" style="font-size:12px;color:#8a8f96;padding:4px 0 8px">견적 차량('+escH(rec.year||'')+')의 옵션 정보가 아직 없습니다. 기준정보는 '+escH(String((rec.vmLink&&rec.vmLink.vmModelYear)||''))+'년형입니다.</p>'; }
                 if(vmOpt.length || vmExt.some(function(c){return c.extraPrice;})) html+='<p class="opt_note" id="optPopNote" style="font-size:12px;color:#8a8f96;padding:8px 0 0">선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.</p>';
                 body.innerHTML=html;

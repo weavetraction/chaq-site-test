@@ -3,7 +3,7 @@ import type pg from "pg";
 import { q, tx } from "../db.js";
 import { setState, getState } from "./state.js";
 import { vm } from "./vm.js";
-import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl, textToCoef, coefToText } from "./quotes-format.js";
+import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl, textToCoef, coefToText, splitIdTok } from "./quotes-format.js";
 
 type Published = Record<Kind, QuoteRecord[]>;
 /** 견적ID 의 번호 부분 (s15 → 15, 형식이 다르면 NULL) */
@@ -79,6 +79,7 @@ export async function createBatch(parsed: ParsedRow[], meta: { fileName: string;
     if (!link.trimId) { const t = maps.strict.get(signature(rec)) || maps.loose.get(signatureLoose(rec)); if (t && vm.get(t)) link = { trimId: t, status: "AUTO" }; }
     const ownVmLink = link.trimId && rec.trimId === link.trimId ? rec.vmLink : undefined;   // 기존 데이터(seed)의 연결 정보는 유지
     applyLink(rec, link, maps.byId.get(rec.id + "|" + link.trimId) || ownVmLink, strict);
+    const idErr = checkIds(rec, link.trimId); if (idErr.length) { problems.push({ rowNo: p.rowNo, errors: idErr }); return; }
     rows.push({ kind: p.kind, rec, link, order: i });
   });
   const blocking = problems.filter((x) => !x.errors.every((e) => e.includes("자동 연결 시도")));
@@ -92,6 +93,22 @@ export async function createBatch(parsed: ParsedRow[], meta: { fileName: string;
     await c.query(`UPDATE quote_batches SET summary = $2 WHERE id = $1`, [batchId, summary]);
     return { batchId, summary };
   });
+}
+
+/** 양식의 옵션ID·색상ID('옵션명@옵션ID', '색상명@색상ID')가 차량 데이터에 있는지 (RL-19 #36). 색인이 없으면 검증 생략. 트림에 안 붙은 ID 는 오류(다른 차의 ID) */
+export function checkIds(rec: QuoteRecord, trimId: string | null): string[] {
+  const errs: string[] = [];
+  for (const o of rec.opts || []) {
+    if (!o.id) continue;
+    const k = vm.optionKnown(o.id); if (k === false) { errs.push(`옵션ID '${o.id}' 가 차량 데이터에 없음 (${o.n})`); continue; }
+    if (trimId && vm.trimHasOption(trimId, o.id) === false) errs.push(`옵션ID '${o.id}' 는 이 트림(${trimId})의 옵션이 아님 (${o.n})`);
+  }
+  for (const [key, label] of [["extId", "외장색"], ["intId", "내장색"]] as const) {
+    const id = (rec as any)[key] as string | undefined; if (!id) continue;
+    const k = vm.colorKnown(id); if (k === false) { errs.push(`${label}ID '${id}' 가 차량 데이터에 없음`); continue; }
+    if (trimId && vm.trimHasColor(trimId, id) === false) errs.push(`${label}ID '${id}' 는 이 트림(${trimId})의 색상이 아님`);
+  }
+  return errs;
 }
 
 /** 차량 데이터 기준: 브랜드·모델·등급명을 연결된 트림 이름으로 (원래 적힌 이름은 srcName 에 보관) */
@@ -238,13 +255,20 @@ const s = (v: unknown, max = 200) => String(v ?? "").trim().slice(0, max);
 /** 화면 입력 → 레코드 (형식 검사) */
 export function cleanRecordInput(inp: any, prev: QuoteRecord | null): QuoteRecord {
   const rec: QuoteRecord = prev ? JSON.parse(JSON.stringify(prev)) : ({ id: "", brand: "", model: "", year: "", trim: "", opts: [], base: null, cost: {}, resid: {} } as QuoteRecord);
-  for (const k of ["year", "ext", "int", "fuel", "seg", "fin"] as const) if (k in inp) (rec as any)[k] = s(inp[k]);
+  for (const k of ["year", "fuel", "seg", "fin"] as const) if (k in inp) (rec as any)[k] = s(inp[k]);
+  for (const [k, idk] of [["ext", "extId"], ["int", "intId"]] as const) {   // 화면 입력 '색상명@색상ID' → 이름 + ID (ID 따로 주면 그것 우선)
+    if (!(k in inp) && !(idk in inp)) continue;
+    const tok = k in inp ? splitIdTok(inp[k]) : { name: (rec as any)[k] || "", id: null };
+    (rec as any)[k] = s(tok.name); const id = idk in inp ? s(inp[idk], 120) : tok.id;
+    if (id) (rec as any)[idk] = id; else delete (rec as any)[idk];
+  }
   if (!prev || "brand" in inp) { if ("brand" in inp) rec.brand = s(inp.brand); if ("model" in inp) rec.model = s(inp.model); if ("trim" in inp) rec.trim = s(inp.trim); }
   if ("base" in inp) { rec.base = toInt(inp.base, "차량가"); rec.vehiclePrice = rec.base; }
   if ("rem" in inp) { const r = toInt(inp.rem, "재고수"); if (r === null) delete rec.rem; else rec.rem = r; }
   if ("opts" in inp) {
     if (!Array.isArray(inp.opts)) throw new QuoteError("옵션 형식 오류");
-    rec.opts = inp.opts.map((o: any) => ({ n: s(o?.n, 120), p: toInt(o?.p, "옵션가격", -1_000_000_000) }))   // 음수 = 할인 항목(대리점 할인 등).filter((o: any) => o.n).map((o: any) => (o.p ? { n: o.n, p: o.p } : { n: o.n }));
+    rec.opts = inp.opts.map((o: any) => { const tok = splitIdTok(o?.n); const id = o?.id ? s(o.id, 120) : tok.id; return { n: s(tok.name, 120), p: toInt(o?.p, "옵션가격", -1_000_000_000), id }; })   // 음수 = 할인 항목(대리점 할인 등) · '옵션명@옵션ID' 허용
+      .filter((o: any) => o.n).map((o: any) => { const r: any = { n: o.n }; if (o.p) r.p = o.p; if (o.id) r.id = o.id; return r; });
   }
   if ("optCoef" in inp) {   // 관리자 화면·API: 27칸 텍스트 또는 cost 모양 객체, null 이면 삭제
     if (inp.optCoef == null || inp.optCoef === "") delete rec.optCoef;
@@ -284,6 +308,7 @@ export async function saveDraftRow(batchId: number, kind: Kind, recId: string | 
   const link: LinkResult = trimId ? { trimId, status: "MANUAL" } : { trimId: null, status: "UNLINKED" };
   if (!prev || prev.trim_id !== trimId) (rec as any).vmLink = undefined;
   applyLink(rec, link, prev && prev.trim_id === trimId ? prev.data.vmLink : undefined, b.strict_master);
+  const idErr = checkIds(rec, trimId); if (idErr.length) throw new QuoteError(idErr.join(" / "));
   return tx(async (c) => {
     if (!recId) {
       await c.query(`SELECT pg_advisory_xact_lock(727011, hashtext($1))`, [kind]);   // 동시에 새 행을 만들어도 번호가 겹치지 않게

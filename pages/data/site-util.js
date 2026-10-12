@@ -28,19 +28,20 @@
     if (base == null && VM && rec.trimId && VM.getListPrice) { var lp = VM.getListPrice(rec.trimId); if (lp) base = lp.price; }
     if (base == null) return 0;
     var sp = splitOpts(rec), sum = 0;
-    sp.opts.forEach(function (o) { if (/^무옵션$/.test(String(o.n).trim())) return; var p = Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : (VM && VM.optionPriceByName && rec.trimId ? VM.optionPriceByName(rec.trimId, o.n) || 0 : 0); sum += p; });
+    sp.opts.forEach(function (o) { if (/^무옵션$/.test(String(o.n).trim())) return; var r = VM && VM.resolveOption ? VM.resolveOption(rec.trimId, o) : null; var p = r ? (r.price || 0) : (Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : 0); sum += p; });   // 옵션ID → 마스터 공식가 / 미매칭은 견적 금액만 (RL-19 #36)
     return base + sum + sp.disc;
   }
   /** 견적 레코드의 차량 이미지: 차량 데이터 이미지(재고 외장색 → 색상 이미지, 없으면 대표) → 없으면 대체 이미지 */
   function carImg(r) {
     try {
       var VM = root.CHAQ_VM; if (!VM || !r) return PH;
-      if (r.trimId && VM.getTrim && VM.getTrim(r.trimId)) return VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote && VM.colorKeyForQuote(r.trimId, r.ext)) || PH;
+      if (r.trimId && VM.getTrim && VM.getTrim(r.trimId)) return VM.resolveImageUrl(r.trimId, [PH], true, VM.colorKeyForQuote && VM.colorKeyForQuote(r.trimId, r.ext, r.extId)) || PH;   // 색상ID 우선, 없으면 이름 정확 일치, 없으면 대표 이미지
       return (VM.imageByName && VM.imageByName(r.brand, r.model)) || PH;   // 트림 미연결 견적: 같은 모델 대표 이미지
     } catch (e) { return PH; }
   }
   /** 색상 이름 → 색상칩 색. trimId 가 있으면 차량 데이터의 HEX(type: EXTERIOR·INTERIOR), 못 찾으면 이름으로 대략 색 */
-  function hex(name, trimId, type) {
+  function hex(name, trimId, type, colorId) {
+    if (colorId) { try { var hi = root.CHAQ_VM && root.CHAQ_VM.colorHexById && root.CHAQ_VM.colorHexById(colorId); if (hi) return hi; } catch (e) {} }   // 견적 행 색상ID(마스터 참조) 우선
     if (trimId) { try { var h = root.CHAQ_VM && root.CHAQ_VM.colorHexByName && root.CHAQ_VM.colorHexByName(trimId, name, type); if (h) return h; } catch (e) {} }
     var n = String(name || "");
     if (/화이트|white|스노우|아이보리|백/i.test(n)) return "#eef0f2";

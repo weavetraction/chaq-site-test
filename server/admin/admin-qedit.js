@@ -72,8 +72,8 @@
         '<div class="fgrid">' +
         '<label class="wide"><span>차량 (트림) — 브랜드·모델·등급명은 차량 데이터 기준</span><div class="picker"><div id="qeTrim" class="done">' + (row.trimLabel ? "✔ " + esc(row.trimLabel) : '<b class="down">미연결</b> ' + esc((r.brand || "") + " " + (r.model || "") + " " + (r.trim || ""))) + '</div><input type="search" id="qeTrimQ" placeholder="트림 검색 (예: 그랜저 2.5 익스클루시브)"><div class="res" hidden id="qeTrimRes"></div></div></label>' +
         '<label class="wide"><span>연식/사양 (사이트 표시용 문구)</span><input name="year" value="' + esc(r.year || "") + '" placeholder="2027년형 가솔린 2.5"></label>' +
-        '<label><span>외장색 (비우면 차량 데이터 색상)</span><input name="ext" list="qeExtList" value="' + esc(r.ext || "") + '"><datalist id="qeExtList"></datalist></label>' +
-        '<label><span>내장색</span><input name="int" list="qeIntList" value="' + esc(r["int"] || "") + '"><datalist id="qeIntList"></datalist></label>' +
+        '<label><span>외장색 (비우면 차량 데이터 색상)</span><input name="ext" list="qeExtList" value="' + esc((r.ext || "") + (r.extId ? "@" + r.extId : "")) + '" placeholder="색상명@색상ID"><datalist id="qeExtList"></datalist></label>' +
+        '<label><span>내장색</span><input name="int" list="qeIntList" value="' + esc((r["int"] || "") + (r.intId ? "@" + r.intId : "")) + '" placeholder="색상명@색상ID"><datalist id="qeIntList"></datalist></label>' +
         '<label><span>연료</span><input name="fuel" value="' + esc(r.fuel || "") + '"></label><label><span>차급</span><input name="seg" value="' + esc(r.seg || "") + '"></label>' +
         '<label><span>금융사</span><input name="fin" value="' + esc(r.fin || "") + '"></label>' +
         (S.kind !== "estimate" ? '<label><span>재고 수 (0 이면 목록에서 숨김)</span><input name="rem" inputmode="numeric" value="' + (r.rem == null ? "" : r.rem) + '"></label>' : '') +
@@ -83,22 +83,23 @@
         '<div class="row between"><h3>장착 옵션 <small>— 비워두면 사이트가 차량 데이터의 선택 옵션(공식 가격)을 보여줍니다</small></h3><button type="button" class="btn sm" id="qeOptAdd">+ 옵션</button></div><datalist id="qeOptList"></datalist><div id="qeOpts"></div>' +
         '<h3>월 납입금 · 잔존가치 (원) <small>— 없는 조건은 비워두면 사이트에 \'별도문의\'</small></h3><div class="tbl_wrap">' + grid + '</div>';
       m.hidden = false;
-      var optRow = function (o) { return '<div class="row gap opt_line"><input class="opt_n" list="qeOptList" value="' + esc(o.n || "") + '" placeholder="옵션명"><input class="num_in opt_p" value="' + (o.p ? won(o.p) : "") + '" placeholder="가격 (모르면 비움 · 할인은 -금액)"><button type="button" class="btn sm danger opt_x">×</button></div>'; };
+      var optRow = function (o) { return '<div class="row gap opt_line"><input class="opt_n" list="qeOptList" value="' + esc((o.n || "") + (o.id ? "@" + o.id : "")) + '" placeholder="옵션명@옵션ID (ID는 차량 데이터 옵션ID, 없으면 사이트에 기타(옵션명))"><input class="num_in opt_p" value="' + (o.p ? won(o.p) : "") + '" placeholder="가격 (모르면 비움 · 할인은 -금액)"><button type="button" class="btn sm danger opt_x">×</button></div>'; };
       $("#qeOpts").innerHTML = (r.opts || []).map(optRow).join("");
       $("#qeOptAdd").onclick = function () { $("#qeOpts").insertAdjacentHTML("beforeend", optRow({})); };
       $("#qeOpts").onclick = function (e) { if (e.target.classList.contains("opt_x")) e.target.parentNode.remove(); };
       $("#qeOpts").oninput = function (e) {   // 차량 데이터 옵션명을 고르면 공식 가격 채움
         if (!e.target.classList.contains("opt_n") || !st.vm) return;
-        var hit = st.vm.options.filter(function (x) { return x.option && x.option.name === e.target.value; })[0];
+        var hit = st.vm.options.filter(function (x) { return x.option && (x.option.name === e.target.value || x.option.name + "@" + x.option.id === e.target.value); })[0];
         var p = e.target.parentNode.querySelector(".opt_p"); if (hit && hit.price && !p.value) p.value = won(hit.price);
       };
       var loadVm = function () {
         if (!st.trimId) return;
         api("/api/admin/vm/trim/" + encodeURIComponent(st.trimId)).then(function (b) {
           st.vm = b;
-          $("#qeExtList").innerHTML = b.colors.filter(function (x) { return x.type === "EXTERIOR" && x.color; }).map(function (x) { return '<option value="' + esc(x.color.name) + '">'; }).join("");
-          $("#qeIntList").innerHTML = b.colors.filter(function (x) { return x.type === "INTERIOR" && x.color; }).map(function (x) { return '<option value="' + esc(x.color.name) + '">'; }).join("");
-          $("#qeOptList").innerHTML = b.options.filter(function (x) { return x.option; }).map(function (x) { return '<option value="' + esc(x.option.name) + '">' + (x.price ? won(x.price) + "원" : "") + '</option>'; }).join("");
+          // 선택지는 '이름@ID' — 고르면 마스터 ID 참조로 저장됨 (RL-19 #36)
+          $("#qeExtList").innerHTML = b.colors.filter(function (x) { return x.type === "EXTERIOR" && x.color; }).map(function (x) { return '<option value="' + esc(x.color.name + "@" + x.color.id) + '">'; }).join("");
+          $("#qeIntList").innerHTML = b.colors.filter(function (x) { return x.type === "INTERIOR" && x.color; }).map(function (x) { return '<option value="' + esc(x.color.name + "@" + x.color.id) + '">'; }).join("");
+          $("#qeOptList").innerHTML = b.options.filter(function (x) { return x.option; }).map(function (x) { return '<option value="' + esc(x.option.name + "@" + x.option.id) + '">' + (x.price ? won(x.price) + "원" : "") + '</option>'; }).join("");
           $("#qeListPrice").textContent = b.trim.listPrice ? "차량 데이터 트림가 " + won(b.trim.listPrice) + "원" : "";
         }).catch(function () {});
       };

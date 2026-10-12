@@ -204,22 +204,25 @@
   /** 외장색 → 이미지 파일 키 (tools/own-images.js 와 동일 규칙): 제조사 코드 소문자, 없으면 color id 에서 브랜드 접두어 제거 */
   function colorKeyOf(c) { if (!c) return null; if (typeof c === "string") c = IX.color[c] || { id: c }; var k = c.manufacturerCode ? c.manufacturerCode : String(c.id || c.colorId || "").replace(/^[a-z-]+?-color-/, ""); return String(k).toLowerCase().replace(/[^a-z0-9-]+/g, "-") || null; }
   /** 견적(재고 실차)의 외장색 이름 → 이 트림 외장색의 colorKey. 공백·괄호 무시 정확 일치 → 포함 관계. 없으면 null (추정 금지) */
-  function colorKeyByName(trimId, name) { if (!name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null; var cs = getTrimColors(trimId, "EXTERIOR"), i; for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return colorKeyOf(cs[i].colorId); for (i = 0; i < cs.length; i++) { var c = n(cs[i].name); if (c && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) return colorKeyOf(cs[i].colorId); } return null; }
+  function colorKeyByName(trimId, name) { if (!name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null; var cs = getTrimColors(trimId, "EXTERIOR"), i; for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return colorKeyOf(cs[i].colorId); return null; }   // (RL-19 #36) 포함 관계 근사매칭 제거 — 정확 일치만. 매칭은 견적 행의 색상ID(extId)가 우선
+  /** 색상ID → HEX / 이름 (견적 행 extId·intId 용, 08 §2 마스터 색상ID 참조) */
+  function colorHexById(id) { var c = id && IX.color[id]; return c && c.hex ? c.hex : null; }
+  function colorNameById(id) { var c = id && IX.color[id]; return c ? (c.name || null) : null; }
   /** 견적 색상 이름 → 차량 데이터의 HEX (색상칩용). 이 트림의 같은 종류(외장/내장) 색상 정확 일치 → 가장 긴 포함 일치 → 같은 브랜드 색상 정확 일치. 없으면 null */
   function colorHexByName(trimId, name, type) {
     if (!trimId || !name) return null; var n = function (x) { return String(x || "").toLowerCase().replace(/\(.*?\)|\[.*?\]|[\s·\-_/]+/g, ""); }; var q = n(name); if (!q) return null;
-    var cs = getTrimColors(trimId, type || "EXTERIOR").filter(function (c) { return c.hex; }), i, best = null, bl = 0;
+    var cs = getTrimColors(trimId, type || "EXTERIOR").filter(function (c) { return c.hex; }), i;
     for (i = 0; i < cs.length; i++) if (n(cs[i].name) === q || (cs[i].nameEn && n(cs[i].nameEn) === q) || (cs[i].manufacturerCode && n(cs[i].manufacturerCode) === q)) return cs[i].hex;
-    for (i = 0; i < cs.length; i++) { var c = n(cs[i].name); if (c && c.length > bl && (q.indexOf(c) >= 0 || c.indexOf(q) >= 0)) { best = cs[i]; bl = c.length; } }
-    if (best) return best.hex;
+    // (RL-19 #36) 포함 관계 근사매칭 제거 — 같은 브랜드 정확 일치까지만
     var t = getTrim(trimId), l = t && IX.lineup[t.lineupId], m = l && IX.model[l.modelId], bid = m && m.brandId; if (!bid) return null;
     for (var id in IX.color) { var x = IX.color[id]; if (x && x.hex && x.brandId === bid && (n(x.name) === q || (x.nameEn && n(x.nameEn) === q))) return x.hex; }
     return null;
   }
   /** 목록 카드용: 재고 외장색 이름 → colorKey. 상세본(트림 색상)이 있으면 그것으로, 없으면 공통본 이미지의 색상명(colorNames)으로. 못 찾으면 null(→ 대표 이미지) */
-  function colorKeyForQuote(trimId, name) {
-    if (!trimId || !name) return null; var t = getTrim(trimId); if (!t) return null;
+  function colorKeyForQuote(trimId, name, colorId) {
+    if (!trimId || (!name && !colorId)) return null; var t = getTrim(trimId); if (!t) return null;
     var arr = (IX.imagesByTrim[trimId] || []).concat(IX.imagesByLineup[t.lineupId] || []);
+    if (colorId) { var kid = colorKeyOf(colorId); if (kid) { kid = remapColorKey(arr, kid); return kid; } }   // 견적 행 색상ID 우선 (근사매칭 없음)
     var k = null; try { k = colorKeyByName(trimId, name); } catch (e) {}
     if (k) { k = remapColorKey(arr, k); if (arr.some(function (im) { return im.colorKey === k; })) return k; }
     return imageKeyByNames(arr, [name]) || k;
@@ -306,11 +309,28 @@
   function optionPriceByName(trimId, name) {
     if (!trimId || !name) return null;
     var list = getTrimOptions(trimId).filter(function (o) { return o.price != null; }); if (!list.length) return null;
-    function find(q) { q = optKey(q); if (!q) return null; var i, c; for (i = 0; i < list.length; i++) if (optKey(list[i].name) === q) return list[i]; for (i = 0; i < list.length; i++) { c = optKey(list[i].name); if (c && c.length >= 3 && (c.indexOf(q) >= 0 || q.indexOf(c) >= 0)) return list[i]; } return null; }
+    function find(q) { q = optKey(q); if (!q) return null; var i; for (i = 0; i < list.length; i++) if (optKey(list[i].name) === q) return list[i]; return null; }   // (RL-19 #36) 포함 관계 근사매칭 제거 — 정확 일치(공백·기호·로마숫자 정규화)만
     var h = find(name); if (h) return h.price;
     var parts = String(name).split(/\s*(?:&|\+|,|\.\s|\||\s및\s)\s*/).filter(Boolean); if (parts.length < 2) return null;
     var sum = 0; for (var k = 0; k < parts.length; k++) { var x = find(parts[k]); if (!x) return null; sum += x.price; }
     return sum;
+  }
+  /** 견적 행 옵션 1개 → 마스터 참조 결과 (RL-19 #36, 08 §2)
+   *  · o.id(마스터 옵션ID) 있으면 그 옵션: 표시명 = 마스터 옵션명, 가격 = 견적 금액 → 없으면 공식 옵션가 (src 'ID')
+   *  · 없으면 이름 정확 일치(10/19 게이트 전환 전까지의 fallback, src 'EXACT')
+   *  · 둘 다 아니면 미매칭: 표시명 '기타(원문명)', 가격 = 견적 금액만 (src null, other true) — 공식가 자동 채움·근사매칭 없음 */
+  function resolveOption(trimId, o) {
+    var raw = String((o && o.n) || "").trim(), qp = o && Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : null;
+    if (!raw && !(o && o.id)) return null;
+    var list = trimId ? getTrimOptions(trimId) : [], hit = null, i;
+    if (o && o.id) {
+      for (i = 0; i < list.length; i++) if (list[i].optionId === o.id) { hit = list[i]; break; }
+      var mo = hit ? null : IX.option[o.id];
+      if (hit || mo) return { id: o.id, n: (hit ? hit.name : mo.name) || raw, raw: raw, price: qp != null ? qp : (hit && hit.price != null ? hit.price : null), src: "ID", other: false };
+    }
+    if (trimId && raw) { var k = optKey(raw); for (i = 0; i < list.length; i++) if (k && optKey(list[i].name) === k) { hit = list[i]; break; } }
+    if (hit) return { id: hit.optionId, n: raw, raw: raw, price: qp != null ? qp : (hit.price != null ? hit.price : null), src: "EXACT", other: false };
+    return { id: null, n: /^기타\(/.test(raw) ? raw : "기타(" + raw + ")", raw: raw, price: qp, src: qp != null ? "QUOTE" : null, other: true };
   }
   function quoteIndex(Q) {
     Q = Q || root.CHAQ || {}; if (QIX && QIX.src === Q) return QIX;
@@ -349,7 +369,7 @@
       yearLabel: rec.year || null, trimLabel: dispName(rec.trim) || (d ? d.trimName : null),
       modelYear: link.quoteModelYear || (d && sameYear ? d.lineup.modelYear : null),
       vehiclePrice: rec.vehiclePrice != null ? rec.vehiclePrice : (rec.base != null ? rec.base : null),
-      quoteOptions: (rec.opts || []).map(function (o) { var vp = o.p == null && rec.trimId ? optionPriceByName(rec.trimId, o.n) : null; return { name: o.n, price: o.p != null ? o.p : vp, priceSrc: o.p != null ? "QUOTE" : (vp != null ? "VM" : null) }; }),
+      quoteOptions: (rec.opts || []).map(function (o) { var r = resolveOption(rec.trimId, o); return r ? { name: r.n, price: r.price, priceSrc: r.price == null ? null : (o.p != null ? "QUOTE" : "VM"), id: r.id, other: r.other } : { name: o.n, price: o.p != null ? o.p : null, priceSrc: o.p != null ? "QUOTE" : null, id: null, other: true }; }),
       quoteColors: qColors,
       vmOptions: vmUsable ? getTrimOptions(rec.trimId, "SELECTABLE") : [],
       vmColors: vmUsable ? getTrimColors(rec.trimId) : [],
@@ -420,7 +440,7 @@
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
-    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, colorHexByName: colorHexByName, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
+    addDetail: addDetail, isDetailLoaded: isDetailLoaded, getTrimOptionCount: getTrimOptionCount, modelIdOfTrim: modelIdOfTrim, getListPrice: getListPrice, getTrimPrice: getTrimPrice, colorKeyOf: colorKeyOf, colorKeyByName: colorKeyByName, colorKeyForQuote: colorKeyForQuote, colorHexByName: colorHexByName, colorHexById: colorHexById, colorNameById: colorNameById, resolveOption: resolveOption, getImageKey: getImageKey, getImageColorKeys: getImageColorKeys, siteUrl: siteUrl,
     dispName: dispName, imageByName: imageByName, nameParts: nameParts, carNameHtml: carNameHtml, optionPriceByName: optionPriceByName,
     getSources: getSources, fromQuote: fromQuote, getQuotes: getQuotes, pickQuote: pickQuote, quoteView: quoteView, validate: validate
   };

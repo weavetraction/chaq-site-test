@@ -45,9 +45,14 @@
   function snapshot(rec, kind) {
     var img = document.querySelector(".detail_car_visual img"), src = img ? img.getAttribute("src") || "" : "";
     var it = onChip("init").replace(/\s+/g, ""), plan = it.indexOf("보증") > -1 ? "보증금 " + (it.match(/\d+%/) || ["30%"])[0] : it.indexOf("선납") > -1 ? "선납금 " + (it.match(/\d+%/) || ["30%"])[0] : "초기비용 0원";
-    var opts = [].map.call(document.querySelectorAll('#optPop .opt_row.on[data-grp="opt"]'), function (r) { var n = r.querySelector("span"), e = r.querySelector("em"), pv = e ? Number(e.textContent.replace(/[^\d]/g, "")) : 0; return { n: n ? n.textContent.trim() : "", p: pv || null }; }).filter(function (o) { return o.n; });
+    // 옵션: 팝업에서 고른 행(마스터 옵션ID data-opt-id 포함, RL-19 #36) → 없으면 견적 행의 옵션(마스터 참조 표시명·ID)
+    var opts = [].map.call(document.querySelectorAll('#optPop .opt_row.on[data-grp="opt"]'), function (r) { var n = r.querySelector("span"), e = r.querySelector("em"), pv = e ? Number(e.textContent.replace(/[^\d]/g, "")) : 0, id = r.getAttribute("data-opt-id") || null; var o = { n: n ? n.textContent.trim() : "", p: pv || null }; if (id) o.id = id; return o; }).filter(function (o) { return o.n; });
     var U = window.CHAQ_UTIL || {}, isDisc = U.isDisc || function () { return false; };
-    if (!opts.length && rec && rec.opts) opts = rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()) && !isDisc(o); }).map(function (o) { return { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; });
+    if (!opts.length && rec && rec.opts) {
+      var OP = window.CHAQ_OPT_PRICES ? window.CHAQ_OPT_PRICES(rec) : null;
+      opts = OP ? OP.items.filter(function (it) { return !it.none; }).map(function (it) { var o = { n: String(it.n).slice(0, 120), p: it.price ? Number(it.price) : null }; if (it.id) o.id = it.id; return o; })
+        : rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()) && !isDisc(o); }).map(function (o) { var x = { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; if (o.id) x.id = o.id; return x; });
+    }
     // 할인 항목(예: 대리점 할인 5% −3,031,500원)은 옵션 뒤에 음수 금액 그대로 → 견적서에서 '할인' 줄
     if (rec && rec.opts) rec.opts.forEach(function (o) { if (o && o.n && isDisc(o)) opts.push({ n: String(o.n).slice(0, 120), p: Number(o.p) < 0 ? Math.round(Number(o.p)) : null }); });
     var bp = window.CHAQ_DETAIL_BASE, basePrice = typeof bp === "number" && bp > 0 ? Math.round(bp) : null;

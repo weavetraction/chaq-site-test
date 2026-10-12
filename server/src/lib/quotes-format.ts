@@ -11,7 +11,9 @@ export const PLANS = [["0", "0원"], ["b", "보증금"], ["s", "선납금"]] as 
 
 export type QuoteRecord = {
   id: string; gu?: string; brand: string; model: string; year: string; trim: string; ext?: string; int?: string; fuel?: string; seg?: string; fin?: string;
-  opts: { n: string; p?: number }[]; base: number | null; rem?: number; cost: Record<string, Record<string, Record<string, number>>>;
+  opts: { n: string; p?: number; id?: string }[]; base: number | null;   // id = 차량 데이터 옵션ID(마스터 참조, RL-19 #36) — 양식 토큰 '옵션명@옵션ID:가격'
+  extId?: string | null; intId?: string | null;   // 외장·내장 색상의 차량 데이터 색상ID (양식 '색상명@색상ID') — 없으면 이름만(미매칭)
+  rem?: number; cost: Record<string, Record<string, Record<string, number>>>;
   resid: Record<string, Record<string, number>>; vehiclePrice?: number | null; trimId?: string | null; vmLink?: unknown;
   incl?: Incl;   // 포함 사항 (선팅·블박·탁송) — 없으면 사이트 기본 표시
   optCoef?: Record<string, Record<string, Record<string, number>>> | null;   // 옵션 증분 계수 (원/100만원, cost 와 같은 [거리][기간][초기유형] 모양) — 견적조회 옵션 선택 시 예상 월납 역산용(07-1 v1.7)
@@ -30,14 +32,14 @@ export const BASE_COLUMNS: { key: string; header: string; width: number; note?: 
   { key: "model", header: "모델", width: 18 },
   { key: "year", header: "연식/사양", width: 24 },
   { key: "trim", header: "등급", width: 26 },
-  { key: "ext", header: "외장색", width: 14 },
-  { key: "int", header: "내장색", width: 14 },
+  { key: "ext", header: "외장색", width: 14, note: "색상명@색상ID (차량 데이터 색상ID, 게이트가 채움) — ID 없으면 이름만 표시·기본 이미지" },
+  { key: "int", header: "내장색", width: 14, note: "색상명@색상ID" },
   { key: "fuel", header: "연료", width: 8 },
   { key: "seg", header: "차급", width: 8 },
   { key: "fin", header: "금융사", width: 12 },
   { key: "rem", header: "재고수", width: 7, note: "재고특가·빠른인도: 0 이면 목록에서 숨김" },
   { key: "base", header: "차량가", width: 12, note: "원 단위 숫자" },
-  { key: "opts", header: "옵션", width: 40, note: "옵션명:가격 | 옵션명:가격 (가격 없으면 옵션명만, 할인은 음수 — 예: 대리점 할인 5%:-3031500)" },
+  { key: "opts", header: "옵션", width: 40, note: "옵션명@옵션ID:가격 | … (옵션ID = 차량 데이터 옵션ID, 게이트가 채움. ID 없으면 사이트에 '기타(옵션명)'로 표시. 가격 없으면 옵션명만, 할인은 음수 — 예: 대리점 할인 5%:-3031500)" },
   ...INCL_KEYS.map(([k, ko]) => ({ key: "incl." + k, header: ko, width: 6, note: `${ko} 포함 Y / 미포함 N (비우면 사이트 기본: 포함)` })),
   { key: "trimId", header: "차량데이터 트림ID", width: 30, note: "비워두면 같은 차량명으로 자동 연결 — 안 되면 관리자 화면에서 지정" },
 ];
@@ -70,12 +72,23 @@ export function textToCoef(s: unknown): { coef: QuoteRecord["optCoef"]; error?: 
   return { coef: n ? coef : null };
 }
 
-export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map((o) => (o.p ? `${o.n}:${o.p}` : o.n)).join(" | "); }
+/** 'ID 토큰' 분리: '어비스 블랙 펄@hyundai-color-xb9' → { name, id } (08 §3 ID 토큰 형식 — ID 는 @ · : · | 를 포함하지 않음) */
+export const ID_RE = /^(.*?)\s*@\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*$/;
+export function splitIdTok(s: unknown): { name: string; id: string | null } {
+  const raw = String(s ?? "").trim(); const m = raw.match(ID_RE);
+  return m ? { name: m[1].trim(), id: m[2] } : { name: raw, id: null };
+}
+export const joinIdTok = (name: string | undefined | null, id: string | undefined | null) => (id ? `${name || ""}@${id}` : name || "");
+export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map((o) => { const h = joinIdTok(o.n, o.id); return o.p ? `${h}:${o.p}` : h; }).join(" | "); }
 export function textToOpts(s: unknown): QuoteRecord["opts"] {
   return String(s ?? "").split(/\s*\|\s*|\r?\n/).map((x) => x.trim()).filter(Boolean).map((x) => {
     // 금액이 음수면 할인 항목 (예: '대리점 할인 5%:-3031500') — 사이트에서 옵션이 아니라 '할인' 줄로 표시
     const m = x.match(/^(.*?)\s*:\s*([-−–]?)\s*([\d,]+)\s*원?$/);
-    return m ? { n: m[1].trim(), p: (m[2] ? -1 : 1) * Number(m[3].replace(/,/g, "")) } : { n: x };
+    const head = splitIdTok(m ? m[1] : x);
+    const o: QuoteRecord["opts"][number] = { n: head.name };
+    if (head.id) o.id = head.id;
+    if (m) o.p = (m[2] ? -1 : 1) * Number(m[3].replace(/,/g, ""));
+    return o;
   });
 }
 
@@ -85,6 +98,8 @@ export function recordToRow(kind: Kind, r: QuoteRecord): Record<string, unknown>
   for (const c of BASE_COLUMNS) {
     if (c.key === "kind") row[c.header] = KIND_KO[kind];
     else if (c.key === "opts") row[c.header] = optsToText(r.opts);
+    else if (c.key === "ext") row[c.header] = joinIdTok(r.ext, r.extId);
+    else if (c.key === "int") row[c.header] = joinIdTok(r.int, r.intId);
     else if (c.key.startsWith("incl.")) { const v = r.incl?.[c.key.slice(5) as keyof Incl]; row[c.header] = v === true ? "Y" : v === false ? "N" : ""; }
     else row[c.header] = (r as any)[c.key] ?? "";
   }
@@ -121,9 +136,11 @@ export function rowToRecord(row: Record<string, unknown>, rowNo: number): Parsed
   if (!kind) errors.push(`구분 '${kindKo}' (재고특가·빠른인도·견적조회 중 하나)`);
   const rec: QuoteRecord = {
     id: str(row["견적ID"]), brand: str(row["브랜드"]), model: str(row["모델"]), year: str(row["연식/사양"]), trim: str(row["등급"]),
-    ext: str(row["외장색"]), int: str(row["내장색"]), fuel: str(row["연료"]), seg: str(row["차급"]), fin: str(row["금융사"]),
+    ext: "", int: "", fuel: str(row["연료"]), seg: str(row["차급"]), fin: str(row["금융사"]),
     opts: textToOpts(row["옵션"]), base: null, cost: {}, resid: {},
   };
+  const ex = splitIdTok(row["외장색"]), ic = splitIdTok(row["내장색"]);
+  rec.ext = ex.name; rec.int = ic.name; if (ex.id) rec.extId = ex.id; if (ic.id) rec.intId = ic.id;
   if (!rec.brand) errors.push("브랜드 없음");
   if (!rec.model) errors.push("모델 없음");
   const base = num(row["차량가"]); if (Number.isNaN(base)) errors.push("차량가가 숫자가 아님"); else rec.base = base;

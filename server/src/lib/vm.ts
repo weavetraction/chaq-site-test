@@ -13,11 +13,14 @@ export type TrimInfo = {
   trimName: string; modelYear: number | null; domestic: boolean; label: string; channel: string;
 };
 
-let cache: { mtime: number; trims: Map<string, TrimInfo>; list: TrimInfo[] } | null = null;
+type IdRow = { id: string; name?: string; hex?: string | null };
+type Link = { trimId: string; optionId?: string; colorId?: string };
+type VmSrc = { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[]; options?: IdRow[]; colors?: IdRow[]; trimOptions?: Link[]; trimColors?: Link[] };
+let cache: { mtime: number; trims: Map<string, TrimInfo>; list: TrimInfo[]; options: Map<string, IdRow> | null; colors: Map<string, IdRow> | null; trimOpt: Map<string, Set<string>>; trimCol: Map<string, Set<string>> } | null = null;
 let fromDb = false;
 
 /** DB 작업본이 바뀔 때마다 vm-store 가 호출 */
-export function setVmSource(M: { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[] }) { cache = build(M, -1); fromDb = true; }
+export function setVmSource(M: VmSrc) { cache = build(M, -1); fromDb = true; }
 
 function load() {
   if (fromDb && cache) return cache;
@@ -32,7 +35,7 @@ function load() {
   return cache;
 }
 
-function build(M: { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: Trim[] }, mtime: number) {
+function build(M: VmSrc, mtime: number) {
   const B = new Map(M.brands.map((b) => [b.id, b])), MO = new Map(M.models.map((m) => [m.id, m])), L = new Map(M.lineups.map((l) => [l.id, l]));
   const trims = new Map<string, TrimInfo>();
   for (const t of M.trims) {
@@ -47,11 +50,23 @@ function build(M: { brands: Brand[]; models: Model[]; lineups: Lineup[]; trims: 
     };
     trims.set(t.id, info);
   }
-  return { mtime, trims, list: [...trims.values()] };
+  // 옵션ID·색상ID 색인 (견적 양식 '옵션명@옵션ID'·'색상명@색상ID' 검증용, RL-19 #36). 공통본(분할 배포)에 options/colors 가 없으면 null = 검증 생략
+  const options = M.options && M.options.length ? new Map(M.options.map((o) => [o.id, o])) : null;
+  const colors = M.colors && M.colors.length ? new Map(M.colors.map((c) => [c.id, c])) : null;
+  const trimOpt = new Map<string, Set<string>>(), trimCol = new Map<string, Set<string>>();
+  for (const r of M.trimOptions || []) if (r.optionId) (trimOpt.get(r.trimId) || trimOpt.set(r.trimId, new Set()).get(r.trimId)!).add(r.optionId);
+  for (const r of M.trimColors || []) if (r.colorId) (trimCol.get(r.trimId) || trimCol.set(r.trimId, new Set()).get(r.trimId)!).add(r.colorId);
+  return { mtime, trims, list: [...trims.values()], options, colors, trimOpt, trimCol };
 }
 
 export const vm = {
   get(trimId: string | null | undefined): TrimInfo | null { if (!trimId) return null; return load().trims.get(trimId) || null; },
+  /** 옵션ID 존재 여부: true/false, 색인이 없으면 null(검증 생략) */
+  optionKnown(id: string): boolean | null { const c = load(); return c.options ? c.options.has(id) : null; },
+  colorKnown(id: string): boolean | null { const c = load(); return c.colors ? c.colors.has(id) : null; },
+  /** 그 트림에 연결된 옵션/색상인지 (색인 없으면 null) */
+  trimHasOption(trimId: string, id: string): boolean | null { const c = load(); const s = c.trimOpt.get(trimId); return c.options ? !!(s && s.has(id)) : null; },
+  trimHasColor(trimId: string, id: string): boolean | null { const c = load(); const s = c.trimCol.get(trimId); return c.colors ? !!(s && s.has(id)) : null; },
   count() { return load().list.length; },
   /** 공백 무시 부분 일치 검색 (모든 단어 포함) */
   search(qs: string, limit = 30): TrimInfo[] {
