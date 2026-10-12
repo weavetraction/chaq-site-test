@@ -79,8 +79,8 @@
                 el.innerHTML = '<p class="qr_head"><span>차큐 견적서</span><small>#' + esc(q.no) + ' · ' + d8(q.at) + '</small></p>' +
                     '<h2 class="qr_car">' + esc(((q.carName || '') + ' ' + (q.trimName || '')).trim() || '상담 문의') + '</h2>' + (q.spec ? '<p class="qr_spec">' + esc(q.spec) + '</p>' : '') +
                     (q.image ? '<img class="qr_img" src="' + esc(img(q.image)) + '" alt="" onerror="this.remove()">' : '') +
-                    '<div class="qr_month"><span>' + (q.estimated ? '옵션 포함 예상 월 납입금' : '월 납입금') + '</span><strong>' + (q.monthly ? won(q.monthly) + '<em>원</em>' : '상담 시 안내') + '</strong></div>' +
-                    (q.estimated ? '<p class="qr_note" style="margin-top:6px">선택한 옵션 추가금을 반영한 예상 금액이에요. 담당 매니저가 실제 견적으로 확정해 드려요.</p>' : '') +
+                    '<div class="qr_month"><span>' + (q.estimated ? (q.estKind === 'base' ? '예상 월 납입금' : '옵션 포함 예상 월 납입금') : '월 납입금') + '</span><strong>' + (q.monthly ? won(q.monthly) + '<em>원</em>' : '상담 시 안내') + '</strong></div>' +
+                    (q.estimated ? '<p class="qr_note" style="margin-top:6px">' + (q.estKind === 'base' ? '딜리버 기준가로 추정한 금액이에요(금융사 실견적 아님). 담당 매니저가 실제 견적으로 확정해 드려요.' : '선택한 옵션 추가금을 반영한 예상 금액이에요. 담당 매니저가 실제 견적으로 확정해 드려요.') + '</p>' : '') +
                     (rows.length ? '<dl class="qr_tbl">' + rows.map(function (x) { return '<div' + (x[2] ? ' class="' + x[2] + '"' : '') + '><dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
                     (opts.length ? '<p class="qr_sec">추가 옵션 ' + opts.length + '개</p><ul class="qr_opts">' + opts.map(function (o) { return '<li><span>' + esc(o.n) + '</span>' + (o.p ? '<em>+' + won(o.p) + '원</em>' : '') + '</li>'; }).join('') + '</ul>' : '') +
                     '<p class="qr_note">' + d8(q.at) + ' 문의 당시 기준 견적이에요. 금융사 심사 결과, 재고·프로모션 변동에 따라 최종 조건은 달라질 수 있어요. 담당 매니저가 확인 후 안내드려요.</p>' +

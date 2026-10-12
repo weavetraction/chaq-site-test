@@ -19,6 +19,9 @@
     all.forEach(function (o) { if (!o || !o.n) return; if (isDisc(o)) { discs.push(o); if (Number(o.p) < 0) disc += Number(o.p); } else opts.push(o); });
     return { opts: opts, discs: discs, disc: disc };
   }
+  /** 견적조회 '딜리버 기준가(추정)' 행 (DC-70, RL-19 #39): 금융사 칸이 실견적이 아닌 외부 기준가·역산 추정값 — 실견적이 있으면 뒤로, 노출 시 '추정' 표기 */
+  var EST_FIN = "딜리버 기준가(추정)";
+  function isEstFin(rec) { var f = String((rec && rec.fin) || "").replace(/\s+/g, ""); return !!f && /기준가/.test(f) && /추정/.test(f); }
   /** 할인 금액 표기: −3,031,500원 */
   function discWon(n) { return "\u2212" + won(Math.abs(+n || 0)) + "원"; }
   /** 차량 총가격 = 기본 차량가 + 옵션가(견적 금액, 없으면 차량 데이터 공식가) + 할인(음수) — 상세 가격 영역과 같은 계산 (목록 '차량가' 정렬용) */
@@ -83,5 +86,5 @@
     if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
-  root.CHAQ_UTIL = { PH: PH, esc: esc, won: won, priceShort: priceShort, isDisc: isDisc, splitOpts: splitOpts, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  root.CHAQ_UTIL = { EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, isDisc: isDisc, splitOpts: splitOpts, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

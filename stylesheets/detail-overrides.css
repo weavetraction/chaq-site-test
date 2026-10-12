@@ -2661,3 +2661,7 @@ html.chaq-detail-loading .local-car-detail::after{
 /* 견적조회 옵션 포함 예상 월납 안내 (07-1 v1.7) */
 .local-car-detail .confirm-monthly { flex-wrap: wrap; }
 .local-car-detail .confirm-monthly .est_hint { flex-basis: 100%; margin: 2px 0 0; color: #8a8f96; font-size: 12px; font-weight: 400; line-height: 1.5; word-break: keep-all; }
+
+/* '딜리버 기준가(추정)' 표기(DC-70, RL-19 #39): 실견적 태그(초록) 대신 회색 계열 */
+.local-car-detail .detail_includes .lowest-tag.is-est,
+.local-special-list .est_card .est_tag.est_tag_est { background: #f1f3f5; color: #5f6670; }

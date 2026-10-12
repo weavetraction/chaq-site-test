@@ -207,6 +207,7 @@
                 blackbox: '블박\n2ch 블랙박스(전,후방) 기본 장착',
                 delivery: '탁송\n서울,수도권 기준 탁송료 포함',
                 lowest: '금융사/렌트사 실시간 최저가\n매일 갱신되는 금융사·렌탈사 최저가 조건입니다',
+                lowestEst: '딜리버 기준가(추정)\n금융사 실견적이 아직 없는 조건이라 딜리버가 공식 가격표 기준으로 추정한 금액이에요. 문의하시면 실제 견적으로 확정돼요.',
                 totalPrice: '보험,취등록세,자동차세 불포함',
                 acqCost: '보험,취등록세,자동차세 포함'
             };
@@ -226,7 +227,7 @@
             }
             function showHelp(icon) {
                 var key = icon.getAttribute('data-help');
-                helpPop.textContent = helpText[key] || '';
+                helpPop.textContent = (key==='lowest' && document.querySelector('.lowest-tag.is-est') ? helpText.lowestEst : helpText[key]) || '';
                 helpPop.classList.add('show');
                 helpPop.setAttribute('aria-hidden', 'false');
                 // 아이콘 위쪽 중앙에 말풍선 배치 (화면 밖으로 안 나가게 보정)
@@ -557,7 +558,9 @@
             var EST_POOL = (/[?&]from=estimate(&|$)/.test(location.search) && rec.trimId && String(rec.id)[0]==='e')
                 ? (DATA.estimate||[]).filter(function(r){ return r.trimId===rec.trimId; }) : null;
             function exactCost(r,c){ var t=r.cost&&r.cost[c.dist]&&r.cost[c.dist][c.term]; return (t&&t[c.plan]!=null)?t[c.plan]:null; }
-            function pickEst(c){ var b=null,bm=Infinity; EST_POOL.forEach(function(r){ var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); return b; }
+            var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
+            // 실견적(금융사) 행 우선 — '딜리버 기준가(추정)'(DC-70, #39) 행은 그 조건에 실견적이 없을 때만 고른다
+            function pickEst(c){ var b=null,bm=Infinity; EST_POOL.forEach(function(r){ if(isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); if(!b) EST_POOL.forEach(function(r){ if(!isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); return b; }
             function monthly(c){
                 if(EST_POOL){ var b=pickEst(c); if(b){ rec=b; window.CHAQ_DETAIL_QUOTE=b; } return b?exactCost(b,c):null; }   // 문의도 이 견적(금융사)으로 저장
                 var d=rec.cost&&rec.cost[c.dist]; if(!d) return null; var t=d[c.term]||d[Object.keys(d)[0]]; if(!t) return null; if(t[c.plan]!=null) return t[c.plan]; for(var p in t) return t[p]; return null; }
@@ -592,17 +595,20 @@
                 var m=monthly(c), rv=resid(c);
                 // 견적조회 옵션 증분 역산(07-1 v1.7): 행에 옵션증분계수(optCoef, 원/100만원)가 있으면 선택 옵션·색상 추가금만큼 월 납입금·잔가를 예상값으로 올림. 계수가 없으면 기본 사양 월납 그대로(옵션 미반영 안내)
                 var extra0=selExtra(), kc=(EST_POOL && rec.optCoef && rec.optCoef[c.dist] && rec.optCoef[c.dist][c.term]) ? rec.optCoef[c.dist][c.term][c.plan] : null;
-                var estimated=false;
+                var estimated=false, estKind=null;
                 if(EST_POOL && m!=null && extra0>0 && kc!=null){
                     m = m + Math.round(extra0/1e6*kc/10)*10;
                     if(rv!=null && rec.base){ rv = Math.round(rv/rec.base*(rec.base+extra0)/100)*100; }
-                    estimated=true;
+                    estimated=true; estKind='coef';
                 }
-                window.CHAQ_DETAIL_ESTIMATED = estimated; window.CHAQ_DETAIL_OPT_EXTRA = extra0;
+                var baseEst = isEF(rec) && m!=null;   // '딜리버 기준가(추정)' 행: 금융사 실견적이 아님 → 예상 표기 (#39)
+                if(baseEst && !estimated){ estimated=true; estKind='base'; }
+                window.CHAQ_DETAIL_ESTIMATED = estimated; window.CHAQ_DETAIL_OPT_EXTRA = extra0; window.CHAQ_DETAIL_EST_KIND = estKind;
+                (function(){ var lt=document.querySelector('.detail_includes .lowest-tag'); if(!lt) return; var want = baseEst ? '딜리버 기준가(추정)' : '금융사/렌트사 실시간 최저가'; if(lt.firstChild && lt.firstChild.nodeValue !== want){ lt.firstChild.nodeValue = want; lt.classList.toggle('is-est', baseEst); } })();
                 (function(){ var l1=document.querySelector('.detail_monthly small'), l2=document.querySelector('.confirm-monthly span'), note=document.getElementById('optPopNote');
-                    if(l1) l1.textContent = estimated ? '옵션 포함 예상 월 납입금' : '월 납입금';
-                    if(l2) l2.textContent = estimated ? '옵션 포함 예상 월납입금' : '선택 조건 확정 월납입금';
-                    var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent='옵션 추가금을 반영한 예상 금액이에요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
+                    if(l1) l1.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월 납입금' : '예상 월 납입금') : '월 납입금';
+                    if(l2) l2.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월납입금' : '예상 월납입금') : '선택 조건 확정 월납입금';
+                    var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent=(estKind==='coef')?'옵션 추가금을 반영한 예상 금액이에요. 문의하시면 실제 견적으로 확정돼요.':'실견적과 다를 수 있어요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
                     if(note) note.textContent = (EST_POOL && rec.optCoef) ? '선택한 옵션·색상 추가금은 차량 총가격과 월 납입금(예상)에 반영됩니다. 문의 시 실제 견적으로 확정돼요.' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.';
                 })();
                 animateNum(hm, m, true);

@@ -40,7 +40,7 @@ export const InquiryInput = z.object({
     product: z.string().max(20), term: z.string().max(20), plan: z.string().max(30), dist: z.string().max(20),
     vehiclePrice: z.number().int().nonnegative().max(2_000_000_000).nullable(),
     basePrice: z.number().int().nonnegative().max(2_000_000_000).nullable(),   // 기본 차량가 (총가격 = 기본 + 옵션 + 할인)
-    estimated: z.boolean().optional(),   // 견적조회에서 옵션을 골라 월 납입금을 계수로 역산한 '예상' 값인지 (07-1 v1.7)
+    estimated: z.boolean().optional(), estKind: z.enum(["coef", "base"]).optional(),   // coef = 옵션 증분 역산 / base = '딜리버 기준가(추정)' 행(DC-70, #39)   // 견적조회에서 옵션을 골라 월 납입금을 계수로 역산한 '예상' 값인지 (07-1 v1.7)
     optionExtra: z.number().int().nonnegative().max(500_000_000).optional(),   // 역산에 넣은 선택 옵션·색상 추가금 합
     // 옵션 금액이 음수면 할인 항목(예: 대리점 할인 5% −3,031,500원) — 견적서에서 '할인' 줄로 표시
     options: z.array(z.object({ n: z.string().max(120), p: z.number().int().min(-500_000_000).max(500_000_000).nullable().optional(), id: z.string().max(120).optional() })).max(40),   // id = 마스터 옵션ID (RL-19 #36)
@@ -82,7 +82,7 @@ export async function reportView(token: string) {
     no: x.id, at: x.created_at, kind: x.kind, recId: x.rec_id, trimId: x.trim_id, source: x.source,
     carName: x.car_name, spec: x.spec, trimName: x.trim_name, image: s.image || null,
     product: s.product || c.product || "", term: s.term || (c.term ? c.term + "개월" : ""), plan: s.plan || PLAN_KO[c.plan] || "", dist: s.dist || (c.dist ? "연 " + c.dist + "만 km" : ""),
-    monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null, basePrice: s.basePrice ?? null, estimated: s.estimated === true,
+    monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null, basePrice: s.basePrice ?? null, estimated: s.estimated === true, estKind: s.estKind || null,
     options: Array.isArray(s.options) && s.options.length ? s.options : (x.options || []).map((n: string) => ({ n, p: null })),
     ext: s.ext || x.color || "", int: s.int || "", delivery: s.delivery || "", finance: s.finance || "",
   };

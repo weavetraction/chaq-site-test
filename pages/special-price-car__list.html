@@ -228,8 +228,11 @@
                     if (!F.model && !F.all) { guide('차량 모델을 선택해주세요'); return; }
                     if (!F.trim && !F.all)  { guide('차량 등급을 선택해주세요'); return; }
                     // 견적조회 = 같은 차량의 금융사별 견적 중 '고른 조건 그대로'의 최저가 (다른 조건 값으로 대신하지 않음)
-                    var best=null, bestM=Infinity;
-                    arr.forEach(function(r){ var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    // 실견적(금융사) 우선 — '딜리버 기준가(추정)' 행(DC-70)은 같은 조건에 실견적이 하나도 없을 때만
+                    var best=null, bestM=Infinity, isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
+                    arr.forEach(function(r){ if(isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    if(!best) arr.forEach(function(r){ if(!isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    var bestEst = !!(best && isEF(best));
                     if (!best && USE_VM && F.model) {   // 견적 데이터가 없는 차량 → 월 납입금 '별도문의'
                         var eg = F.trim ? TG.groupByKey(F.model, F.trim) : null, er = eg ? { g: eg, tid: groupRep(eg) } : modelRep(F.model);
                         var ed = er && er.tid ? VM.describe(er.tid) : null;
@@ -254,8 +257,8 @@
                         '<div class="est_visual"><img src="'+carImg(best)+'" alt=""></div>'+
                         '<strong class="est_name cn">'+carNameH(best)+'</strong>'+
                         '<span class="est_year">'+escT((USE_VM && best.trimId && (TG.basicLine ? TG.basicLine(best.trimId, best) : TG.specLine(best.trimId, best))) || best.year || '')+'</span>'+
-                        '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b>0<em>원</em></b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
-                        '<span class="est_tag">금융사/렌트사 실시간 최저가</span></div>';
+                        '<div class="est_bottom"><div class="est_monthly"><small>'+(bestEst?'예상 월 납입금':'월 납입금')+'</small><b>0<em>원</em></b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
+                        (bestEst ? '<span class="est_tag est_tag_est">딜리버 기준가(추정) · 문의 시 실견적 확정</span>' : '<span class="est_tag">금융사/렌트사 실시간 최저가</span>')+'</div>';
                     animateNum(estEl.querySelector('.est_monthly b'), bestM, true);
                     return;
                 }
