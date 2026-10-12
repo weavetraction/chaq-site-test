@@ -324,6 +324,9 @@
   function resolveOption(trimId, o) {
     var raw = String((o && o.n) || "").trim(), qp = o && Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : null;
     if (!raw && !(o && o.id)) return null;
+    // 게이트가 만든 보조 줄(08 §3): '외장 ○○:추가금'·'내장 ○○:추가금' = 마스터 트림색상 추가금(매칭된 값) / '기타(차액):+금액' = 정가+옵션과의 차액 보존
+    if (/^(외장|내장) /.test(raw)) return { id: null, n: raw, raw: raw, price: qp, src: qp != null ? "COLOR" : null, other: false, colorLine: true };
+    if (/^기타\(차액\)$/.test(raw)) return { id: null, n: raw, raw: raw, price: qp, src: qp != null ? "QUOTE" : null, other: true, diffLine: true };
     var list = trimId ? getTrimOptions(trimId) : [], hit = null, i;
     if (o && o.id) {
       for (i = 0; i < list.length; i++) if (list[i].optionId === o.id) { hit = list[i]; break; }

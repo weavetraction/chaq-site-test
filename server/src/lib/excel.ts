@@ -42,9 +42,33 @@ export async function buildWorkbook(data: Partial<Record<Kind, QuoteRecord[]>>, 
   return wb;
 }
 
-export async function parseWorkbook(buf: Buffer): Promise<{ rows: ParsedRow[]; missingHeaders: string[] }> {
+/** 다른 도구(openpyxl 등)가 저장한 파일의 메모(comments)·VML 관계는 exceljs 가 못 읽고 터짐(절대경로 Target, xl/comments/… 경로) → 메모 관계만 떼어낸 사본으로 다시 읽는다. 메모는 파싱에 필요 없음 */
+async function stripComments(buf: Buffer): Promise<Buffer> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(buf);
+  for (const name of Object.keys(zip.files)) {
+    if (/^xl\/worksheets\/_rels\/.*\.rels$/.test(name)) {
+      const xml = await zip.file(name)!.async("string");
+      zip.file(name, xml.replace(/<Relationship\b[^>]*Type="[^"]*\/(comments|vmlDrawing)"[^>]*\/>/g, ""));
+    } else if (/^xl\/worksheets\/sheet\d+\.xml$/.test(name)) {
+      const xml = await zip.file(name)!.async("string");
+      zip.file(name, xml.replace(/<legacyDrawing\b[^>]*\/>/g, ""));
+    } else if (/^xl\/(comments|drawings\/(comments|vml))/.test(name) || /\.vml$/.test(name)) zip.remove(name);
+  }
+  return Buffer.from(await zip.generateAsync({ type: "nodebuffer" }));
+}
+export async function loadWorkbook(buf: Buffer): Promise<ExcelJS.Workbook> {
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(buf as any);
+  try { await wb.xlsx.load(buf as any); return wb; }
+  catch (e) {
+    const wb2 = new ExcelJS.Workbook();
+    await wb2.xlsx.load(await stripComments(buf) as any);   // 메모 관계 때문이 아니면 여기서 원래 오류가 다시 남
+    return wb2;
+  }
+}
+
+export async function parseWorkbook(buf: Buffer): Promise<{ rows: ParsedRow[]; missingHeaders: string[] }> {
+  const wb = await loadWorkbook(buf);
   const ws = wb.getWorksheet(SHEET) || wb.worksheets[0];
   if (!ws) return { rows: [], missingHeaders: ["(시트 없음)"] };
   const headers: string[] = [];

@@ -83,11 +83,11 @@ export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map(
 export function textToOpts(s: unknown): QuoteRecord["opts"] {
   return String(s ?? "").split(/\s*\|\s*|\r?\n/).map((x) => x.trim()).filter(Boolean).map((x) => {
     // 금액이 음수면 할인 항목 (예: '대리점 할인 5%:-3031500') — 사이트에서 옵션이 아니라 '할인' 줄로 표시
-    const m = x.match(/^(.*?)\s*:\s*([-−–]?)\s*([\d,]+)\s*원?$/);
+    const m = x.match(/^(.*?)\s*:\s*([-−–+]?)\s*([\d,]+)\s*원?$/);   // '+' 접두(게이트의 '기타(차액):+60000') 허용
     const head = splitIdTok(m ? m[1] : x);
     const o: QuoteRecord["opts"][number] = { n: head.name };
     if (head.id) o.id = head.id;
-    if (m) o.p = (m[2] ? -1 : 1) * Number(m[3].replace(/,/g, ""));
+    if (m) o.p = (m[2] && m[2] !== "+" ? -1 : 1) * Number(m[3].replace(/,/g, ""));
     return o;
   });
 }

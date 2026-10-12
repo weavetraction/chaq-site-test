@@ -5,7 +5,7 @@
 import ExcelJS from "exceljs";
 import type pg from "pg";
 import { q, tx } from "../db.js";
-import { cellValue } from "./excel.js";
+import { cellValue, loadWorkbook } from "./excel.js";
 import { VmKind, VM, VM_KINDS, idOf, saveItem, deleteItem, loadDraft, VmError, KIND_KO, REQUIRED, replaceDraft, validateVm, countsOf, gz, gunzipVm } from "./vm-store.js";
 
 type Col = { h: string; f: string; t?: "int" | "strArr" | "status"; w?: number; note?: string; ref?: (o: any, X: Lookup) => unknown };
@@ -119,7 +119,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.strin
 
 export async function planVmImport(buf: Buffer) {
   const M = await loadDraft();
-  const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf as any);
+  const wb = await loadWorkbook(buf);   // 다른 도구가 저장한 메모 관계로 exceljs 가 터지면 메모를 떼고 다시 읽음
   const ops: Op[] = []; const errors: string[] = [];
   for (const sh of SHEETS) {
     const ws = wb.getWorksheet(sh.name); if (!ws) continue;
@@ -200,7 +200,7 @@ function defaultsFor(kind: VmKind, o: any) {
 export type ReplaceRows = { rows: Partial<Record<VmKind, { label: string; key: string; vals: Record<string, unknown> }[]>>; errors: string[]; skippedDel: Record<string, number> };
 /** 엑셀 9개 시트 → 행 값 (DB 와 무관한 읽기만 — 배포용 초기화 파일도 이 결과를 그대로 저장) */
 export async function readReplaceSheets(buf: Buffer): Promise<ReplaceRows> {
-  const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf as any);
+  const wb = await loadWorkbook(buf);   // 다른 도구가 저장한 메모 관계로 exceljs 가 터지면 메모를 떼고 다시 읽음
   const missing = SHEETS.filter((sh) => !wb.getWorksheet(sh.name)).map((sh) => sh.name);
   if (missing.length) throw new VmError(`전체 교체는 9개 시트가 모두 있어야 합니다 — 없는 시트: ${missing.join(", ")}`);
   const out: ReplaceRows = { rows: {}, errors: [], skippedDel: {} }; const errors = out.errors;

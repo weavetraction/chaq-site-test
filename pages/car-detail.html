@@ -180,7 +180,7 @@
                 var r = (VM && VM.resolveOption) ? VM.resolveOption(rec.trimId, o) : null;
                 var q = o.pSrc === 'VM' ? null : (Number(o.p) > 0 ? Number(o.p) : null);
                 var pr = r ? r.price : q;
-                out.items.push({ n: r ? r.n : o.n, raw: o.n, id: r ? r.id : (o.id || null), other: r ? r.other : !o.id, price: pr, src: q != null ? 'QUOTE' : (pr != null ? 'VM' : null), idx: idx });
+                out.items.push({ n: r ? r.n : o.n, raw: o.n, id: r ? r.id : (o.id || null), other: r ? r.other : !o.id, colorLine: !!(r && r.colorLine), diffLine: !!(r && r.diffLine), price: pr, src: q != null ? 'QUOTE' : (pr != null ? 'VM' : null), idx: idx });
                 out.priceable++; if (pr != null) { out.sum += pr; out.cnt++; }
             });
             return out;
@@ -497,8 +497,15 @@
             //   미매칭 옵션(기타(…))이 있는 재고 행은 정가·할인을 알 수 없으므로 '차량 총가격'만 표시(W7·W5 — 연식·옵션 미매칭)
             (function(){
                 var kind = String(rec.id||'')[0]; if(kind!=='s' && kind!=='f') return;
-                var unmatched = OPS.items.some(function(it){ return it.other; });
-                var decomposed = (OPS.discs||[]).length>0 || !unmatched;
+                var unmatched = OPS.items.some(function(it){ return it.other && !it.diffLine; });   // 기타(차액) 줄은 분해를 막지 않음(08 §3 ⑤)
+                var lp = (window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice) ? window.CHAQ_VM.getListPrice(rec.trimId) : null;
+                var atList = !!(lp && rec.base != null && Number(lp.price) === Number(rec.base));   // 차량가 = 마스터 트림가(정가)인 행 = 게이트 분해 행
+                if(!atList && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.raw){   // 직전 연식 트림(후속트림ID = 이 트림)의 정가로 분해된 행(DC-69)
+                    var prevs = ((window.CHAQ_VM.raw()||{}).trims||[]).filter(function(t){ return t.successorTrimId===rec.trimId && t.listPrice!=null && Number(t.listPrice)===Number(rec.base); });
+                    if(prevs.length) atList = true;
+                }
+                var hasDiff = OPS.items.some(function(it){ return it.diffLine; });   // 기타(차액) 줄 = 게이트가 정가 기준으로 분해한 행
+                var decomposed = (OPS.discs||[]).length>0 || hasDiff || (!unmatched && atList);
                 var rb=document.getElementById('rowBase'), ro=document.getElementById('rowOpt'), rd=document.getElementById('rowDisc');
                 if(decomposed){ if(rb) rb.querySelector('span').textContent = '정가 (공식 가격표)'; window.CHAQ_DETAIL_DECOMPOSED = true; return; }
                 window.CHAQ_DETAIL_DECOMPOSED = false;
