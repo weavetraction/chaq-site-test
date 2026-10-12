@@ -141,13 +141,14 @@
       var L = r.statusLabels, total = 0; Object.keys(r.counts).forEach(function (k) { total += r.counts[k]; });
       $("#newBadge").hidden = !r.counts.NEW; $("#newBadge").textContent = r.counts.NEW || "";
       $("#statusChips").innerHTML = '<button data-st="" class="' + (iqState.status ? "" : "on") + '">전체 ' + total + '</button>' + Object.keys(L).map(function (k) { return '<button data-st="' + k + '" class="' + (iqState.status === k ? "on" : "") + '">' + L[k] + ' ' + (r.counts[k] || 0) + '</button>'; }).join("");
+      iqRows = {}; r.rows.forEach(function (x) { iqRows[x.id] = x; });
       $("#iqTable").innerHTML = '<tr><th>#</th><th>접수</th><th>상태</th><th>고객</th><th>차량</th><th>조건</th><th>유입</th><th class="num">월 납입금</th><th>메모</th></tr>' + (r.rows.length ? r.rows.map(function (x) {
         var c = x.conditions || {}, cond = [c.product, c.term ? c.term + "개월" : "", PLAN[c.plan] || "", c.dist ? c.dist + "만 km" : ""].filter(Boolean).join(" · ");
         return '<tr><td>' + x.id + '</td><td>' + dt(x.created_at) + '<br><small class="hint">' + (x.kind ? KIND[x.kind] : x.source === "GUIDE" || x.source === "FORM" ? "일반 상담" : "") + (x.rec_id ? " " + esc(x.rec_id) : "") + '</small></td>' +
           '<td><select data-id="' + x.id + '" class="st-' + x.status + '">' + Object.keys(L).map(function (k) { return '<option value="' + k + '"' + (k === x.status ? " selected" : "") + '>' + L[k] + '</option>'; }).join("") + '</select></td>' +
           '<td class="cust">' + (x.phone ? '<strong>' + esc(x.customer_name || "이름 없음") + '</strong><br><a href="tel:' + esc(String(x.phone).replace(/[^\d]/g, "")) + '">' + esc(x.phone) + '</a>' + (x.contact_time ? '<br><small class="hint">' + esc(x.contact_time) + '</small>' : '') + (x.message ? '<br><small class="msg">' + esc(x.message) + '</small>' : '') : '<small class="hint">연락처 없음</small>') +
             (x.member_id ? '<br><small class="pill">회원 #' + x.member_id + '</small>' : '') + (x.phone_verified === false ? ' <small class="pill draft" title="인증문자 준비 전 직접 입력한 번호 — 첫 연락 때 본인 확인">번호 미인증</small>' : '') + (x.kakao_sent_at ? ' <small class="pill live" title="알림톡 발송 ' + dt(x.kakao_sent_at) + '">알림톡 전달</small>' : x.member_id ? ' <small class="pill draft" title="알림톡 연동 전이거나 전달 실패">알림톡 미전달</small>' : '') +
-            (x.report_token ? '<br><a href="/pages/quote-report.html?t=' + esc(x.report_token) + '" target="_blank" rel="noopener">견적서 보기</a>' : '') + '</td>' +
+            (x.report_token ? '<br><a href="/pages/quote-report.html?t=' + esc(x.report_token) + '" target="_blank" rel="noopener">견적서 보기</a> <button type="button" class="btn sm" data-copy-report="' + x.id + '" title="카카오톡 채팅방에 붙여넣을 견적서 메시지 복사">견적서 링크 복사</button>' : '') + '</td>' +
           '<td class="car"><strong>' + esc(x.car_name || "-") + ' ' + esc(x.trim_name) + '</strong>' + esc(x.spec) + (x.options && x.options.length ? '<br><small class="hint">옵션: ' + esc(x.options.join(", ")) + '</small>' : '') + (x.color ? '<br><small class="hint">색상: ' + esc(x.color) + '</small>' : '') + (/^https?:\/\//i.test(x.page_url || '') ? '<br><a href="' + esc(x.page_url) + '" target="_blank" rel="noopener">페이지 열기</a>' : '') + '</td>' +
           '<td>' + esc(cond) + '</td><td>' + touch(x.last_touch) + (x.first_touch && x.first_touch.source && x.first_touch.source !== (x.last_touch || {}).source ? '<br><small class="hint">처음: ' + touch(x.first_touch) + '</small>' : '') + '</td><td class="num">' + (x.monthly ? won(x.monthly) + "원" : "별도문의") + '</td>' +
           '<td><textarea data-memo="' + x.id + '" rows="2" placeholder="상담 메모">' + esc(x.memo) + '</textarea></td></tr>';
@@ -159,6 +160,23 @@
   $("#statusChips").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; iqState.status = b.getAttribute("data-st"); iqState.page = 1; loadInquiries(); });
   $("#iqPager").addEventListener("click", function (e) { var p = e.target.getAttribute("data-page"); if (p) { iqState.page = +p; loadInquiries(); } });
   var sTimer = null; $("#iqSearch").addEventListener("input", function (e) { clearTimeout(sTimer); sTimer = setTimeout(function () { iqState.q = e.target.value.trim(); iqState.page = 1; loadInquiries(); }, 300); });
+  // 견적서 링크 복사: 카카오톡 채널 1:1 채팅방에 붙여넣을 메시지 (알림톡 연동 전 수동 발송용)
+  var iqRows = {};
+  var SITE = /(^|\.)chaq\.co\.kr$/.test(location.hostname) ? location.origin : "https://chaq.co.kr";
+  function reportMessage(x) {
+    var c = x.conditions || {}, cond = [c.product, c.term ? c.term + "개월" : "", ({ "0": "초기비용 0원", b: "보증금 30%", s: "선납금 30%" })[c.plan] || "", c.dist ? "연 " + c.dist + "만 km" : ""].filter(Boolean).join(" · ");
+    return "[차큐] " + (x.customer_name ? x.customer_name + "님, " : "") + "문의하신 견적서를 보내드려요.\n" +
+      ((x.car_name || "") + " " + (x.trim_name || "")).trim() + "\n" + cond + (x.monthly ? " · 월 " + won(x.monthly) + "원" : "") + "\n\n" +
+      "▶ 견적서 보기\n" + SITE + "/pages/quote-report.html?t=" + encodeURIComponent(x.report_token) + "\n\n" +
+      "궁금한 점은 이 채팅방에 편하게 남겨 주세요. (접수번호 #" + x.id + ")";
+  }
+  $("#iqTable").addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-copy-report]"); if (!b) return;
+    var x = iqRows[b.getAttribute("data-copy-report")]; if (!x) return;
+    var t = reportMessage(x), done = function () { var o = b.textContent; b.textContent = "복사됨 ✓"; b.classList.add("primary"); setTimeout(function () { b.textContent = o; b.classList.remove("primary"); }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done).catch(function () { window.prompt("아래 메시지를 복사해 주세요", t); });
+    else window.prompt("아래 메시지를 복사해 주세요", t);
+  });
   $("#iqTable").addEventListener("change", function (e) {
     var id = e.target.getAttribute("data-id"); if (!id) return;
     api("/api/admin/inquiries/" + id, { method: "PATCH", json: { status: e.target.value } }).then(function () { e.target.className = "st-" + e.target.value; loadInquiries(); }).catch(function (er) { alert(er.message); });
