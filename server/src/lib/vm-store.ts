@@ -157,7 +157,7 @@ export const FIELDS: Record<VmKind, Record<string, FieldType>> = {
   brands: { nameKo: "str", nameEn: "str", country: "str", domesticImport: "str", officialSite: "str", status: "status", sortOrder: "int" },
   models: { brandId: "id", nameKo: "str", nameEn: "str", bodyType: "str", segment: "str", familyKey: "str", status: "status", sortOrder: "int" },
   lineups: { modelId: "id", displayName: "str", shortLabel: "str", generationName: "str", generationCode: "str", modelYear: "int", fuelType: "str", engineSummary: "str", salesChannel: "str", status: "status", sortOrder: "int", imageKey: "str" },
-  trims: { lineupId: "id", name: "str", nameEn: "str", drivetrain: "str", driveLabel: "str", seatCount: "int", variantNote: "str", status: "status", sortOrder: "int", listPrice: "int", listPriceBeforeTaxBenefit: "int", listPriceBasis: "str", listPriceDate: "str", standardItems: "strArr" },
+  trims: { lineupId: "id", successorTrimId: "id", name: "str", nameEn: "str", drivetrain: "str", driveLabel: "str", seatCount: "int", variantNote: "str", status: "status", sortOrder: "int", listPrice: "int", listPriceBeforeTaxBenefit: "int", listPriceBasis: "str", listPriceDate: "str", standardItems: "strArr" },
   options: { modelId: "id", name: "str", nameEn: "str", category: "str", description: "str", items: "strArr" },
   trimOptions: { trimId: "id", optionId: "id", price: "int", type: "str", dependencyNote: "str", exclusionNote: "str" },
   colors: { brandId: "id", name: "str", nameEn: "str", hex: "str", manufacturerCode: "str", kind: "str" },
@@ -174,7 +174,7 @@ export const REQUIRED: Partial<Record<VmKind, string[]>> = {
   colorRules: ["trimId", "interiorColorId"], vehicleImages: ["lineupId", "imageUrl"],
 };
 /** 참조 검사: 필드 → 참조하는 종류 */
-const REFS: Record<string, VmKind> = { brandId: "brands", modelId: "models", lineupId: "lineups", trimId: "trims", optionId: "options", colorId: "colors", interiorColorId: "colors" };
+const REFS: Record<string, VmKind> = { brandId: "brands", modelId: "models", lineupId: "lineups", trimId: "trims", optionId: "options", colorId: "colors", interiorColorId: "colors", successorTrimId: "trims" };   // successorTrimId = 연식 전환 후속 트림(DC-69, RL-19 #38)
 
 function coerce(kind: VmKind, patch: Record<string, unknown>) {
   const spec = FIELDS[kind]; const out: Record<string, unknown> = {};
@@ -384,7 +384,7 @@ export function validateVm(M: VM) {
   const B = has("brands"), MO = has("models"), L = has("lineups"), T = has("trims"), O = has("options"), C = has("colors");
   M.models.forEach((m) => { if (!B.has(m.brandId)) errors.push(`모델 ${m.nameKo}(${m.id}): 브랜드 없음`); });
   M.lineups.forEach((l) => { if (!MO.has(l.modelId)) errors.push(`라인업 ${l.id}: 모델 없음`); });
-  M.trims.forEach((t) => { if (!L.has(t.lineupId)) errors.push(`트림 ${t.id}: 라인업 없음`); if (!t.name) errors.push(`트림 ${t.id}: 이름 없음`); if (t.status !== "INACTIVE" && !t.listPrice) warnings.push(`트림 가격 없음: ${t.id}`); });
+  M.trims.forEach((t) => { if (!L.has(t.lineupId)) errors.push(`트림 ${t.id}: 라인업 없음`); if (!t.name) errors.push(`트림 ${t.id}: 이름 없음`); if (t.successorTrimId && !T.has(t.successorTrimId)) errors.push(`트림 ${t.id}: 후속트림ID '${t.successorTrimId}' 없음`); if (t.successorTrimId === t.id) errors.push(`트림 ${t.id}: 후속트림ID 가 자기 자신`); if (t.successorTrimId && t.status !== "INACTIVE") warnings.push(`트림 ${t.id}: 후속트림이 있는데 노출 Y (구연식은 노출 N 권장, DC-69)`); if (t.status !== "INACTIVE" && !t.listPrice) warnings.push(`트림 가격 없음: ${t.id}`); });
   M.trimOptions.forEach((x) => { if (!T.has(x.trimId) || !O.has(x.optionId)) errors.push(`트림별 옵션 ${x.trimId}|${x.optionId}: 트림 또는 옵션 없음`); });
   M.trimColors.forEach((x) => { if (!T.has(x.trimId) || !C.has(x.colorId)) errors.push(`트림별 색상 ${x.trimId}|${x.colorId}: 트림 또는 색상 없음`); });
   M.vehicleImages.forEach((x) => { if (!L.has(x.lineupId)) errors.push(`이미지 ${x.id}: 라인업 없음`); });

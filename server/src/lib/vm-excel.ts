@@ -32,7 +32,7 @@ export const SHEETS: Sheet[] = [
     { h: "트림명", f: "name", w: 18 }, { h: "영문명", f: "nameEn", w: 14 }, { h: "구동", f: "drivetrain", w: 7 }, { h: "구동표시", f: "driveLabel", w: 8 }, { h: "인승", f: "seatCount", t: "int", w: 6 },
     { h: "트림가격", f: "listPrice", t: "int", w: 12, note: "원 (세제혜택 적용, 옵션 제외)" }, { h: "세제혜택전가격", f: "listPriceBeforeTaxBenefit", t: "int", w: 13 },
     { h: "가격기준", f: "listPriceBasis", w: 18 }, { h: "가격기준일", f: "listPriceDate", w: 11 }, { h: "비고", f: "variantNote", w: 18 },
-    { h: "노출", f: "status", t: "status", w: 6 }, { h: "정렬", f: "sortOrder", t: "int", w: 6 }, { h: "기본품목", f: "standardItems", t: "strArr", w: 40, note: "한 줄에 하나씩 (칸 안 줄바꿈: Alt+Enter)" }] },
+    { h: "노출", f: "status", t: "status", w: 6 }, { h: "후속트림ID", f: "successorTrimId", w: 40, note: "연식 전환으로 노출 N 이 된 트림의 새 연식 트림ID (DC-69) — 저장 견적·공유 링크는 옛 트림ID 그대로 열리고 상세에 '신형 보기' 안내" }, { h: "정렬", f: "sortOrder", t: "int", w: 6 }, { h: "기본품목", f: "standardItems", t: "strArr", w: 40, note: "한 줄에 하나씩 (칸 안 줄바꿈: Alt+Enter)" }] },
   { kind: "options", name: "옵션", key: ["id"], cols: [
     { h: "옵션ID", f: "id", w: 40 }, { h: "모델ID", f: "modelId", w: 24 }, { h: "옵션명", f: "name", w: 26 }, { h: "영문명", f: "nameEn", w: 14 },
     { h: "분류", f: "category", w: 10, note: "PACKAGE / ITEM / ACCESSORY / WHEEL / SEAT / DRIVETRAIN" }, { h: "설명", f: "description", w: 30 }, { h: "구성품목", f: "items", t: "strArr", w: 30, note: "한 줄에 하나씩 (칸 안 줄바꿈: Alt+Enter)" }] },

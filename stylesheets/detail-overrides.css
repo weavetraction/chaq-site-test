@@ -2665,3 +2665,7 @@ html.chaq-detail-loading .local-car-detail::after{
 /* '딜리버 기준가(추정)' 표기(DC-70, RL-19 #39): 실견적 태그(초록) 대신 회색 계열 */
 .local-car-detail .detail_includes .lowest-tag.is-est,
 .local-special-list .est_card .est_tag.est_tag_est { background: #f1f3f5; color: #5f6670; }
+
+/* 후속트림 안내(DC-69, RL-19 #38): 이전 연식 트림 상세 상단 '신형 보기' */
+.local-car-detail .detail_card > .succ_link { display: inline-flex; gap: 6px; align-items: center; margin: 2px 0 10px; padding: 6px 10px; border-radius: 6px; background: #f1f3f5; color: #1b1b1d; font-size: 12px; font-weight: 600; text-decoration: none; }
+.local-car-detail .detail_card > .succ_link span { color: #6b7280; font-weight: 500; }

@@ -127,6 +127,8 @@
   function getLineup(id) { return IX.lineup[id] || null; }
   function getTrims(lineupId, opt) { return activeOnly(copy(IX.trimsByLineup[lineupId]), opt).sort(bySort); }
   function getTrim(id) { return IX.trim[id] || null; }
+  /** 후속 트림(DC-69, RL-19 #38): 노출 N 트림의 successorTrimId 를 따라가 노출 Y 트림(또는 마지막)까지. 없으면 null */
+  function successorOf(id) { var t = getTrim(id), seen = {}, last = null; while (t && t.successorTrimId && !seen[t.successorTrimId]) { seen[t.successorTrimId] = 1; var n = getTrim(t.successorTrimId); if (!n) break; last = n.id; if (!n.status || n.status === "ACTIVE") return n.id; t = n; } return last; }
   /** 모델 하위 전체 트림 (라인업 순 → 트림 순). opt.salesChannels 로 채널 필터. */
   function getTrimsByModel(modelId, opt) { var out = [], ls = getLineups(modelId, opt); for (var i = 0; i < ls.length; i++) out = out.concat(getTrims(ls[i].id, opt)); return out; }
   /** 등급 팝업용: 라인업별 섹션 [{ lineup, label, trims }] — 라인업이 1개면 label 은 null(헤더 생략) */
@@ -436,7 +438,7 @@
     load: load, raw: function () { return D; }, meta: function () { return D.meta; },
     getBrands: getBrands, getBrand: getBrand, getModels: getModels, getModel: getModel, getModelsByFamily: getModelsByFamily,
     getLineups: getLineups, getLineup: getLineup, lineupLabel: lineupLabel,
-    carName: carName, getTrims: getTrims, getTrim: getTrim, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
+    carName: carName, getTrims: getTrims, getTrim: getTrim, successorOf: successorOf, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,
