@@ -19,6 +19,18 @@
     </form>
   </section>
 
+  <!-- 초대 링크: 비밀번호 설정 -->
+  <section id="inviteView" class="login" hidden>
+    <form id="inviteForm" class="login_box">
+      <h1>차큐 관리자 — 비밀번호 설정</h1>
+      <p class="hint" id="inviteWho"></p>
+      <label>새 비밀번호 <small class="hint">(10자 이상, 영문·숫자 포함)</small><input name="pw" type="password" autocomplete="new-password" minlength="10" required></label>
+      <label>새 비밀번호 확인<input name="pw2" type="password" autocomplete="new-password" minlength="10" required></label>
+      <button type="submit" class="btn primary">설정하고 시작하기</button>
+      <p class="err" id="inviteErr"></p>
+    </form>
+  </section>
+
   <!-- 본문 -->
   <div id="appView" hidden>
     <header class="top">
@@ -30,8 +42,9 @@
         <button type="button" data-tab="home">메인 화면</button>
         <button type="button" data-tab="inquiries">상담 문의 <b id="newBadge" class="badge" hidden></b></button>
         <button type="button" data-tab="members">회원·연동</button>
+        <button type="button" data-tab="admins" hidden>관리자 계정</button>
       </nav>
-      <span class="who"><span id="whoName"></span> <button type="button" id="logoutBtn" class="btn link">로그아웃</button></span>
+      <span class="who"><span id="whoName"></span> <button type="button" id="pwBtn" class="btn link">비밀번호 변경</button> <button type="button" id="logoutBtn" class="btn link">로그아웃</button></span>
     </header>
 
     <main>
@@ -155,7 +168,7 @@
       </section>
       <!-- 회원 · 외부 연동 -->
       <section data-panel="members" hidden>
-        <div class="card">
+        <div class="card" id="igCard">
           <div class="row between wrap"><h2>외부 연동 <small class="hint" id="igStatus"></small></h2></div>
           <p class="hint">카카오 로그인·카카오톡 채널·알림톡·휴대폰 인증 키를 넣으면 사이트에 바로 켜집니다 (15초 안). 비밀값은 끝 4자리만 보이며, 비우고 저장하면 지워집니다.</p>
           <form id="igForm" class="vm_form ig_form"></form>
@@ -167,12 +180,33 @@
           <div class="row gap center" id="mbPager"></div>
         </div>
       </section>
+      <!-- 관리자 계정 · 탭별 권한 (대표만) -->
+      <section data-panel="admins" hidden>
+        <div class="card">
+          <h2>관리자 멤버 추가</h2>
+          <p class="hint">추가하면 <b>초대 링크</b>가 만들어집니다. 링크를 본인에게만 보내 주세요 — 본인이 링크에서 비밀번호를 정합니다(72시간 안 1회). 권한은 탭별로 <b>없음</b>(탭이 안 보임) · <b>보기</b>(조회·엑셀/CSV 받기) · <b>수정</b>(저장·업로드·반영 포함).</p>
+          <form id="adAddForm" class="ad_add">
+            <label>이름<input name="name" maxlength="50" required></label>
+            <label>이메일(로그인 아이디)<input name="email" type="email" maxlength="200" required></label>
+            <div class="ad_perms" id="adAddPerms"></div>
+            <div class="row gap end"><button type="submit" class="btn primary">추가하고 초대 링크 만들기</button></div>
+          </form>
+          <div class="ad_link" id="adLink" hidden></div>
+        </div>
+        <div class="card">
+          <div class="row between wrap"><h2>관리자 계정 <small class="hint">권한을 바꾸면 그 사람의 다음 화면 이동부터 바로 적용 · 중지하면 즉시 로그아웃</small></h2></div>
+          <div class="tbl_wrap"><table class="tbl" id="adTable"></table></div>
+        </div>
+      </section>
     </main>
   </div>
   <!-- 팝업 · 알림 -->
   <div class="modal" id="vmModal" hidden><div class="modal_box"><div class="row between"><h2 id="vmModalTitle"></h2><button type="button" class="btn link" id="vmModalClose">닫기</button></div><div id="vmModalBody" class="vm_form"></div><div class="row gap end"><button type="button" class="btn primary" id="vmModalSave">저장</button></div></div></div>
   <div class="modal" id="qeModal" hidden><div class="modal_box wide"><div class="row between"><h2 id="qeModalTitle"></h2><button type="button" class="btn link" id="qeModalClose">닫기</button></div><div id="qeModalBody" class="vm_form"></div><div class="row gap end"><button type="button" class="btn primary" id="qeModalSave">저장</button></div></div></div>
   <div class="modal" id="ctModal" hidden><div class="modal_box wide"><div class="row between"><h2 id="ctModalTitle"></h2><button type="button" class="btn link" id="ctModalClose">닫기</button></div><div id="ctModalBody" class="vm_form"></div><div class="row gap end"><button type="button" class="btn primary" id="ctModalSave">저장</button></div></div></div>
+  <div class="modal" id="pwModal" hidden><div class="modal_box narrow"><div class="row between"><h2>비밀번호 변경</h2><button type="button" class="btn link" id="pwClose">닫기</button></div>
+    <form id="pwForm" class="vm_form"><label>지금 비밀번호<input name="cur" type="password" autocomplete="current-password" required></label><label>새 비밀번호 <small class="hint">(10자 이상, 영문·숫자 포함 · 다른 기기 로그인은 풀립니다)</small><input name="next" type="password" autocomplete="new-password" minlength="10" required></label><label>새 비밀번호 확인<input name="next2" type="password" autocomplete="new-password" minlength="10" required></label><p class="err" id="pwErr"></p><div class="row gap end"><button type="submit" class="btn primary">변경</button></div></form>
+  </div></div>
   <div class="toast" id="vmToast"></div>
   <script src="admin.js"></script>
   <script src="admin-vm.js"></script>
@@ -180,5 +214,6 @@
   <script src="admin-content.js"></script>
   <script src="admin-home.js"></script>
   <script src="admin-member.js"></script>
+  <script src="admin-accounts.js"></script>
 </body>
 </html>

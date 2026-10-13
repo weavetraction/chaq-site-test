@@ -11,6 +11,7 @@ import { createBatch, publishBatch, discardBatch, setRowTrim, publishedStatus, g
 import { adminVmRouter } from "./admin-vm.js";
 import { adminContentRouter } from "./admin-content.js";
 import { adminHomeRouter } from "./admin-home.js";
+import { adminInviteRouter, adminAccountsRouter } from "./admin-accounts.js";
 import { KINDS, Kind } from "../lib/quotes-format.js";
 import { vm } from "../lib/vm.js";
 import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
@@ -22,17 +23,19 @@ const loginLimit = limiter("login", { windowMs: 15 * 60_000, limit: 20, message:
 
 adminRouter.post("/api/admin/login", loginLimit, wrap(async (req, res) => {
   const { email, password } = req.body || {};
-  const { rows } = await q(`SELECT id, email, name, password_hash FROM admins WHERE email = $1`, [String(email || "").trim().toLowerCase()]);
+  const { rows } = await q(`SELECT id, email, name, password_hash, active FROM admins WHERE email = $1`, [String(email || "").trim().toLowerCase()]);
   const a = rows[0];
-  if (!a || !(await bcrypt.compare(String(password || ""), a.password_hash))) return res.status(401).json({ error: "이메일 또는 비밀번호가 맞지 않습니다" });
+  // 초대 대기(비밀번호 미설정)·중지 계정은 같은 문구로 거절 (계정 존재 여부 노출 안 함)
+  if (!a || !a.active || !a.password_hash || !(await bcrypt.compare(String(password || ""), a.password_hash))) return res.status(401).json({ error: "이메일 또는 비밀번호가 맞지 않습니다" });
   await q(`UPDATE admins SET last_login_at = now() WHERE id = $1`, [a.id]);
   issue(res, { id: a.id, email: a.email, name: a.name });
   res.json({ id: a.id, email: a.email, name: a.name });
 }));
 adminRouter.post("/api/admin/logout", (_req, res) => { clear(res); res.json({ ok: true }); });
 
-adminRouter.use("/api/admin", requireAdmin);
-adminRouter.get("/api/admin/me", (req, res) => res.json(adminOf(req)));
+adminRouter.use(adminInviteRouter);                 // 초대 링크로 비밀번호 설정 (로그인 전)
+adminRouter.use("/api/admin", requireAdmin);       // 로그인 + 탭별 권한 (lib/admin-perms)
+adminRouter.use(adminAccountsRouter);              // 내 정보·비밀번호 변경 · 관리자 계정(대표만)
 // 견적·트림 검색·메인 화면은 차량 데이터 트림 색인을 씀 → 다른 서버에서 바뀐 작업본도 바로 반영 (10초 버전 확인)
 adminRouter.use(["/api/admin/quotes", "/api/admin/batches", "/api/admin/trims", "/api/admin/home"], (_req, _res, next) => { loadDraft().then(() => next(), next); });
 

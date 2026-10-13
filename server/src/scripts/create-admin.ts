@@ -1,4 +1,5 @@
-// 관리자 계정 만들기/비밀번호 바꾸기: npm run create-admin -- 이메일 비밀번호 [이름]
+// 대표(owner) 관리자 계정 만들기/비밀번호 바꾸기: npm run create-admin -- 이메일 비밀번호 [이름]
+// 멤버(탭별 권한)는 관리자 화면 「관리자 계정」 탭에서 초대 링크로 추가
 import bcrypt from "bcryptjs";
 import { pool } from "../db.js";
 import { migrate } from "./migrate.js";
@@ -8,7 +9,7 @@ if (!email || !password || password.length < 10) { console.error("사용: npm ru
 (async () => {
   await migrate();
   const hash = await bcrypt.hash(password, 12);
-  await pool.query(`INSERT INTO admins (email, name, password_hash) VALUES ($1,$2,$3) ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, name = EXCLUDED.name`, [email.trim().toLowerCase(), name, hash]);
+  await pool.query(`INSERT INTO admins (email, name, password_hash, role, active, pw_changed_at) VALUES ($1,$2,$3,'owner',true,now() - interval '5 seconds') ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, name = EXCLUDED.name, role = 'owner', active = true, invite_hash = NULL, invite_expires_at = NULL, pw_changed_at = now() - interval '5 seconds'`, [email.trim().toLowerCase(), name, hash]);
   console.log("관리자 저장:", email);
   await pool.end();
 })().catch((e) => { console.error(e); process.exit(1); });

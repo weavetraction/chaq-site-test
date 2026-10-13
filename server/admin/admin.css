@@ -169,3 +169,24 @@ input.saved { border-color: var(--green); }
 .ig_form label > span { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
 .ig_form input { width: 100%; box-sizing: border-box; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
 .ig_form small.hint { display: block; margin-top: 3px; }
+
+/* 관리자 계정 · 탭별 권한 (#46) */
+.modal_box.narrow { width: min(440px, 100%); }
+.ro_note { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #fff7ed; color: #9a3412; font-size: 13px; }
+.ad_add { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; align-items: end; }
+.ad_add label { display: grid; gap: 4px; font-size: 13px; }
+.ad_add .ad_perms, .ad_add .row { grid-column: 1 / -1; }
+.ad_perms { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.ad_perms label, .ad_perm { display: inline-grid; gap: 2px; font-size: 12px; color: #4b5563; }
+.ad_perms select, .ad_perm select { height: 30px; font-size: 13px; }
+.ad_link { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--green-soft); }
+.ad_link input { width: 100%; margin: 6px 0; font-family: ui-monospace, monospace; font-size: 12px; }
+#adTable td { vertical-align: middle; }
+#adTable .perm_cell { display: flex; flex-wrap: wrap; gap: 6px 8px; min-width: 520px; }
+#adTable .ad_acts { flex-wrap: wrap; min-width: 150px; }
+.pill.stopped { background: #f3f4f6; color: #9ca3af; }
+.pill.invited { background: #eff6ff; color: #1d4ed8; }
+@media (max-width: 720px) { .ad_add { grid-template-columns: 1fr; } }
+/* 보기 권한 탭: 저장·업로드·반영 버튼 숨김 (서버도 거절) */
+[data-panel].ro .btn.primary, [data-panel].ro .btn.danger, [data-panel].ro input[type=file], [data-panel].ro #vmPublish, [data-panel].ro #vmAdd { display: none !important; }
+[data-panel].ro #iqTable select, [data-panel].ro #iqTable textarea, [data-panel].ro #iqTable input { pointer-events: none; opacity: .6; }

@@ -22,11 +22,57 @@
   }
 
   // ---------------------------------------------------------------- 로그인
-  function showLogin() { $("#appView").hidden = true; $("#loginView").hidden = false; }
-  function showApp(me) { $("#loginView").hidden = true; $("#appView").hidden = false; $("#whoName").textContent = (me.name || me.email) + "님"; loadQuotes(); loadInquiries(); document.dispatchEvent(new CustomEvent("chaq:app")); }
+  function showLogin() { $("#appView").hidden = true; $("#inviteView").hidden = true; $("#loginView").hidden = false; }
+  // 탭별 권한(#46): 대표 = 전부 수정 + 관리자 계정, 멤버 = 탭별 없음(숨김)/보기(안내 문구, 수정 요청은 서버가 거절)/수정
+  var ME = null;
+  function permOf(tab) { if (!ME) return "none"; if (ME.role === "owner") return "edit"; if (tab === "admins") return "none"; return (ME.perms || {})[tab] || "none"; }
+  function can(tab) { return permOf(tab) !== "none"; }
+  function showApp(me) {
+    ME = me; window.CHAQ_ME = me; var nt = $("#noTabNote"); if (nt) nt.remove();
+    $("#loginView").hidden = true; $("#inviteView").hidden = true; $("#appView").hidden = false; $("#whoName").textContent = (me.name || me.email) + "님";
+    $$(".tabs button").forEach(function (b) { b.hidden = !can(b.getAttribute("data-tab")); });
+    $$("[data-panel]").forEach(function (p) {
+      var t = p.getAttribute("data-panel"), n = $(".ro_note", p); p.classList.toggle("ro", permOf(t) === "view");
+      if (permOf(t) === "view") { if (!n) { n = document.createElement("p"); n.className = "ro_note"; p.insertBefore(n, p.firstChild); } n.textContent = "보기 권한만 있는 탭이에요. 조회·엑셀/CSV 받기는 되고, 저장·업로드·반영은 되지 않아요."; }
+      else if (n) n.remove();
+    });
+    $("#igCard").hidden = me.role !== "owner";      // 외부 연동 키는 대표만
+    var first = $$(".tabs button").filter(function (b) { return !b.hidden; });
+    var pick = first.filter(function (b) { return b.getAttribute("data-tab") === "quotes"; })[0] || first[0];
+    if (!pick) { $$("[data-panel]").forEach(function (p) { p.hidden = true; }); $("main").insertAdjacentHTML("afterbegin", '<p class="ro_note" id="noTabNote">아직 열 수 있는 탭이 없어요. 대표에게 권한을 요청해 주세요.</p>'); return; }
+    if (can("quotes")) loadQuotes();
+    if (can("inquiries")) loadInquiries();
+    document.dispatchEvent(new CustomEvent("chaq:app"));
+    pick.click();
+  }
+  // 초대 링크(?invite=…)로 들어오면 비밀번호 설정 화면
+  var inviteToken = (location.search.match(/[?&]invite=([A-Za-z0-9_-]{40,60})/) || [])[1];
+  function showInvite() {
+    $("#loginView").hidden = true; $("#appView").hidden = true; $("#inviteView").hidden = false;
+    api("/api/admin/invite/" + inviteToken).then(function (r) { $("#inviteWho").textContent = (r.name ? r.name + "님 · " : "") + r.email; })
+      .catch(function (er) { $("#inviteWho").textContent = ""; $("#inviteErr").textContent = er.message; $("#inviteForm button").disabled = true; });
+  }
+  $("#inviteForm").addEventListener("submit", function (e) {
+    e.preventDefault(); $("#inviteErr").textContent = "";
+    if (e.target.pw.value !== e.target.pw2.value) { $("#inviteErr").textContent = "두 비밀번호가 달라요"; return; }
+    api("/api/admin/invite/" + inviteToken, { method: "POST", json: { password: e.target.pw.value } }).then(function () {
+      history.replaceState(null, "", location.pathname); inviteToken = null;
+      return api("/api/admin/me").then(showApp);
+    }).catch(function (er) { $("#inviteErr").textContent = er.message; });
+  });
+  // 비밀번호 변경
+  $("#pwBtn").addEventListener("click", function () { $("#pwForm").reset(); $("#pwErr").textContent = ""; $("#pwModal").hidden = false; });
+  $("#pwClose").addEventListener("click", function () { $("#pwModal").hidden = true; });
+  $("#pwForm").addEventListener("submit", function (e) {
+    e.preventDefault(); $("#pwErr").textContent = "";
+    if (e.target.next.value !== e.target.next2.value) { $("#pwErr").textContent = "새 비밀번호 두 칸이 달라요"; return; }
+    api("/api/admin/me/password", { method: "POST", json: { current: e.target.cur.value, next: e.target.next.value } }).then(function () {
+      $("#pwModal").hidden = true; var t = $("#vmToast"); t.textContent = "비밀번호를 바꿨어요"; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2200);
+    }).catch(function (er) { $("#pwErr").textContent = er.message; });
+  });
   $("#loginForm").addEventListener("submit", function (e) {
     e.preventDefault(); $("#loginErr").textContent = "";
-    api("/api/admin/login", { method: "POST", json: { email: e.target.email.value, password: e.target.password.value } }).then(showApp).catch(function (er) { $("#loginErr").textContent = er.message; });
+    api("/api/admin/login", { method: "POST", json: { email: e.target.email.value, password: e.target.password.value } }).then(function () { return api("/api/admin/me"); }).then(showApp).catch(function (er) { $("#loginErr").textContent = er.message; });
   });
   $("#logoutBtn").addEventListener("click", function () { api("/api/admin/logout", { method: "POST" }).finally(showLogin); });
   $$(".tabs button").forEach(function (b) {
@@ -150,6 +196,7 @@
             (x.member_id ? '<br><small class="pill">회원 #' + x.member_id + '</small>' : '') + (x.phone_verified === false ? ' <small class="pill draft" title="인증문자 준비 전 직접 입력한 번호 — 첫 연락 때 본인 확인">번호 미인증</small>' : '') + (x.kakao_sent_at ? ' <small class="pill live" title="알림톡 발송 ' + dt(x.kakao_sent_at) + '">알림톡 전달</small>' : x.member_id ? ' <small class="pill draft" title="알림톡 연동 전이거나 전달 실패">알림톡 미전달</small>' : '') +
             (x.report_token ? '<br><a href="/pages/quote-report.html?t=' + esc(x.report_token) + '" target="_blank" rel="noopener">견적서 보기</a> <button type="button" class="btn sm" data-copy-report="' + x.id + '" title="카카오톡 채팅방에 붙여넣을 견적서 메시지 복사">견적서 링크 복사</button>' : '') + '</td>' +
           '<td class="car"><strong>' + esc(x.car_name || "-") + ' ' + esc(x.trim_name) + '</strong>' + esc(x.spec) + (x.options && x.options.length ? '<br><small class="hint">옵션: ' + esc(x.options.join(", ")) + '</small>' : '') + (x.color ? '<br><small class="hint">색상: ' + esc(x.color) + '</small>' : '') + (/^https?:\/\//i.test(x.page_url || '') ? '<br><a href="' + esc(x.page_url) + '" target="_blank" rel="noopener">페이지 열기</a>' : '') + '</td>' +
+          '<td>' + (x.quote_fin ? '<strong>' + esc(x.quote_fin) + '</strong>' : '<span class="hint">-</span>') + '</td>' +   // #45 문의 당시 견적의 금융사(관리자 전용)
           '<td>' + esc(cond) + '</td><td>' + touch(x.last_touch) + (x.first_touch && x.first_touch.source && x.first_touch.source !== (x.last_touch || {}).source ? '<br><small class="hint">처음: ' + touch(x.first_touch) + '</small>' : '') + '</td><td class="num">' + (x.monthly ? won(x.monthly) + "원" : "별도문의") + (x.snapshot && x.snapshot.estimated ? '<br><small class="pill draft" title="견적조회에서 옵션을 골라 계수로 역산한 예상 월납 — 실견적으로 확정 필요">예상</small>' : '') + '</td>' +
           '<td><textarea data-memo="' + x.id + '" rows="2" placeholder="상담 메모">' + esc(x.memo) + '</textarea></td></tr>';
       }).join("") : '<tr><td colspan="10" class="hint">문의가 없습니다</td></tr>');
@@ -185,12 +232,12 @@
     var id = e.target.getAttribute("data-memo"); if (!id || e.target.value === e.target.defaultValue) return;
     api("/api/admin/inquiries/" + id, { method: "PATCH", json: { memo: e.target.value } }).then(function () { e.target.defaultValue = e.target.value; e.target.style.borderColor = "#18a85c"; }).catch(function (er) { alert(er.message); });
   });
-  setInterval(function () { if (!$("#appView").hidden) loadInquiries(); }, 60000);   // 새 문의 배지 1분마다 갱신
+  setInterval(function () { if (!$("#appView").hidden && can("inquiries")) loadInquiries(); }, 60000);   // 새 문의 배지 1분마다 갱신
 
   // 다른 화면 모듈(admin-vm.js · admin-qedit.js)에서 같이 쓰는 도구
   /** 관리자 화면 미리보기용 이미지 주소 (사이트 상대경로 ../assets/.. → /assets/..) */
   var imgSrc = function (u) { return !u ? "" : /^(https?:|\/|data:)/.test(u) ? u : "/" + String(u).replace(/^(\.\.\/)+/, ""); };
-  window.CHAQ_ADMIN = { api: api, esc: esc, won: won, dt: dt, $: $, $$: $$, imgSrc: imgSrc, KIND: KIND, reloadQuotes: loadQuotes, openBatch: openBatch };
-  api("/api/admin/me").then(showApp).catch(showLogin);
+  window.CHAQ_ADMIN = { api: api, esc: esc, won: won, dt: dt, $: $, $$: $$, imgSrc: imgSrc, KIND: KIND, reloadQuotes: loadQuotes, openBatch: openBatch, permOf: permOf };
+  if (inviteToken) showInvite();
+  else api("/api/admin/me").then(showApp).catch(showLogin);
 })();
-          '<td>' + (x.quote_fin ? '<strong>' + esc(x.quote_fin) + '</strong>' : '<span class="hint">-</span>') + '</td>' +   // #45 문의 당시 견적의 금융사(관리자 전용)
