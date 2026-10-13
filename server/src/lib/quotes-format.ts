@@ -79,6 +79,18 @@ export function splitIdTok(s: unknown): { name: string; id: string | null } {
   return m ? { name: m[1].trim(), id: m[2] } : { name: raw, id: null };
 }
 export const joinIdTok = (name: string | undefined | null, id: string | undefined | null) => (id ? `${name || ""}@${id}` : name || "");
+/** 옵션 칸 특수 토큰 종류 (사이트 로직 지시 2호 ①·③, RL-41) — 사이트 site-util.tokKind 와 같은 규칙.
+ *  tax = 세제혜택:-N (구 '하이브리드 세제혜택' 호환) / pdisc = 차량가 할인:-N · 할인:-N (구 '대리점 할인 n%' 호환) / mdisc = 월납입료 할인(금액 없음) / opt = 그 외 */
+export function tokKind(o: { n?: string; p?: number } | null | undefined): "tax" | "pdisc" | "mdisc" | "opt" {
+  if (!o || !o.n) return "opt";
+  const n = String(o.n).replace(/\s+/g, " ").trim(), p = Number(o.p);
+  if (/^(하이브리드 )?세제혜택$/.test(n)) return "tax";
+  if (/^월납입료 할인$/.test(n)) return "mdisc";
+  if (/^(차량가 할인|할인)$/.test(n) || /^대리점 할인/.test(n)) return "pdisc";
+  if (p < 0) return "pdisc";
+  if (/할인/.test(n) && !(p > 0)) return "mdisc";
+  return "opt";
+}
 export function optsToText(opts: QuoteRecord["opts"]) { return (opts || []).map((o) => { const h = joinIdTok(o.n, o.id); return o.p ? `${h}:${o.p}` : h; }).join(" | "); }
 export function textToOpts(s: unknown): QuoteRecord["opts"] {
   return String(s ?? "").split(/\s*\|\s*|\r?\n/).map((x) => x.trim()).filter(Boolean).map((x) => {

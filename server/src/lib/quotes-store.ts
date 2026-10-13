@@ -3,7 +3,7 @@ import type pg from "pg";
 import { q, tx } from "../db.js";
 import { setState, getState } from "./state.js";
 import { vm } from "./vm.js";
-import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl, textToCoef, coefToText, splitIdTok } from "./quotes-format.js";
+import { KINDS, KIND_KO, KIND_PREFIX, Kind, QuoteRecord, ParsedRow, signature, signatureLoose, DISTS, TERMS, PLANS, INCL_KEYS, Incl, textToCoef, coefToText, splitIdTok, tokKind } from "./quotes-format.js";
 
 type Published = Record<Kind, QuoteRecord[]>;
 /** 견적ID 의 번호 부분 (s15 → 15, 형식이 다르면 NULL) */
@@ -145,14 +145,16 @@ async function computeSummary(c: pg.PoolClient, batchId: number, kinds: Kind[], 
     const cur = await c.query(`SELECT rec_id, data FROM quote_rows WHERE batch_id = $1 AND kind = $2`, [batchId, k]);
     const pub = await c.query(`SELECT r.rec_id, r.data FROM published_sets p JOIN quote_rows r ON r.batch_id = p.batch_id AND r.kind = p.kind WHERE p.kind = $1`, [k]);
     const old = new Map(pub.rows.map((r) => [r.rec_id, r.data]));
-    let added = 0, changedPrice = 0, unlinked = 0, discounted = 0;
+    let added = 0, changedPrice = 0, unlinked = 0, discounted = 0, taxRows = 0, priceDiscRows = 0, monthlyDiscRows = 0;
     for (const r of cur.rows) {
-      if ((r.data.opts || []).some((o: any) => Number(o?.p) < 0)) discounted++;   // 할인 항목(음수 옵션) 있는 행 — 오류 아님, 미리보기에 건수만
+      const kinds = new Set((r.data.opts || []).map((o: any) => tokKind(o)));   // 특수 토큰 집계(2호 ③): 세제혜택 / 차량가 할인 / 월납입료 할인 — 오류 아님, 미리보기에 건수만
+      if (kinds.has("tax")) taxRows++; if (kinds.has("pdisc")) priceDiscRows++; if (kinds.has("mdisc")) monthlyDiscRows++;
+      if (kinds.has("pdisc") || kinds.has("mdisc")) discounted++;
       const o = old.get(r.rec_id); if (!o) added++; else if (JSON.stringify(o.cost) !== JSON.stringify(r.data.cost) || o.base !== r.data.base) changedPrice++;
       if (!r.data.trimId) unlinked++;
     }
     const now = new Set(cur.rows.map((r) => r.rec_id));
-    per[k] = { rows: cur.rows.length, published: pub.rows.length, added, removed: [...old.keys()].filter((x) => !now.has(x)).length, changedPrice, unlinked, discounted };
+    per[k] = { rows: cur.rows.length, published: pub.rows.length, added, removed: [...old.keys()].filter((x) => !now.has(x)).length, changedPrice, unlinked, discounted, taxRows, priceDiscRows, monthlyDiscRows };
   }
   return { kinds: per, problems: problems.slice(0, 200), problemCount: problems.length, blockingErrors: 0, strict } as any;
 }
