@@ -157,7 +157,7 @@ export const FIELDS: Record<VmKind, Record<string, FieldType>> = {
   brands: { nameKo: "str", nameEn: "str", country: "str", domesticImport: "str", officialSite: "str", status: "status", sortOrder: "int" },
   models: { brandId: "id", nameKo: "str", nameEn: "str", bodyType: "str", segment: "str", familyKey: "str", status: "status", sortOrder: "int" },
   lineups: { modelId: "id", displayName: "str", shortLabel: "str", generationName: "str", generationCode: "str", modelYear: "int", fuelType: "str", engineSummary: "str", salesChannel: "str", status: "status", sortOrder: "int", imageKey: "str" },
-  trims: { lineupId: "id", successorTrimId: "id", name: "str", nameEn: "str", drivetrain: "str", driveLabel: "str", seatCount: "int", variantNote: "str", status: "status", sortOrder: "int", listPrice: "int", listPriceBeforeTaxBenefit: "int", listPriceBasis: "str", listPriceDate: "str", standardItems: "strArr" },
+  trims: { lineupId: "id", successorTrimId: "id", name: "str", nameEn: "str", drivetrain: "str", driveLabel: "str", seatCount: "int", variantNote: "str", status: "status", sortOrder: "int", listPrice: "int", listPriceBeforeTaxBenefit: "int", taxBenefit: "int", listPriceBasis: "str", listPriceDate: "str", standardItems: "strArr" },
   options: { modelId: "id", name: "str", nameEn: "str", category: "str", description: "str", items: "strArr" },
   trimOptions: { trimId: "id", optionId: "id", price: "int", type: "str", dependencyNote: "str", exclusionNote: "str" },
   colors: { brandId: "id", name: "str", nameEn: "str", hex: "str", manufacturerCode: "str", kind: "str" },

@@ -11,7 +11,7 @@
     brandId: "브랜드ID", bodyType: "차체", segment: "차급", familyKey: "묶음키 (후기 연결)", modelId: "모델ID", displayName: "라인업명", shortLabel: "짧은 이름 (목록·상세 표시)",
     generationName: "세대명", generationCode: "세대 코드", modelYear: "연식", fuelType: "연료", engineSummary: "엔진", salesChannel: "판매 채널", imageKey: "이미지 키",
     lineupId: "라인업ID", name: "이름", drivetrain: "구동", driveLabel: "구동 표시", seatCount: "인승", variantNote: "비고", listPrice: "트림 가격 (원, 옵션 제외)",
-    listPriceBeforeTaxBenefit: "세제혜택 전 가격 (원)", listPriceBasis: "가격 기준", listPriceDate: "가격 기준일", standardItems: "기본 품목 (한 줄에 하나)",
+    listPriceBeforeTaxBenefit: "세제혜택 전 가격 (원)", taxBenefit: "세제혜택액 (원, 2호 ②)", listPriceBasis: "가격 기준", listPriceDate: "가격 기준일", standardItems: "기본 품목 (한 줄에 하나)",
     category: "분류", description: "설명", items: "구성 품목 (한 줄에 하나)", hex: "색상 코드 (#RRGGBB)", manufacturerCode: "제조사 색상 코드", kind: "종류",
     trimId: "트림ID", optionId: "옵션ID", price: "옵션 가격 (원)", type: "구분", dependencyNote: "선행 조건", exclusionNote: "동시 선택 불가",
     colorId: "색상ID", extraPrice: "추가 금액 (원)", note: "비고", imageUrl: "이미지 주소", thumbnailUrl: "썸네일 주소", colorKey: "색상 키", view: "보기 방향", author: "제작", license: "라이선스",
@@ -364,7 +364,7 @@
     $("#vmXlsPlan").innerHTML = '<p class="hint">확인 중… (전체 파일은 30초 정도 걸릴 수 있습니다)</p>';
     api("/api/admin/vm/import", { method: "POST", body: fd }).then(function (p) {
       var kinds = Object.keys(p.summary);
-      $("#vmXlsPlan").innerHTML = '<h3>미리보기 — 바뀌는 항목 ' + p.total + '건</h3>' + (kinds.length ? '<table class="tbl"><tr><th>종류</th><th class="num">추가</th><th class="num">수정</th><th class="num">삭제</th></tr>' + kinds.map(function (k) { var s = p.summary[k]; return '<tr><td>' + esc(k) + '</td><td class="num up">' + s.create + '</td><td class="num">' + s.update + '</td><td class="num down">' + s["delete"] + '</td></tr>'; }).join("") + '</table>' : '<p class="hint">바뀐 내용이 없습니다</p>') +
+      $("#vmXlsPlan").innerHTML = '<h3>미리보기 — 바뀌는 항목 ' + p.total + '건' + (p.taxBenefitTrims ? ' · 세제혜택액 ' + p.taxBenefitTrims + '트림' : '') + '</h3>' + (kinds.length ? '<table class="tbl"><tr><th>종류</th><th class="num">추가</th><th class="num">수정</th><th class="num">삭제</th></tr>' + kinds.map(function (k) { var s = p.summary[k]; return '<tr><td>' + esc(k) + '</td><td class="num up">' + s.create + '</td><td class="num">' + s.update + '</td><td class="num down">' + s["delete"] + '</td></tr>'; }).join("") + '</table>' : '<p class="hint">바뀐 내용이 없습니다</p>') +
         (p.errorCount ? '<div class="problems"><b>오류 ' + p.errorCount + '건 — 이 행들은 빼고 적용됩니다</b><br>' + p.errors.map(esc).join("<br>") + '</div>' : '') +
         (p.sample.length ? '<details><summary>바뀌는 항목 보기</summary><div class="problems ok">' + p.sample.map(function (s) { return ({ create: "추가", update: "수정", "delete": "삭제" })[s.op] + " · " + esc(s.label) + " · " + esc(s.kind) + " " + esc(s.id) + (s.fields.length ? " (" + esc(s.fields.join(", ")) + ")" : ""); }).join("<br>") + '</div></details>' : '') +
         (p.total ? '<div class="row gap"><button class="btn primary" id="vmXlsApply">작업본에 적용</button><span class="hint">적용 후 [사이트 반영] 을 눌러야 사이트에 나갑니다</span></div>' : '');
@@ -381,7 +381,7 @@
     $("#vmRepPlan").innerHTML = '<p class="hint">확인 중… (전체 파일은 1분 정도 걸릴 수 있습니다)</p>';
     api("/api/admin/vm/replace", { method: "POST", body: fd }).then(function (p) {
       var im = p.impact, ks = Object.keys(p.counts), list = function (a) { return a.map(esc).join("<br>"); };
-      var h = '<h3>전체 교체 미리보기</h3><table class="tbl"><tr><th>종류</th><th class="num">지금</th><th class="num">파일</th><th class="num">새로 생김</th><th class="num">없어짐</th></tr>' + ks.map(function (k) { var c = p.counts[k]; return '<tr><td>' + esc(c.kind) + '</td><td class="num">' + won(c.cur) + '</td><td class="num"><b>' + won(c.next) + '</b></td><td class="num up">' + won(c.added) + '</td><td class="num down">' + won(c.removed) + '</td></tr>'; }).join("") + '</table>';
+      var h = '<h3>전체 교체 미리보기' + (p.taxBenefitTrims ? ' · 세제혜택액 ' + p.taxBenefitTrims + '트림' : '') + '</h3><table class="tbl"><tr><th>종류</th><th class="num">지금</th><th class="num">파일</th><th class="num">새로 생김</th><th class="num">없어짐</th></tr>' + ks.map(function (k) { var c = p.counts[k]; return '<tr><td>' + esc(c.kind) + '</td><td class="num">' + won(c.cur) + '</td><td class="num"><b>' + won(c.next) + '</b></td><td class="num up">' + won(c.added) + '</td><td class="num down">' + won(c.removed) + '</td></tr>'; }).join("") + '</table>';
       h += '<h3>연결 데이터 영향</h3><ul class="hint">' +
         '<li>사이트 견적(재고특가·빠른인도·금융사) 연결 ' + won(im.quotes.linked) + '건 중 <b class="' + (im.quotes.missing ? "down" : "up") + '">트림이 없어져 끊기는 견적 ' + won(im.quotes.missing) + '건</b>' + (im.quotes.hidden ? ' · 숨김 트림에 연결 ' + won(im.quotes.hidden) + '건' : '') + '</li>' +
         '<li>이용후기 ' + im.reviews.total + '건 중 <b class="' + (im.reviews.missing ? "down" : "up") + '">차종 연결이 끊기는 후기 ' + im.reviews.missing + '건</b></li>' +
