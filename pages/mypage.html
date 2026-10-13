@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>차큐 마이페이지</title>
+  <meta name="description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="차큐 마이페이지">
+  <meta property="og:description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image.jpg">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
@@ -76,7 +85,7 @@
         (function(){
             var C = window.CHAQ || {stock:[],fast:[],estimate:[]};
             var PH = "../assets/icons/car-placeholder.svg";
-            var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
+            var carImg = window.CHAQ_UTIL.carThumb;   // 카드용 작은 차량 이미지(공통 site-util.js, #53)
             var ALL = (C.stock||[]).concat(C.fast||[], C.estimate||[]);
             var esc = window.CHAQ_UTIL.esc;
             function car(id){ for(var i=0;i<ALL.length;i++){ if(ALL[i].id===id) return ALL[i]; } return null; }
@@ -109,7 +118,7 @@
                     var q=x.q, c={term:q.term||'60',plan:q.plan||'0',dist:q.dist||'1'}, href=hrefOf(x,c);
                     var m = q.price!=null ? q.price : (x.r?monthly(x.r,c):null);   // 저장 당시 월 납입금(스냅샷)
                     return '<a class="mp_qcard"'+(href?' href="'+href+'"':'')+'>'+
-                        '<img src="'+imgOf(x)+'" alt="">'+
+                        '<img src="'+imgOf(x)+'" alt="" loading="lazy">'+
                         '<span class="mp_qinfo"><small class="cn">'+vmName(x)+'</small>'+
                         '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong>'+
                         '<span class="mp_qcond">'+esc(condText(c))+'</span></span>'+
@@ -131,7 +140,7 @@
             document.getElementById('mpRecent').innerHTML = recent.map(function(x){
                 var m=x.r?monthly(x.r,dc):null, href=hrefOf(x,dc);
                 return '<a class="mp_recent"'+(href?' href="'+href+'"':'')+'>'+
-                    '<img src="'+imgOf(x)+'" alt="">'+
+                    '<img src="'+imgOf(x)+'" alt="" loading="lazy">'+
                     '<small class="cn">'+vmName(x)+'</small>'+
                     '<strong>'+(m!=null?'월 '+won(m)+'원':'월 별도문의')+'</strong></a>';
             }).join('') || '<p class="mp_empty">아직 본 견적이 없어요.</p>';

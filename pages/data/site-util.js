@@ -70,6 +70,8 @@
       return (VM.imageByName && VM.imageByName(r.brand, r.model)) || PH;   // 트림 미연결 견적: 같은 모델 대표 이미지
     } catch (e) { return PH; }
   }
+  /** 목록·카드용 작은 차량 이미지(가로 480px, 원본의 약 1/6 용량). 사이트 차량 이미지만 해당 — 관리자 업로드 이미지는 원본 그대로 (#53) */
+  function carThumb(r) { return String(carImg(r)).replace(/(assets\/vehicles\/[^?#]+?)(\.w480)?\.webp/, "$1.w480.webp"); }
   /** 색상 이름 → 색상칩 색. trimId 가 있으면 차량 데이터의 HEX(type: EXTERIOR·INTERIOR), 못 찾으면 이름으로 대략 색 */
   function hex(name, trimId, type, colorId) {
     if (colorId) { try { var hi = root.CHAQ_VM && root.CHAQ_VM.colorHexById && root.CHAQ_VM.colorHexById(colorId); if (hi) return hi; } catch (e) {} }   // 견적 행 색상ID(마스터 참조) 우선
@@ -115,8 +117,8 @@
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
   /** 예시 후기(#44): 실제 고객 후기가 아닌 항목 표기 — 카드 배지 HTML · 목록이 전부 예시인지 */
-  var SAMPLE_BADGE = '<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em>';
+  var SAMPLE_BADGE = '<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em>';
   function sampleBadge(r) { return r && r.sample ? SAMPLE_BADGE : ""; }
   function allSample(list) { return !!(list && list.length) && list.every(function (r) { return r && (r.sample || (r.review && r.review.sample)); }); }
-  root.CHAQ_UTIL = { sampleBadge: sampleBadge, allSample: allSample, EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, tokKind: tokKind, isDisc: isDisc, splitOpts: splitOpts, taxBenefitOf: taxBenefitOf, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  root.CHAQ_UTIL = { carThumb: carThumb, sampleBadge: sampleBadge, allSample: allSample, EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, tokKind: tokKind, isDisc: isDisc, splitOpts: splitOpts, taxBenefitOf: taxBenefitOf, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

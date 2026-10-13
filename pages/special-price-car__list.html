@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>차큐 재고특가</title>
+  <meta name="description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="차큐 재고특가">
+  <meta property="og:description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image.jpg">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
@@ -12,7 +21,7 @@
 <body class="local-special-list">
     <div class="special_shell">
         <header class="special_header">
-            <button type="button" aria-label="뒤로 가기" onclick="history.back()">‹</button>
+            <button type="button" aria-label="뒤로 가기" onclick="if(document.referrer&&document.referrer.indexOf(location.host)>-1&&history.length>1)history.back();else location.href='../index.html'">‹</button>
             <h1>특가차량</h1>
         </header>
 
@@ -25,7 +34,8 @@
                     <button type="button" class="filter_select" data-filter="trim" aria-label="등급"><span class="fs_text">등급 선택</span><span class="fs_clear" role="button" aria-label="등급 선택 해제"></span></button>
                 </div>
                 <h2>계약 조건</h2>
-                <div class="cond_wrap is-locked">
+                <button type="button" class="cond_summary" aria-expanded="false"><span class="cs_label">계약 조건</span><span class="cs_val"></span><span class="cs_edit">변경</span></button>
+                <div class="cond_wrap">
                     <div class="filter_group">
                         <span class="filter_sub">계약 기간</span>
                         <div class="filter_row">
@@ -65,12 +75,12 @@
                     </select>
                 </div>
 
-                <a class="est_card" id="estCard" href="#" hidden></a>
+                <a class="est_card" id="estCard" href="#" hidden aria-label="선택한 차량 견적 보기"></a>
 
                 <div class="special_stock_panel">
                 <div class="special_cards" id="stockList"></div>
                 </div>
-                <p class="no_result" id="noResult" hidden style="padding:40px 16px;text-align:center;color:#9aa0a6;font-size:14px">조건에 맞는 차량이 없습니다</p>
+                <p class="no_result" id="noResult" hidden style="padding:40px 16px;text-align:center;color:#5f6670;font-size:14px">조건에 맞는 차량이 없습니다</p>
             </section>
         </main>
 
@@ -82,7 +92,7 @@
 
         <footer class="special_footer">
             <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
-            <button class="on" type="button"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
+            <button class="on" type="button" id="navStock" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
             <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
             <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
             <button type="button" onclick="location.href='../index.html#menu'">•••<span>전체메뉴</span></button>
@@ -118,10 +128,12 @@
 
             var titles = { estimate: '견적조회', fast: '빠른인도', stock: '특가차량' };
             document.querySelector('.special_header h1').textContent = titles[page];
+            document.title = '차큐 ' + ({ estimate: '견적조회', fast: '빠른인도', stock: '재고특가' })[page];
+            var navStock = document.getElementById('navStock'); if (navStock && page !== 'stock') navStock.classList.remove('on');
             if (isEstimate) document.body.classList.add('view-estimate');
 
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
-            var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
+            var carImg = window.CHAQ_UTIL.carThumb;   // 카드용 작은 차량 이미지(공통 site-util.js, #53)
 
             var won = window.CHAQ_UTIL.won;
             function animateNum(el, to, em){ window.CHAQ_UTIL.animateNum(el, to, em); }
@@ -139,14 +151,14 @@
                 var d = rec.cost && rec.cost[c.dist]; if (!d) return null;
                 var t = d[c.term]; if (!t) { for (var k in d){ t=d[k]; break; } }
                 if (!t) return null;
-                if (t[c.plan]!=null) return t[c.plan];
-                for (var p in t) return t[p];
+                if (t[c.plan]!=null) return t[c.plan] > 0 ? t[c.plan] : null;   // 0원 = 견적 없음 (별도문의)
+                for (var p in t) return t[p] > 0 ? t[p] : null;
                 return null;
             }
 
             function monthlyExact(rec, c) {   // 견적조회 전용: 거리·기간·초기유형이 정확히 일치하는 칸만 (빈칸이면 null)
                 var t = rec.cost && rec.cost[c.dist] && rec.cost[c.dist][c.term];
-                return (t && t[c.plan] != null) ? t[c.plan] : null;
+                return (t && t[c.plan] > 0) ? t[c.plan] : null;
             }
 
             var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / 차량 데이터 모드: brandId, modelId, 등급 묶음 key · all = '전체 보기'
@@ -175,7 +187,7 @@
                 return (!F.brand||r.brand===F.brand)&&(!F.model||r.model===F.model)&&(!F.trim||r.trim===F.trim);
             }
             var zeroToggle = document.querySelector('#filterPop .fpop_toggle input');
-            if (zeroToggle && USE_VM) zeroToggle.checked = false;   // 기본: 견적 없는 차량(0대)까지 모두 노출 → 켜면 0대 제외
+            if (zeroToggle && USE_VM) zeroToggle.checked = !isEstimate;   // 재고특가·빠른인도: 견적(재고) 있는 차량만(0대 제외 켬, 끄면 별도문의 차량까지) · 견적조회: 전체 차량(견적 없으면 별도문의)
             function hideZero(){ return !!(zeroToggle && zeroToggle.checked); }
             // 견적 없는 차량 카드용: 모델·등급 묶음의 대표 트림
             function groupRep(g){ return g && g.trims && g.trims[0] ? g.trims[0].id : null; }
@@ -191,7 +203,7 @@
             }
             function inquiryCard(tid, title, sub, c){   // 견적 데이터가 없는 차량: 비용칸 '별도문의'
                 return '<a class="stock-card is-inquiry" href="car-detail.html?trimId='+encodeURIComponent(tid)+'&from='+page+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
-                    '<img src="'+escT(vmImg(tid))+'" alt="'+escT(title)+'" onerror="this.onerror=null;this.src=\''+PH+'\'">'+
+                    '<img src="'+escT(vmImg(tid))+'" alt="'+escT(title)+'" loading="lazy" onerror="this.onerror=null;this.src=\''+PH+'\'">'+
                     '<span class="stock-copy"><small class="cn">'+carNameH({trimId: tid})+'</small>'+
                     '<strong class="is-inquiry">월 별도문의</strong>'+
                     '<b><span class="opt-tag">'+escT(sub)+'</span></b></span>'+
@@ -206,6 +218,7 @@
                 // 차량가 정렬 = 차량 총가격(기본 + 옵션 + 할인, 상세 가격 영역과 같은 계산)
                 var tot = {}, U = window.CHAQ_UTIL, carP = function(r){ if(!(r.id in tot)) tot[r.id] = U && U.carTotal ? U.carTotal(r) : (r.base||0); return tot[r.id]; };
                 arr.sort(function(a,b){
+                    if (!byCar) { var am = monthly(a,c), bm = monthly(b,c); if ((am==null) !== (bm==null)) return am==null ? 1 : -1; }   // 이 조건 월 납입금이 없는 차량(별도문의)은 항상 뒤로
                     var av = byCar ? carP(a) : (monthly(a,c)||0);
                     var bv = byCar ? carP(b) : (monthly(b,c)||0);
                     return desc ? bv-av : av-bv;
@@ -218,13 +231,68 @@
             var noEl = document.getElementById('noResult');
             var countEl = document.querySelector('.result_header p strong');
 
+            // 견적조회 첫 화면: 모델별 '지금 조건' 최저 월 납입금 차량 (실견적 우선, 없으면 추정) — 브랜드를 고르기 전에도 바로 비교
+            var EST_TOP = 20;
+            function renderEstTop(c){
+                var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; }, byModel = {};
+                records.forEach(function(r){
+                    var m = monthlyExact(r,c); if (m==null) return;
+                    var k = (USE_VM && VMK[r.id]) ? VMK[r.id].mid : (r.brand+'|'+r.model), est = isEF(r), cur = byModel[k];
+                    if (!cur || (cur.est && !est) || (cur.est === est && m < cur.m)) byModel[k] = { r: r, m: m, est: est };
+                });
+                var list = Object.keys(byModel).map(function(k){ return byModel[k]; }).sort(function(a,b){ return (a.est-b.est) || (a.m-b.m); }).slice(0, EST_TOP);
+                if (countEl) countEl.textContent = list.length;
+                var hint = '<p class="est_top_hint">지금 조건의 <b>모델별 최저가</b>예요. 브랜드를 고르면 원하는 차량만 볼 수 있어요.</p>';
+                listEl.innerHTML = hint + list.map(function(o){ var r = o.r;
+                    return '<a class="stock-card" href="car-detail.html?id='+r.id+'&from=estimate&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
+                        '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'" loading="lazy">'+
+                        '<span class="stock-copy"><small class="cn">'+carNameH(r)+'</small>'+
+                        '<strong>'+(o.est?'예상 ':'')+'월 '+won(o.m)+'원</strong>'+
+                        '<b><span class="opt-tag">'+(o.est?'딜리버 기준가(추정)':'금융사 최저가')+'</span></b></span>'+
+                        '<span class="stock-cta">상세견적</span></a>'; }).join('');
+                listEl.hidden = false; noEl.hidden = list.length > 0;
+            }
+            // 선택·조건을 주소에 남김 → 상세 갔다가 뒤로 와도 그대로 (공유 링크에도 유지)
+            function saveState(c){
+                try {
+                    var q = new URLSearchParams(location.search); ['b','m','t','bl','ml','tl','all','term','plan','dist','sort'].forEach(function(k){ q.delete(k); });
+                    if (F.brand) { q.set('b', F.brand); q.set('bl', LABEL.brand||''); }
+                    if (F.model) { q.set('m', F.model); q.set('ml', LABEL.model||''); }
+                    if (F.trim) { q.set('t', F.trim); q.set('tl', LABEL.trim||''); }
+                    if (F.all) q.set('all', '1');
+                    if (c.term !== '60') q.set('term', c.term); if (c.plan !== '0') q.set('plan', c.plan); if (c.dist !== '1') q.set('dist', c.dist);
+                    if (sortSel && sortSel.value !== 'default') q.set('sort', sortSel.value);
+                    var qs = q.toString(); history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : ''));
+                } catch (e) {}
+            }
+            function restoreState(){
+                var q = new URLSearchParams(location.search), g = function(k){ return q.get(k); };
+                if (g('b')) { F.brand = g('b'); LABEL.brand = g('bl') || g('b'); }
+                if (g('b') && g('m')) { F.model = g('m'); LABEL.model = g('ml') || g('m'); }
+                if (g('b') && g('m') && g('t')) { F.trim = g('t'); LABEL.trim = g('tl') || g('t'); }
+                if (g('all') === '1') F.all = true;
+                var groups = document.querySelectorAll('.filter_panel .filter_group');
+                function pick(gi, test){ var row = groups[gi] && groups[gi].querySelector('.filter_row'); if (!row) return; var t = [].filter.call(row.children, test)[0]; if (!t) return; [].forEach.call(row.children, function(x){ x.classList.remove('on'); }); t.classList.add('on'); }
+                if (/^(36|48|60)$/.test(g('term')||'')) pick(0, function(b){ return b.textContent.indexOf(g('term')) > -1; });
+                if (g('plan') === 'b') pick(1, function(b){ return b.textContent.indexOf('보증') > -1; });
+                if (g('plan') === 's') pick(1, function(b){ return b.textContent.indexOf('선납') > -1; });
+                if (/^[123]$/.test(g('dist')||'')) pick(2, function(b){ return b.textContent.indexOf(g('dist')+'만') > -1; });
+                if (sortSel && g('sort') && [].some.call(sortSel.options, function(o){ return o.value === g('sort'); })) sortSel.value = g('sort');
+            }
+            var condSum = document.querySelector('.cond_summary');
+            function updateCondSummary(c){
+                if (!condSum) return;
+                condSum.querySelector('.cs_val').textContent = c.term + '개월 · ' + ({ '0': '초기비용 0원', b: '보증금 30%', s: '선납금 30%' })[c.plan] + ' · 연 ' + c.dist + '만 km';
+            }
+            if (condSum) condSum.addEventListener('click', function(){ var open = !document.querySelector('.filter_panel').classList.contains('cond-open'); document.querySelector('.filter_panel').classList.toggle('cond-open', open); condSum.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+
             function render() {
-                var c = cond();
+                var c = cond(); updateCondSummary(c); saveState(c);
                 var arr = records.filter(matches);
                 if (isEstimate) {
                     listEl.hidden = true; noEl.hidden=true;
                     function guide(msg){ estEl.hidden=false; estEl.classList.add('est-empty'); estEl.removeAttribute('href'); estEl.innerHTML='<span class="est_guide">'+msg+'</span>'; }
-                    if (!F.brand && !F.all) { guide('차량 브랜드를 선택해주세요'); return; }
+                    if (!F.brand && !F.all) { estEl.hidden = true; renderEstTop(c); return; }
                     if (!F.model && !F.all) { guide('차량 모델을 선택해주세요'); return; }
                     if (!F.trim && !F.all)  { guide('차량 등급을 선택해주세요'); return; }
                     // 견적조회 = 같은 차량의 금융사별 견적 중 '고른 조건 그대로'의 최저가 (다른 조건 값으로 대신하지 않음)
@@ -263,6 +331,7 @@
                     return;
                 }
                 estEl.hidden=true;
+                if (hideZero()) arr = arr.filter(function(r){ return monthly(r,c)!=null; });   // 재고특가·빠른인도: 이 조건 월 납입금이 없는 재고(별도문의)는 '0대 제외' 켜짐이면 숨김
                 sortList(arr, c);
                 if (countEl) countEl.textContent = arr.length;
                 // 견적(재고) 없는 차량도 노출: 브랜드/모델/등급을 고른 경우, 이 목록에 0대인 모델·등급 묶음을 '별도문의' 카드로 뒤에 붙임 ('0대 제외'를 켜면 숨김)
@@ -279,9 +348,9 @@
                     var m=monthly(r,c);
                     html += '<a class="stock-card" href="car-detail.html?id='+r.id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
                         '<span class="stock-badge">특가</span>'+
-                        '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'">'+
+                        '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'" loading="lazy" decoding="async">'+
                         '<span class="stock-copy"><small class="cn">'+carNameH(r)+'</small>'+
-                        '<strong>월 '+won(m)+'원</strong>'+
+                        (m==null ? '<strong class="is-inquiry">월 별도문의</strong>' : '<strong>월 '+won(m)+'원</strong>')+
                         '<b><span class="opt-tag">옵션 <em>'+(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0))+'</em>개</span>'+trimTag(r)+
                         '</b></span>'+
                         '<span class="stock-cta">상세견적</span></a>';
@@ -412,6 +481,8 @@
                 var pickedTrim=(currentFilter==='trim');
                 syncSelects();
                 updateFilterLock(); updateCondLock(); closePop(); render();
+                // 견적조회: 브랜드 → 모델 → 등급을 이어서 고르도록 다음 선택창 자동으로 (등급까지 골라야 견적이 나옴)
+                if (isEstimate && (currentFilter === 'brand' || currentFilter === 'model')) { var nx = currentFilter === 'brand' ? 'model' : 'trim'; setTimeout(function(){ openPop(nx); }, 180); return; }
                 // 등급 선택 완료 시 자동 스크롤
                 if(pickedTrim && F.trim){
                     setTimeout(function(){
@@ -440,7 +511,7 @@
                 });
             }
             var condWrap=document.querySelector('.cond_wrap');
-            function updateCondLock(){ if(condWrap) condWrap.classList.toggle('is-locked', !F.trim && !F.all); }
+            function updateCondLock(){ if(condWrap) condWrap.classList.remove('is-locked'); }   // 계약 조건은 차량 선택 전에도 바로 바꿀 수 있음 (사용성 점검 261014)
             function clearFrom(type){
                 F[type]=null; LABEL[type]=null; F.all=false;
                 if(type==='brand'){ F.model=null; F.trim=null; }
@@ -474,7 +545,7 @@
             window.addEventListener('scroll', hideTip, true);
             window.addEventListener('resize', hideTip);
 
-            syncSelects(); updateFilterLock(); updateCondLock(); render();
+            restoreState(); syncSelects(); updateFilterLock(); updateCondLock(); render();
         })();
     </script>
     <script src="data/auth.js"></script>   <!-- 회원: 비회원 조건 변경 제한(5회) · 가입 시트 -->

@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>차큐 아티클</title>
+  <meta name="description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="차큐 아티클">
+  <meta property="og:description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image.jpg">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
@@ -12,7 +21,7 @@
 <body class="local-sub sub-white">
     <div class="sub_shell">
         <header class="sub_header">
-            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="history.back()">뒤로</button>
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="if(document.referrer&&document.referrer.indexOf(location.host)>-1&&history.length>1)history.back();else location.href='posting__list.html'">뒤로</button>
             <h1>아티클</h1>
         </header>
 

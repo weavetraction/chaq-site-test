@@ -1,4 +1,4 @@
-@font-face{font-family:"Pretendard";font-weight:45 920;font-style:normal;font-display:swap;src:url("../font/PretendardVariable.woff2") format("woff2-variations")}
+@font-face{font-family:"Pretendard";font-weight:45 920;font-style:normal;font-display:swap;src:url("../font/PretendardVariable-subset.woff2") format("woff2-variations")}
 :root{--green:#20a65a;--dark-green:#218c4f;--soft-green:#effbf3;--page:#f2f4f7;--line:#e7e9ec;--text:#16181b;--muted:#8a9098;--shadow:0 5px 18px rgba(36,46,56,.06)}
 *{box-sizing:border-box}
 html{background:#f4f4f4;scroll-behavior:smooth}
@@ -28,7 +28,7 @@ main{background:#fff}
 .quick-grid img{width:31.5px;height:31.5px;object-fit:contain}
 .finder-card{position:relative;display:flex;min-height:92px;overflow:hidden;align-items:center;border:1px solid #e2e2e2;border-radius:12px;box-shadow:none}
 .finder-copy{position:relative;z-index:4;display:flex;width:66%;padding:15px 0 15px 16px;flex-direction:column;transform:translateX(3%)}
-.finder-copy small{color:#8e949b}
+.finder-copy small{color:#5f6670}
 .finder-copy strong{margin-top:2.94px;letter-spacing:-.8px}
 .finder-copy b{margin-top:8.64px;color:#6f757b}
 .logo-chip-slider{position:absolute;top:0;right:0;width:42%;height:100%;overflow:hidden;transform:translateX(-7%)}
@@ -48,7 +48,7 @@ main{background:#fff}
 .delivery-grid strong{margin-top:3px;color:#23a45c}
 .delivery-grid b{margin-top:auto;color:#18a358;line-height:1}
 .stock-section{border:0;background:#fff}
-.section-heading p{margin:3px 0 0;color:#8e949b}
+.section-heading p{margin:3px 0 0;color:#5f6670}
 .price-filters{grid-template-columns:repeat(3,1fr);margin:16px 0 14px}
 .stock-panel{padding:9px 16px 16px;border-radius:14px}
 .stock-list{display:grid;gap:0}
@@ -61,13 +61,13 @@ main{background:#fff}
 .stock-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stock-copy strong{margin-top:4px;letter-spacing:-.7px;white-space:nowrap}
 .stock-copy b{display:flex;flex-wrap:nowrap;align-items:center;gap:3px;margin-top:5px;color:#666d74;font-size:11px;font-weight:500;white-space:nowrap}
-.opt-tag{padding:2.375px 5px;border-radius:5px;color:#8b8b8b;font-size:11px;font-weight:400;line-height:1;white-space:nowrap}
+.opt-tag{padding:2.375px 5px;border-radius:5px;color:#5f6670;font-size:11px;font-weight:400;line-height:1;white-space:nowrap}
 .opt-tag em{font-style:normal;font-weight:400}
 .stock-cta{align-self:center;margin-left:8px;margin-right:8px;padding:6px 10px;border:1px solid #e2e2e2;border-radius:7px;background:transparent;color:#20a65a;line-height:1;white-space:nowrap;transform:translateX(10%)}
 .more-button{display:flex;width:100%;height:43px;align-items:center;justify-content:center;margin-top:14px;border:1px solid #e2e2e2;border-radius:7px;color:#72777d;background:#fff;cursor:pointer;box-shadow:0 2px 6px rgba(32,71,47,.055)}
 .more-button span{margin-left:4px}
 .discount-card{padding:5px 16px 16px;border-radius:13px}
-.discount-live-tag{display:inline-block;margin-bottom:8px;padding:4px 9px;border-radius:6px;color:#8b8b8b;font-size:11px;font-weight:600;line-height:1}
+.discount-live-tag{display:inline-block;margin-bottom:8px;padding:4px 9px;border-radius:6px;color:#5f6670;font-size:11px;font-weight:600;line-height:1}
 .discount-card a:not(.more-button){display:flex;align-items:center;justify-content:space-between;border-top:.5px solid #f2f2f2;min-height:76.8px}
 .discount-card a:not(.more-button):first-of-type{border-top:0}
 .discount-card span{display:flex;align-items:center;gap:10px}
@@ -97,24 +97,24 @@ main{background:#fff}
 .faq-list summary{display:flex;justify-content:space-between;padding:18px;list-style:none;cursor:pointer}
 .faq-list summary::-webkit-details-marker{display:none}
 .faq-head{display:flex;min-width:0;flex-direction:column;gap:9px}
-.faq-cat{align-self:flex-start;padding:4px 10px;border-radius:7px;color:#8b8b8b}
+.faq-cat{align-self:flex-start;padding:4px 10px;border-radius:7px;color:#5f6670}
 .faq-q{color:#1c1f22;letter-spacing:-.3px;line-height:1.35}
 .faq-arrow{flex:none;width:11px;height:11px;margin-top:-4px;border-right:2px solid #9aa0a6;border-bottom:2px solid #9aa0a6;transform:rotate(45deg);transition:transform .2s}
 .faq-list details[open] .faq-arrow{margin-top:4px;transform:rotate(-135deg)}
 .faq-list p{margin:0;padding:2px 18px 20px;color:#5c6167;line-height:1.7}
 .guide-section{padding-bottom:35px;border-top:0}
-.guide-section>p{margin:3px 0 15px;color:#8b9198}
+.guide-section>p{margin:3px 0 15px;color:#5f6670}
 .guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .guide-grid button{display:flex;overflow:hidden;padding:0;border:0;border-radius:11px;flex-direction:column;color:#191b1e;text-align:left;cursor:pointer}
 .guide-grid button strong{width:100%;padding:13px 12px;background:#dedfe2}
-.guide-grid button span{padding:12px 12px 0;color:#8d9298;line-height:1.5}
+.guide-grid button span{padding:12px 12px 0;color:#5f6670;line-height:1.5}
 .guide-grid button b{padding:0 12px 13px}
 .company-footer{min-height:120px;padding-top:25px;color:#8a9097;background:#f4f4f4;font-size:11px}
 .company-footer img{width:58px;height:20px;object-fit:contain;object-position:left center}
 .company-footer details{margin-top:10px}
 .company-footer summary{cursor:pointer}
 .bottom-nav{position:fixed;bottom:0;left:50%;z-index:50;display:grid;width:100%;max-width:480px;height:72px;transform:translateX(-50%);grid-template-columns:repeat(5,1fr);border-top:1px solid #e6e9ec;background:rgba(255,255,255,.97);box-shadow:0 -3px 15px rgba(24,35,45,.04)}
-.bottom-nav a,.bottom-nav button{position:relative;display:flex;min-width:0;align-items:center;justify-content:center;gap:4px;border:0;color:#b7bcc2;background:transparent;flex-direction:column;font-size:10px;cursor:pointer}
+.bottom-nav a,.bottom-nav button{position:relative;display:flex;min-width:0;align-items:center;justify-content:center;gap:4px;border:0;color:#5f6670;background:transparent;flex-direction:column;font-size:10px;cursor:pointer}
 .bottom-nav .is-active,.bottom-nav a:hover,.bottom-nav button:hover{color:#239e5a;font-weight:700}
 .bottom-nav .gnb-icon-pair{position:relative;display:block;width:24px;height:24px}
 .bottom-nav .gnb-icon-pair img{position:absolute;inset:0;width:24px;height:24px;object-fit:contain;transition:opacity .16s ease}
@@ -144,7 +144,7 @@ main{background:#fff}
 .menu-links a{display:grid;min-height:66.56px;align-items:center;grid-template-columns:72px 1fr;border-bottom:.5px solid #f4f4f4}
 .menu-links img{width:32.5px;height:32.5px;margin-left:14px;object-fit:contain}
 .menu-links span{display:flex;flex-direction:column}
-.menu-links small{margin-top:3px;color:#8b9198}
+.menu-links small{margin-top:3px;color:#5f6670}
 .menu-cash{margin-top:38px}
 .toast{position:fixed;left:50%;bottom:92px;z-index:120;visibility:hidden;padding:11px 16px;transform:translate(-50%,12px);border-radius:22px;color:#fff;background:rgba(23,27,31,.9);font-size:11px;opacity:0;transition:.2s;white-space:nowrap}
 .toast.is-show{visibility:visible;transform:translate(-50%,0);opacity:1}
@@ -156,7 +156,7 @@ main{background:#fff}
   .bottom-nav{bottom:22px;border-radius:0 0 18px 18px}
   .full-menu-inner{box-shadow:0 0 24px rgba(20,30,40,.12)}
 }
-@media(max-width:360px){.content-pad{padding-right:16px;padding-left:16px}.stock-card{grid-template-columns:88px 1fr auto}.stock-card>img{width:84px}.menu-intro p{font-size:18px}.menu-intro h2{font-size:28px}}
+@media(max-width:360px){.content-pad{padding-right:16px;padding-left:16px}.review-scroll{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}.stock-card{grid-template-columns:88px 1fr auto}.stock-card>img{width:84px}.menu-intro p{font-size:18px}.menu-intro h2{font-size:28px}}
 
 /* v31: 로고칩 좌/우 그라데이션 오른쪽 10% 이동 + 메뉴 팝업 헤더 좌우여백 본문과 통일(28px) */
 .logo-chip-window::before{left:10%}
@@ -179,17 +179,17 @@ main{background:#fff}
 .review-scroll .review-mini img{width:40px;height:40px;border-radius:7px;object-fit:cover;background:#f2f2f2;flex:none}
 .review-scroll .review-mini .rm-info{display:flex;flex-direction:column;min-width:0}
 .review-scroll .review-mini .rm-info strong{color:#2a2e33;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:400}
-.review-scroll .review-mini .rm-info em{margin-top:1px;color:#8a8f96;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:400}
+.review-scroll .review-mini .rm-info em{margin-top:1px;color:#5f6670;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:400}
 .review-scroll .review-mini+b{margin-top:0}
 
 /* v47: 고객후기 미니 흰색 카드 위치 약 10% 아래로 */
 
 /* v55: 모든 페이지 공통 사업자 정보 푸터 */
-.chaq-biz-footer{padding:24px 20px 28px;background:#fff;border-top:1px solid #f0f0f0;color:#9aa0a6;font-size:11px;line-height:1.9;text-align:left}
+.chaq-biz-footer{padding:24px 20px 28px;background:#fff;border-top:1px solid #f0f0f0;color:#5f6670;font-size:11px;line-height:1.9;text-align:left}
 .chaq-biz-footer .cf-logo{width:60px;margin-bottom:10px;opacity:.55;filter:grayscale(1)}
 .chaq-biz-footer .cf-info{margin:0}
 .chaq-biz-footer .cf-links{margin:10px 0 0}
-.chaq-biz-footer .cf-links a{color:#7b8087;text-decoration:none}
+.chaq-biz-footer .cf-links a{color:#5f6670;text-decoration:none}
 .chaq-biz-footer .cf-links span{margin:0 7px;color:#d5d8dc}
 /* car-detail: 고정 CTA바 위로 여백 확보 */
 .local-car-detail .detail_card:last-of-type{margin-bottom:18px}
@@ -348,7 +348,7 @@ main{background:#fff}
 .price-filters{display:flex;align-items:stretch;gap:16px;padding:8px 6px 8px 16px;border-radius:16px;background:#f4f5f6;min-height:66px;box-shadow:none}
 .price-filters .pf-label{flex:0 0 auto;align-self:center;width:auto;font-size:16px;font-weight:600;color:#2b2f34;white-space:nowrap}
 .price-filters .pf-options{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;align-items:stretch}
-.price-filters button{justify-self:stretch;align-self:stretch;display:flex;align-items:center;justify-content:center;text-align:center;height:auto;min-height:0;padding:4px;border:0;border-radius:12px;background:transparent;box-shadow:none;color:#9aa0a6;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.price-filters button{justify-self:stretch;align-self:stretch;display:flex;align-items:center;justify-content:center;text-align:center;height:auto;min-height:0;padding:4px;border:0;border-radius:12px;background:transparent;box-shadow:none;color:#5f6670;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
 .price-filters button.is-active{color:#18a85c;font-weight:700;background:#e7e8ea;border:0;box-shadow:none}
 
 /* ===== v88: 재고특가 차량 이미지 로딩 지연·서버오류·데이터 누락 시 공백 대신 플레이스홀더 아이콘 ===== */

@@ -2,11 +2,21 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#20a65a">
   <title>차큐 장기렌트</title>
-  <link rel="preload" href="font/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261009-1">
+  <meta name="description" content="차큐 — 장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고, 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="차큐 장기렌트 — 금융사 다이렉트 비교견적">
+  <meta property="og:description" content="장기렌트·리스 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image.jpg">
+  <meta property="og:url" content="https://chaq.co.kr/">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="font/PretendardVariable-subset.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261014-1">
     <script src="pages/data/api-config.js"></script>
     <script src="pages/data/site-util.js"></script>
     <script src="pages/data/analytics.js"></script>
@@ -31,7 +41,7 @@
       <section class="hero" aria-label="주요 혜택">
         <div class="hero-track">
           <a class="hero-slide is-active" href="pages/event__list__ing.html">
-            <img src="assets/img/banner-cash.jpg" alt="최대 200만원 현금지원">
+            <img src="assets/img/banner-cash.jpg?v=261014" alt="최대 100만원 현금지원">
           </a>
           <a class="hero-slide" href="pages/special-price-car__list.html?from=estimate">
             <img src="assets/img/banner-compare.jpg" alt="금융사 다이렉트 비교견적">
@@ -122,21 +132,11 @@
         </div>
       </section>
 
-      <section class="discount-section content-pad section-space" style="display:none">
-        <div class="section-heading"><span class="discount-live-tag">30개+ 딜러사 실시간</span><h2>절대 놓치면 안 되는 수입차 할인</h2><p>각 딜러사의 할인 정보를 실시간으로 업데이트합니다.</p></div>
-        <div class="discount-card">
-          <a href="pages/car-select__master.html?type=discount"><span><span class="brand-logo is-text" aria-hidden="true">BMW</span><i class="brand-text"><small>7개 딜러사 실시간</small><b>BMW 신차 프로모션</b></i></span><strong><span class="dc-max">최대</span><span class="dc-num">22.7</span><span class="dc-pct">%</span></strong></a>
-          <a href="pages/car-select__master.html?type=discount"><span><span class="brand-logo is-text" aria-hidden="true">Audi</span><i class="brand-text"><small>9개 딜러사 실시간</small><b>아우디 신차 프로모션</b></i></span><strong><span class="dc-max">최대</span><span class="dc-num">21.1</span><span class="dc-pct">%</span></strong></a>
-          <a href="pages/car-select__master.html?type=discount"><span><span class="brand-logo is-text" aria-hidden="true">Benz</span><i class="brand-text"><small>11개 딜러사 실시간</small><b>벤츠 신차 프로모션</b></i></span><strong><span class="dc-max">최대</span><span class="dc-num">16.0</span><span class="dc-pct">%</span></strong></a>
-          <a href="pages/car-select__master.html?type=discount"><span><span class="brand-logo is-text" aria-hidden="true">VW</span><i class="brand-text"><small>8개 딜러사 실시간</small><b>폭스바겐 신차 프로모션</b></i></span><strong><span class="dc-max">최대</span><span class="dc-num">23.0</span><span class="dc-pct">%</span></strong></a>
-          <a class="more-button" href="pages/car-select__master.html?type=discount">수입차 할인 더보기</a>
-        </div>
-      </section>
 
       <section class="cash-banner-wrap content-pad">
         <a class="cash-banner cash-slider" href="pages/event__list__ing.html" aria-label="현금지원 이벤트">
           <span class="cs-track">
-            <span class="cs-slide is-active"><img src="assets/img/banner-cash.jpg" alt="최대 200만원 현금지원"></span>
+            <span class="cs-slide is-active"><img src="assets/img/banner-cash.jpg?v=261014" alt="최대 100만원 현금지원"></span>
             <span class="cs-slide"><img src="assets/img/banner-compare.jpg" alt="금융사 다이렉트 비교견적"></span>
           </span>
           <span class="cs-dots" aria-hidden="true"><i class="is-on"></i><i></i></span>
@@ -145,12 +145,12 @@
 
       <section class="review-section content-pad section-space">
         <h2 id="reviewTitle">이용 후기 예시</h2>
-        <div class="review-scroll">
-          <article data-review-id="1"><small>홍**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>차를 바꿀 때가 되어서 여기저기 알아봤는데, 렌탈사마다 조건이 다 달라서 어디가 진짜 싼 건지 도무지 감이 안 잡히더라고요. 어떤 곳은 월 납입금이 싼 대신 잔가가 높고, 또 어떤 곳은 초기비용을 많이 요구하는 식이라 단순 비교가 정말 어려웠습니다. 그러다 차큐를 알게 됐는데 15개 렌탈사 가격을 한 화면에서 한 번에 비교해주니까 발품 팔 필요가 전혀 없었어요. 예전 같으면 대리점마다 전화 돌리고 견적서 받고 엑셀에 일일이 정리하느라 며칠씩 걸렸을 텐데, 여기서는 원하는 조건만 넣으니 가장 싼 조합이 바로 정리돼서 나왔습니다. 덕분에 가장 유리한 조건을 찾는 데 하루도 안 걸렸고, 상담사분도 제가 놓친 부분까지 꼼꼼히 짚어주셔서 믿고 계약할 수 있었어요. 출고 일정도 처음 안내받은 그대로 진행돼서 군더더기가 하나도 없었습니다. 다음 차량도, 그리고 주변 지인들에게도 무조건 차큐를 추천할 생각입니다. 정말 강력하게 추천드려요.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-palisade--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 팰리세이드</strong><em>LX3 익스클루시브</em></span></div></article>
-          <article data-review-id="2"><small>김**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>개인사업자로 일하고 있어서 차량을 비용처리 할 수 있는 방법으로 알아보던 중이었어요. 장기렌트가 유리하다는 얘기는 들었는데 막상 세부 조건까지 따지려니 너무 복잡해서 엄두가 안 났습니다. 용어부터 낯설고, 같은 차인데도 회사마다 견적 차이가 커서 혼자서는 판단하기가 어려웠거든요. 차큐에서는 상담을 통해 선수금, 보증금, 잔가, 주행거리 조건을 하나하나 비교해주셔서 제 상황에 어떤 조합이 가장 유리한지 명확하게 이해할 수 있었어요. 특히 매달 나가는 비용과 만기 인수 시 총비용까지 숫자로 딱 정리해주시니 결정이 훨씬 수월했습니다. 세금계산서 처리나 회계 반영 부분도 따로 설명해주셔서 사업자 입장에서 정말 도움이 많이 됐어요. 무리하게 계약을 권하지 않고 제 예산에 맞는 선에서 솔직하게 안내해주신 점도 인상 깊었습니다. 덕분에 마음 편히 결정할 수 있었고, 주변 사장님들께도 자신 있게 추천하고 있습니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/tesla-model-y--cur/default.webp" alt=""></span><span class="rm-info"><strong>테슬라 모델 Y</strong><em>롱레인지 AWD</em></span></div></article>
-          <article data-review-id="3"><small>이**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>솔직히 처음엔 온라인으로 보이는 견적이 실제랑 다를까 봐 반신반의했어요. 이런 플랫폼들이 화면에는 싸게 띄워놓고 막상 상담에 들어가면 이런저런 명목으로 조건이 슬쩍 바뀌는 경우가 많잖아요. 그래서 큰 기대 없이 문의했는데, 차큐는 화면에 나온 견적이랑 실제 계약 견적이 정확히 똑같이 나와서 오히려 제가 더 놀랐습니다. 상담사분도 조건 하나하나 왜 이렇게 나오는지 근거를 들어 친절하게 설명해주셔서 신뢰가 갔어요. 중간에 제가 주행거리랑 계약기간, 선납 비율을 몇 번이나 바꿔가며 물어봤는데도 귀찮은 기색 하나 없이 그때그때 다시 계산해서 알려주셨습니다. 심지어 제가 유리한 쪽으로 조건을 먼저 제안해주시기도 했어요. 이렇게 투명하게 진행되니 마음 놓고 계약할 수 있었고, 출고까지도 처음 안내한 일정 그대로 진행돼서 아주 만족스러웠어요. 주변 사람들에게도 믿고 쓸 만한 곳이라고 자신 있게 이야기하고 있습니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-casper-electric--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 캐스퍼 일렉트릭</strong><em>인스퍼레이션</em></span></div></article>
-          <article data-review-id="4"><small>박**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>여러 렌탈사를 일일이 전화 돌릴 필요 없이 한 번에 최저가를 찾아주니 정말 편했어요. 예전에 다른 차를 뽑을 때는 대리점 몇 군데를 직접 돌아다니면서 견적을 받았는데, 그때마다 말이 조금씩 달라서 뭘 믿어야 할지 헷갈렸고 시간도 어마어마하게 들었거든요. 차큐는 조건만 입력하면 여러 회사 견적을 객관적인 숫자로 나란히 보여주니까 비교가 확실했습니다. 어느 회사가 왜 더 싼지까지 눈에 보이니 흥정에 휘둘릴 일도 없었어요. 특히 초기비용 0원 조건으로 바로 출고까지 이어져서 목돈 부담 없이 차를 받을 수 있었고 시간도 크게 아꼈습니다. 중간중간 궁금한 점을 물어볼 때마다 빠르게 답변을 받아 계약 과정 내내 스트레스가 전혀 없었어요. 차량 인도도 약속한 날짜에 정확히 맞춰 진행돼서 더욱 신뢰가 갔습니다. 온 가족이 아주 만족하며 잘 타고 있고, 다음 차량은 물론 부모님 차까지도 무조건 차큐로 알아볼 생각이에요.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-grandeur--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 그랜저</strong><em>익스클루시브</em></span></div></article>
-          <article data-review-id="5"><small>최**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>법인 차량을 새로 마련하려고 처음엔 금융리스로만 알아보고 있었어요. 리스가 당연히 법인에 유리하다고만 막연히 생각했거든요. 그런데 차큐에서 상담을 받아보니 제 조건에서는 오히려 장기렌트가 총비용 면에서 더 유리하다는 걸 구체적인 숫자로 보여주셔서 눈이 번쩍 뜨였습니다. 리스와 렌트의 차이, 각각의 세무 처리 방식, 부가세 공제 여부, 만기 시 인수 여부에 따른 손익까지 한눈에 정리해주시니 결정이 정말 빨랐어요. 담당자분이 우리 회사 운행 패턴과 연간 주행거리를 먼저 꼼꼼히 물어보고 거기에 딱 맞는 조합을 추천해주신 점도 인상적이었습니다. 덕분에 불필요한 옵션에 돈 쓰지 않고 꼭 필요한 조건으로만 계약할 수 있었어요. 계약 이후에도 차량 관리 방법과 만기 처리 절차까지 미리 안내해주셔서 끝까지 세심하다는 느낌을 받았습니다. 법인 차량을 고민하는 분들이라면 꼭 한 번 비교해보시길 진심으로 추천합니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/tesla-model-3--cur/default.webp" alt=""></span><span class="rm-info"><strong>테슬라 모델 3</strong><em>롱레인지</em></span></div></article>
+        <div class="review-scroll" tabindex="0" aria-label="이용 후기 목록">
+          <article data-review-id="1"><small>홍**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>차를 바꿀 때가 되어서 여기저기 알아봤는데, 렌탈사마다 조건이 다 달라서 어디가 진짜 싼 건지 도무지 감이 안 잡히더라고요. 어떤 곳은 월 납입금이 싼 대신 잔가가 높고, 또 어떤 곳은 초기비용을 많이 요구하는 식이라 단순 비교가 정말 어려웠습니다. 그러다 차큐를 알게 됐는데 15개 렌탈사 가격을 한 화면에서 한 번에 비교해주니까 발품 팔 필요가 전혀 없었어요. 예전 같으면 대리점마다 전화 돌리고 견적서 받고 엑셀에 일일이 정리하느라 며칠씩 걸렸을 텐데, 여기서는 원하는 조건만 넣으니 가장 싼 조합이 바로 정리돼서 나왔습니다. 덕분에 가장 유리한 조건을 찾는 데 하루도 안 걸렸고, 상담사분도 제가 놓친 부분까지 꼼꼼히 짚어주셔서 믿고 계약할 수 있었어요. 출고 일정도 처음 안내받은 그대로 진행돼서 군더더기가 하나도 없었습니다. 다음 차량도, 그리고 주변 지인들에게도 무조건 차큐를 추천할 생각입니다. 정말 강력하게 추천드려요.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-palisade--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 팰리세이드</strong><em>LX3 익스클루시브</em></span></div></article>
+          <article data-review-id="2"><small>김**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>개인사업자로 일하고 있어서 차량을 비용처리 할 수 있는 방법으로 알아보던 중이었어요. 장기렌트가 유리하다는 얘기는 들었는데 막상 세부 조건까지 따지려니 너무 복잡해서 엄두가 안 났습니다. 용어부터 낯설고, 같은 차인데도 회사마다 견적 차이가 커서 혼자서는 판단하기가 어려웠거든요. 차큐에서는 상담을 통해 선수금, 보증금, 잔가, 주행거리 조건을 하나하나 비교해주셔서 제 상황에 어떤 조합이 가장 유리한지 명확하게 이해할 수 있었어요. 특히 매달 나가는 비용과 만기 인수 시 총비용까지 숫자로 딱 정리해주시니 결정이 훨씬 수월했습니다. 세금계산서 처리나 회계 반영 부분도 따로 설명해주셔서 사업자 입장에서 정말 도움이 많이 됐어요. 무리하게 계약을 권하지 않고 제 예산에 맞는 선에서 솔직하게 안내해주신 점도 인상 깊었습니다. 덕분에 마음 편히 결정할 수 있었고, 주변 사장님들께도 자신 있게 추천하고 있습니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/tesla-model-y--cur/default.webp" alt=""></span><span class="rm-info"><strong>테슬라 모델 Y</strong><em>롱레인지 AWD</em></span></div></article>
+          <article data-review-id="3"><small>이**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>솔직히 처음엔 온라인으로 보이는 견적이 실제랑 다를까 봐 반신반의했어요. 이런 플랫폼들이 화면에는 싸게 띄워놓고 막상 상담에 들어가면 이런저런 명목으로 조건이 슬쩍 바뀌는 경우가 많잖아요. 그래서 큰 기대 없이 문의했는데, 차큐는 화면에 나온 견적이랑 실제 계약 견적이 정확히 똑같이 나와서 오히려 제가 더 놀랐습니다. 상담사분도 조건 하나하나 왜 이렇게 나오는지 근거를 들어 친절하게 설명해주셔서 신뢰가 갔어요. 중간에 제가 주행거리랑 계약기간, 선납 비율을 몇 번이나 바꿔가며 물어봤는데도 귀찮은 기색 하나 없이 그때그때 다시 계산해서 알려주셨습니다. 심지어 제가 유리한 쪽으로 조건을 먼저 제안해주시기도 했어요. 이렇게 투명하게 진행되니 마음 놓고 계약할 수 있었고, 출고까지도 처음 안내한 일정 그대로 진행돼서 아주 만족스러웠어요. 주변 사람들에게도 믿고 쓸 만한 곳이라고 자신 있게 이야기하고 있습니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-casper-electric--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 캐스퍼 일렉트릭</strong><em>인스퍼레이션</em></span></div></article>
+          <article data-review-id="4"><small>박**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>여러 렌탈사를 일일이 전화 돌릴 필요 없이 한 번에 최저가를 찾아주니 정말 편했어요. 예전에 다른 차를 뽑을 때는 대리점 몇 군데를 직접 돌아다니면서 견적을 받았는데, 그때마다 말이 조금씩 달라서 뭘 믿어야 할지 헷갈렸고 시간도 어마어마하게 들었거든요. 차큐는 조건만 입력하면 여러 회사 견적을 객관적인 숫자로 나란히 보여주니까 비교가 확실했습니다. 어느 회사가 왜 더 싼지까지 눈에 보이니 흥정에 휘둘릴 일도 없었어요. 특히 초기비용 0원 조건으로 바로 출고까지 이어져서 목돈 부담 없이 차를 받을 수 있었고 시간도 크게 아꼈습니다. 중간중간 궁금한 점을 물어볼 때마다 빠르게 답변을 받아 계약 과정 내내 스트레스가 전혀 없었어요. 차량 인도도 약속한 날짜에 정확히 맞춰 진행돼서 더욱 신뢰가 갔습니다. 온 가족이 아주 만족하며 잘 타고 있고, 다음 차량은 물론 부모님 차까지도 무조건 차큐로 알아볼 생각이에요.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/hyundai-grandeur--cur/default.webp" alt=""></span><span class="rm-info"><strong>현대 그랜저</strong><em>익스클루시브</em></span></div></article>
+          <article data-review-id="5"><small>최**님<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#5f6670;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em></small><div class="stars">★★★★★</div><p>법인 차량을 새로 마련하려고 처음엔 금융리스로만 알아보고 있었어요. 리스가 당연히 법인에 유리하다고만 막연히 생각했거든요. 그런데 차큐에서 상담을 받아보니 제 조건에서는 오히려 장기렌트가 총비용 면에서 더 유리하다는 걸 구체적인 숫자로 보여주셔서 눈이 번쩍 뜨였습니다. 리스와 렌트의 차이, 각각의 세무 처리 방식, 부가세 공제 여부, 만기 시 인수 여부에 따른 손익까지 한눈에 정리해주시니 결정이 정말 빨랐어요. 담당자분이 우리 회사 운행 패턴과 연간 주행거리를 먼저 꼼꼼히 물어보고 거기에 딱 맞는 조합을 추천해주신 점도 인상적이었습니다. 덕분에 불필요한 옵션에 돈 쓰지 않고 꼭 필요한 조건으로만 계약할 수 있었어요. 계약 이후에도 차량 관리 방법과 만기 처리 절차까지 미리 안내해주셔서 끝까지 세심하다는 느낌을 받았습니다. 법인 차량을 고민하는 분들이라면 꼭 한 번 비교해보시길 진심으로 추천합니다.</p><div class="review-mini"><span class="rm-photos"><img src="assets/vehicles/tesla-model-3--cur/default.webp" alt=""></span><span class="rm-info"><strong>테슬라 모델 3</strong><em>롱레인지</em></span></div></article>
         </div>
         <a class="more-button" href="pages/review__list.html">이용 후기 더보기</a>
       </section>
@@ -196,12 +196,11 @@
           <a href="pages/special-price-car__list.html?from=estimate"><img src="assets/icons/estimate.svg" alt=""><span><strong>견적조회</strong><small>내 조건에서 승인 가능한 최저가 금융사/렌탈사</small></span></a>
           <a href="pages/special-price-car__list.html"><img src="assets/icons/special.svg" alt=""><span><strong>재고특가</strong><small>금융사 · 렌탈사 재고 차량 특별 할인</small></span></a>
           <a href="pages/special-price-car__list.html?from=fast"><img src="assets/icons/fast-delivery.svg" alt=""><span><strong>빠른인도</strong><small>1주 이내 인도 가능한 장기렌트 차량</small></span></a>
-          <a href="pages/car-select__master.html?type=instant" style="display:none"><img src="assets/icons/instant.svg" alt=""><span><strong>즉시출고</strong><small>2주 이내 출고 가능한 장기렌트 차량</small></span></a>
           <a href="pages/event__list__ing.html"><img src="assets/icons/release-event.svg" alt=""><span><strong>이벤트</strong><small>출고 이벤트 · 후기 이벤트</small></span></a>
         </nav>
         <a class="cash-banner cash-slider menu-cash" href="pages/event__list__ing.html" aria-label="현금지원 이벤트">
           <span class="cs-track">
-            <span class="cs-slide is-active"><img src="assets/img/banner-cash.jpg" alt="최대 200만원 현금지원"></span>
+            <span class="cs-slide is-active"><img src="assets/img/banner-cash.jpg?v=261014" alt="최대 100만원 현금지원"></span>
             <span class="cs-slide"><img src="assets/img/banner-compare.jpg" alt="금융사 다이렉트 비교견적"></span>
           </span>
           <span class="cs-dots" aria-hidden="true"><i class="is-on"></i><i></i></span>
@@ -228,7 +227,7 @@
       var C = window.CHAQ || {};
       // 관리자 '메인 화면' 설정: 섹션별 자동/직접 선택 (설정이 없으면 자동 = 지금 규칙)
       var HM = window.CHAQ_HOME || null, SEC = function(k){ var s = HM && HM.sections && HM.sections[k]; return s || { mode:'auto', ids:[], count:null }; };
-      var pickBy = function(list, k, idOf){ var s = SEC(k); if(s.mode!=='pick' || !s.ids.length) return null; var m = {}; (list||[]).forEach(function(x){ m[String(idOf(x))] = x; }); return s.ids.map(function(id){ return m[String(id)]; }).filter(Boolean); };
+      var pickBy = function(list, k, idOf){ var s = SEC(k); if(s.mode!=='pick' || !s.ids.length) return null; var m = {}; (list||[]).forEach(function(x){ m[String(idOf(x))] = x; }); var out = s.ids.map(function(id){ return m[String(id)]; }).filter(Boolean); return out.length ? out : null; };   // 고른 차량이 모두 빠졌으면 자동으로
       var inclTags = function(r){ var i = r.incl || {}; return (i.tint===false?'':'<span class="opt-tag">선팅</span>')+(i.blackbox===false?'':'<span class="opt-tag">블박</span>'); };   // 견적의 포함 사항(선팅·블박)대로
       // 배너: 관리자에서 등록한 상단 배너·중간 띠배너(메뉴 페이지 배너 공통). 없으면 페이지 기본 배너
       var bEsc=function(x){ return String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
@@ -255,14 +254,14 @@
       var PH='assets/icons/car-placeholder.svg';
       function carNmH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : carNm(r); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
       function carNm(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명
-  var carImg = window.CHAQ_UTIL.carImg;   // 차량 이미지(공통 site-util.js)
-      function monthly(r){ try{ return r.cost['1']['60']['0']; }catch(e){ return null; } }   // 기본 견적 기준: 60개월 · 초기비용 0원 · 연 1만 km
+  var carImg = window.CHAQ_UTIL.carThumb;   // 카드용 작은 차량 이미지(공통 site-util.js, #53)
+      function monthly(r){ try{ var v=r.cost['1']['60']['0']; return v>0 ? v : null; }catch(e){ return null; } }   // 기본 견적 기준: 60개월 · 초기비용 0원 · 연 1만 km
       function pg(m){ return m<500000?'30':(m<800000?'50':'80'); }
       var perGroup={'30':0,'50':0,'80':0}, picks=[];
       var stockPick = pickBy(C.stock, 'stock', function(r){ return r.id; }), stockCap = SEC('stock').count;
       if(stockPick){ stockPick.forEach(function(r){ var m=monthly(r); if(m==null) return; if(!stockCap || picks.length<stockCap) picks.push({r:r,m:m,g:pg(m)}); }); }   // 직접 선택: 고른 순서대로
       else (C.stock||[]).forEach(function(r){ var m=monthly(r); if(m==null) return; var g=pg(m); if(perGroup[g]<(stockCap||6)){ perGroup[g]++; picks.push({r:r,m:m,g:g}); } });
-      if(stockPick){   // 직접 선택: 고른 차량이 없는 월 이용료 탭은 숨기고, 있는 첫 탭부터
+      {   // 차량이 없는 월 이용료 탭은 숨기고, 있는 첫 탭부터 (직접 선택·자동 공통)
         var has={}, first=null; picks.forEach(function(o){ has[o.g]=1; });
         [].forEach.call(document.querySelectorAll('[data-price-filter]'), function(b){ var g=b.getAttribute('data-price-filter'); b.hidden=!has[g]; b.classList.toggle('is-active', false); if(has[g] && !first) first=b; });
         if(first) first.classList.add('is-active');
@@ -273,7 +272,7 @@
           var r=o.r, oc=(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0));
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'" data-price-group="'+o.g+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
-            '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
+            '<img src="'+carImg(r)+'" alt="'+carNm(r)+'" loading="lazy" decoding="async">'+
             '<span class="stock-copy"><small class="cn">'+carNmH(r)+'</small>'+
             '<strong>월 '+o.m.toLocaleString('ko-KR')+'원</strong>'+
             '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
@@ -313,7 +312,7 @@
         rvEl.innerHTML = rvList.map(function(r){
           var st=Math.max(1,Math.min(5,+r.stars||5)), ph=(r.photos||[])[0];
           return '<article data-review-id="'+esc(r.id)+'"><small>'+esc(r.name||'')+((window.CHAQ_UTIL&&window.CHAQ_UTIL.sampleBadge)?window.CHAQ_UTIL.sampleBadge(r):'')+'</small><div class="stars">'+'★★★★★'.slice(0,st)+'☆☆☆☆☆'.slice(0,5-st)+'</div><p>'+esc(r.text||'')+'</p>'+
-            '<div class="review-mini">'+(ph?'<span class="rm-photos"><img src="'+esc(rvImg(ph))+'" alt=""></span>':'')+'<span class="rm-info"><strong>'+esc(r.car||'')+'</strong><em>'+esc(r.trim||'')+'</em></span></div></article>';
+            '<div class="review-mini">'+(ph?'<span class="rm-photos"><img src="'+esc(rvImg(ph))+'" alt="" loading="lazy"></span>':'')+'<span class="rm-info"><strong>'+esc(r.car||'')+'</strong><em>'+esc(r.trim||'')+'</em></span></div></article>';
         }).join('');
         var rvT=document.getElementById('reviewTitle'); if(rvT) rvT.textContent = rvList.length && rvList.every(function(r){return r.sample;}) ? '이용 후기 예시' : '차큐 이용 후기';   // #44
       }
@@ -329,13 +328,13 @@
           if(isSuv) t.push('suv'); else t.push('sedan');
           return t;
         };
-        var fastSrc = pickBy(C.fast, 'fast', function(r){ return r.id; }) || (C.fast||[]); if(SEC('fast').count) fastSrc = fastSrc.slice(0, SEC('fast').count);
+        var fastSrc = (pickBy(C.fast, 'fast', function(r){ return r.id; }) || (C.fast||[])).filter(function(r){ return monthly(r)!=null; });   // 월 이용료 없는 차량은 메인에서 제외 if(SEC('fast').count) fastSrc = fastSrc.slice(0, SEC('fast').count);
         fastEl.innerHTML=fastSrc.map(function(r){
-          var m=monthly(r); m=(m==null)?0:m;
+          var m=monthly(r);
           var oc=(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0));
           return '<a class="stock-card" href="pages/car-detail.html?id='+r.id+'&from=fast&term=60&plan=0&dist=1" data-cartype="'+carTypes(r).join(' ')+'" data-opt-count="'+oc+'">'+
             '<span class="stock-badge">특가</span>'+
-            '<img src="'+carImg(r)+'" alt="'+carNm(r)+'">'+
+            '<img src="'+carImg(r)+'" alt="'+carNm(r)+'" loading="lazy" decoding="async">'+
             '<span class="stock-copy"><small class="cn">'+carNmH(r)+'</small>'+
             '<strong>월 '+m.toLocaleString('ko-KR')+'원</strong>'+
             '<b><span class="opt-tag">옵션 <em>'+oc+'</em>개</span>'+inclTags(r)+'</b>'+
@@ -344,7 +343,7 @@
         var fastCards=[].slice.call(fastEl.querySelectorAll('.stock-card'));
         var fastMore=document.getElementById('fastMore');
         var fastType='ev', fastVisible=5;
-        if(SEC('fast').mode==='pick'){   // 직접 선택: 고른 차량이 없는 차종 탭은 숨기고, 있는 첫 탭부터
+        {   // 차량이 없는 차종 탭은 숨기고, 있는 첫 탭부터 (직접 선택·자동 공통)
           var fBtns=[].slice.call(document.querySelectorAll('.fast-stock-section [data-cartype-filter]')), fFirst=null;
           fBtns.forEach(function(btn){ var t=btn.getAttribute('data-cartype-filter'), n=fastCards.filter(function(c){ return c.dataset.cartype.split(' ').indexOf(t)>-1; }).length; btn.hidden=!n; btn.classList.remove('is-active'); if(n && !fFirst) fFirst=btn; });
           if(fFirst){ fFirst.classList.add('is-active'); fastType=fFirst.getAttribute('data-cartype-filter'); }

@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
     <title>차큐 견적서</title>
+  <meta name="description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="차큐 견적서">
+  <meta property="og:description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image.jpg">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
@@ -12,7 +21,7 @@
     <style>
         .qr_wrap { padding: 20px 16px 28px; background: #fff; }
         .qr_head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; color: #18a85c; font-size: 13px; font-weight: 700; }
-        .qr_head small { color: #9aa0a6; font-weight: 500; }
+        .qr_head small { color:#5f6670; font-weight: 500; }
         .qr_car { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.4px; color: #1c1f23; word-break: keep-all; }
         .qr_spec { margin: 4px 0 0; color: #5f6368; font-size: 14px; word-break: keep-all; }
         .qr_img { display: block; width: 100%; max-width: 420px; aspect-ratio: 5 / 3; margin: 12px auto 4px; object-fit: contain; }
@@ -23,14 +32,14 @@
         .qr_tbl { margin: 16px 0 0; padding: 4px 16px; border: 1px solid #eceef0; border-radius: 14px; }
         .qr_tbl div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; font-size: 14px; }
         .qr_tbl div:last-child { border-bottom: 0; }
-        .qr_tbl dt { color: #80868b; flex: none; }
+        .qr_tbl dt { color:#5f6670; flex: none; }
         .qr_tbl dd { margin: 0; color: #202124; font-weight: 600; text-align: right; word-break: keep-all; }
         .qr_tbl .qr_disc dd { color: #f04452; }
         .qr_sec { margin: 22px 0 8px; font-size: 15px; font-weight: 800; color: #1c1f23; }
         .qr_opts { margin: 0; padding: 0; list-style: none; }
         .qr_opts li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #eceef0; font-size: 13.5px; color: #3c4043; }
         .qr_opts li em { flex: none; font-style: normal; color: #5f6368; }
-        .qr_note { margin: 16px 0 0; color: #80868b; font-size: 12.5px; line-height: 1.55; }
+        .qr_note { margin: 16px 0 0; color:#5f6670; font-size: 12.5px; line-height: 1.55; }
         .qr_cta { display: flex; flex-direction: column; gap: 8px; margin: 20px 0 0; }
         .qr_cta a { display: block; padding: 15px; border-radius: 12px; font-size: 15.5px; font-weight: 700; text-align: center; text-decoration: none; }
         .qr_cta .k { background: #FEE500; color: rgba(0,0,0,.85); }
@@ -42,7 +51,7 @@
 <body class="local-sub sub-white">
     <div class="sub_shell">
         <header class="sub_header">
-            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="history.length > 1 ? history.back() : location.href='../index.html'">뒤로</button>
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="if(document.referrer&&document.referrer.indexOf(location.host)>-1&&history.length>1)history.back();else location.href='mypage.html'">뒤로</button>
             <h1>견적서</h1>
         </header>
         <main><div class="qr_wrap" id="qr"><p class="qr_empty">견적서를 불러오는 중이에요…</p></div></main>

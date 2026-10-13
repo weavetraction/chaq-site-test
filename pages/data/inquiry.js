@@ -148,11 +148,11 @@
     var isQuote = sent || c.source === "DETAIL";
     sheet('<div class="iqf_done"><i>✓</i><h3>' + (isQuote ? "이 견적 그대로 신청되었어요 :)" : "상담 신청이 접수됐어요") + '</h3>' +
       '<p>' + (sent ? "카카오톡 <b>차큐</b> 채널에서<br>견적서를 확인해 주세요." : ch ? "아래 버튼을 눌러 채팅방에 메시지를 보내 주시면<br>카카오톡으로 견적서를 바로 보내드려요." : "") + '</p>' +
-      (j.id ? '<p style="font-size:12.5px;color:#80868b">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
+      (j.id ? '<p style="font-size:12.5px;color:#5f6670">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
       '<div class="iqf_btns" style="flex-direction:column">' +
       // 알림톡 연동 전: 채팅방을 열고 고객이 먼저 말을 걸게 (카카오 채널은 고객이 먼저 보내야 답장 가능) — 접수번호 메시지를 복사해 두어 붙여넣기만 하면 되게
       (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener"' + (sent ? '' : ' data-copy="' + esc("차큐 견적서 요청 (접수번호 #" + (j.id || "") + ")") + '"') + ' style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">' + (sent ? "카카오톡에서 상담 이어가기" : "카카오톡에서 견적서 받기") + '</a>' +
-        (sent ? '' : '<p style="margin:-2px 0 2px;color:#80868b;font-size:12.5px;text-align:center">요청 메시지가 복사돼요. 채팅방에 붙여넣어 보내 주세요.</p>') : '') +
+        (sent ? '' : '<p style="margin:-2px 0 2px;color:#5f6670;font-size:12.5px;text-align:center">요청 메시지가 복사돼요. 채팅방에 붙여넣어 보내 주세요.</p>') : '') +
       (j.report ? '<a class="iqf_close" href="' + reportHref(j.report) + '" style="display:block;flex:none;text-align:center;text-decoration:none;border-radius:12px;padding:14px;font-weight:700">견적서 보기</a>' : '') +
       '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
   }

@@ -7,7 +7,7 @@
 (function () {
   "use strict";
   var C = window.CHAQ_API || {}, BASE = String(C.base || "").replace(/\/$/, "");
-  var LIMIT = { list: 5, detail: 2 }, LS_CNT = "chaq_cond_cnt_v1", SS_ME = "chaq_me_v1", SS_PEND = "chaq_pending_v1";
+  var LIMIT = { list: 8, detail: 3 }, LS_CNT = "chaq_cond_cnt_v2", SS_ME = "chaq_me_v1", SS_PEND = "chaq_pending_v1";
   var TEL = "1533-5663";
   function ls(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
   function ss(k, v) { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || "null"); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
@@ -49,19 +49,19 @@
     ".au .au_x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:0;border-radius:50%;background:#f1f3f4;color:#5f6368;font-size:20px;line-height:1;cursor:pointer}" +
     ".au .au_kakao{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;padding:15px;border:0;border-radius:12px;background:#FEE500;color:rgba(0,0,0,.85);font:inherit;font-size:16px;font-weight:700;cursor:pointer}" +
     ".au .au_kakao svg{width:20px;height:20px}" +
-    ".au .au_or{display:flex;align-items:center;gap:10px;margin:16px 0;color:#9aa0a6;font-size:12.5px}.au .au_or:before,.au .au_or:after{content:'';flex:1;height:1px;background:#e8eaed}" +
+    ".au .au_or{display:flex;align-items:center;gap:10px;margin:16px 0;color:#5f6670;font-size:12.5px}.au .au_or:before,.au .au_or:after{content:'';flex:1;height:1px;background:#e8eaed}" +
     ".au label.f{display:block;margin:0 0 10px;font-size:13px;font-weight:700;color:#3c4043}" +
     ".au .au_row{display:flex;gap:8px;margin-top:6px}.au input[type=tel],.au input[type=text]{flex:1;min-width:0;width:100%;padding:13px;border:1px solid #dadce0;border-radius:10px;font:inherit;font-size:15.5px;box-sizing:border-box;background:#fff;color:#202124}" +
     ".au input:focus{outline:none;border-color:#18a85c}.au .au_btn2{flex:none;padding:0 14px;border:1px solid #18a85c;border-radius:10px;background:#fff;color:#18a85c;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}.au .au_btn2:disabled{opacity:.5;cursor:default}" +
     ".au .au_timer{margin:6px 0 0;color:#e5484d;font-size:12.5px}.au .au_hint{margin:6px 0 0;color:#5f6368;font-size:12.5px}" +
     ".au .au_agree{margin:16px 0 4px;padding:12px 14px;border-radius:12px;background:#f8f9fa;font-size:13.5px}.au .au_agree.need{outline:2px solid #e5484d}" +
     ".au .au_agree label{display:flex;gap:8px;align-items:flex-start;margin:6px 0;line-height:1.45;cursor:pointer}.au .au_agree label.all{margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid #e8eaed;font-weight:700}" +
-    ".au .au_agree input{width:18px;height:18px;margin:1px 0 0;accent-color:#18a85c;flex:none}.au .au_agree a{margin-left:auto;color:#80868b;font-size:12px;white-space:nowrap}" +
-    ".au .au_agree small{display:block;color:#80868b;font-size:12px;margin-top:2px}" +
+    ".au .au_agree input{width:18px;height:18px;margin:1px 0 0;accent-color:#18a85c;flex:none}.au .au_agree a{margin-left:auto;color:#5f6670;font-size:12px;white-space:nowrap}" +
+    ".au .au_agree small{display:block;color:#5f6670;font-size:12px;margin-top:2px}" +
     ".au .au_err{min-height:18px;margin:8px 0;color:#e5484d;font-size:13px;line-height:1.45}" +
     ".au .au_go{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:#18a85c;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}.au .au_go:disabled{opacity:.55;cursor:default}" +
-    ".au .au_kakao.is-off,.au .au_send.is-off{opacity:.45}.au .au_agree_hint{margin:6px 0 0;color:#80868b;font-size:12px}" +
-    ".au .au_note{margin:12px 0 0;color:#80868b;font-size:12px;line-height:1.5;text-align:center}";
+    ".au .au_kakao.is-off,.au .au_send.is-off{opacity:.45}.au .au_agree_hint{margin:6px 0 0;color:#5f6670;font-size:12px}" +
+    ".au .au_note{margin:12px 0 0;color:#5f6670;font-size:12px;line-height:1.5;text-align:center}";
   var KAKAO_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.65 1.74 4.98 4.37 6.31l-.9 3.3c-.08.3.26.54.52.37l3.93-2.6c.52.06 1.04.1 1.58.1 5.25 0 9.5-3.36 9.5-7.48S17.25 3.5 12 3.5z"/></svg>';
   var REASON = {
     inquiry: ["3초 가입하고 견적 받기", "가입하면 이 견적을 카카오톡으로 바로 보내드리고, 담당 매니저가 상담을 이어가요."],
@@ -86,23 +86,23 @@
       var bg = document.createElement("div"); bg.className = "au_bg";
       bg.innerHTML = '<div class="au" role="dialog" aria-modal="true" aria-labelledby="auTitle"><button type="button" class="au_x" aria-label="닫기">×</button>' +
         '<h3 id="auTitle">' + esc(R[0]) + '</h3><p class="au_sub">' + esc(R[1]) + '</p>' +
-        (!phoneOnly && A.kakao ? '<button type="button" class="au_kakao">' + KAKAO_SVG + '카카오로 3초 만에 시작하기</button>' : '') +
-        (!phoneOnly && A.kakao && A.sms ? '<div class="au_or">또는 휴대폰 번호로</div>' : '') +
-        (selfMode ? '<div class="au_phone">' +   // 인증문자 준비 전: 카카오 회원이 번호 직접 입력
-          '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"></span></label>' +
-          '<label class="f">이름 <small style="font-weight:400;color:#80868b">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>' +
-          '<p class="au_hint">상담 연락에만 사용해요. 혜택 소식은 보내지 않아요.</p></div>' :
-        (A.sms || phoneOnly) ? '<div class="au_phone">' +
-          '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"><button type="button" class="au_btn2 au_send">인증번호 받기</button></span></label>' +
-          '<label class="f au_codewrap" hidden>인증번호<span class="au_row"><input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6자리 숫자"></span><p class="au_timer"></p></label>' +
-          (phoneOnly ? '' : '<label class="f au_namewrap" hidden>이름 <small style="font-weight:400;color:#80868b">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>') +
-          '</div>' : '') +
         (phoneOnly ? '' : '<div class="au_agree"><label class="all"><input type="checkbox" data-all>전체 동의</label>' +
           '<label><input type="checkbox" data-req="age">[필수] 만 14세 이상입니다</label>' +
           '<label><input type="checkbox" data-req="terms">[필수] 이용약관 동의<a href="' + agreementsHref() + '#terms" target="_blank" rel="noopener">보기</a></label>' +
           '<label><input type="checkbox" data-req="privacy"><span>[필수] 개인정보 수집·이용 동의<small>휴대전화번호·이름(카카오 가입 시 카카오 계정의 이름·닉네임·회원번호·전화번호), 상담 차량·조건 / 회원 관리·견적 상담·알림톡 안내 / 회원 탈퇴 시까지 (상담 기록은 상담 종료 후 1년)</small></span><a href="' + agreementsHref() + '#privacy" target="_blank" rel="noopener">보기</a></label>' +
           '<label><input type="checkbox" data-opt="marketing">[선택] 혜택·이벤트 소식 받기 (카카오톡·문자)</label>' +
           '<p class="au_agree_hint">[필수] 항목에 모두 동의해야 시작할 수 있어요</p></div>') +
+        (!phoneOnly && A.kakao ? '<button type="button" class="au_kakao">' + KAKAO_SVG + '카카오로 3초 만에 시작하기</button>' : '') +
+        (!phoneOnly && A.kakao && A.sms ? '<div class="au_or">또는 휴대폰 번호로</div>' : '') +
+        (selfMode ? '<div class="au_phone">' +   // 인증문자 준비 전: 카카오 회원이 번호 직접 입력
+          '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"></span></label>' +
+          '<label class="f">이름 <small style="font-weight:400;color:#5f6670">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>' +
+          '<p class="au_hint">상담 연락에만 사용해요. 혜택 소식은 보내지 않아요.</p></div>' :
+        (A.sms || phoneOnly) ? '<div class="au_phone">' +
+          '<label class="f">휴대폰 번호<span class="au_row"><input type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="010-0000-0000" maxlength="13"><button type="button" class="au_btn2 au_send">인증번호 받기</button></span></label>' +
+          '<label class="f au_codewrap" hidden>인증번호<span class="au_row"><input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6자리 숫자"></span><p class="au_timer"></p></label>' +
+          (phoneOnly ? '' : '<label class="f au_namewrap" hidden>이름 <small style="font-weight:400;color:#5f6670">(선택 · 상담 시 호칭)</small><span class="au_row"><input type="text" name="name" autocomplete="name" maxlength="30" placeholder="홍길동"></span></label>') +
+          '</div>' : '') +
         '<p class="au_err" role="alert"></p>' +
         (A.sms || phoneOnly ? '<button type="button" class="au_go"' + (selfMode ? '' : ' disabled') + '>' + (phoneOnly ? "확인" : "인증하고 시작하기") + '</button>' : '') +
         (!A.kakao && !A.sms && !phoneOnly ? '<p class="au_note">지금은 온라인 가입이 어려워요. <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p>' : '') +
@@ -207,7 +207,10 @@
   }
   function logout() { return api("/api/auth/logout", { method: "POST" }).catch(function () {}).then(function () { state = null; ss(SS_ME, null); return me(true); }); }
 
-  // ---------------------------------------------------------------- 비회원 조건 변경 제한 (목록 5회 · 상세 2회)
+  // ---------------------------------------------------------------- 비회원 조건 변경 제한 (사용성 점검 261014: 목록 하루 8회 · 상세 차량별 3회, 날짜가 바뀌면 초기화)
+  function today() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+  function carKey() { var q = location.search, m = q.match(/[?&]id=([^&]+)/) || q.match(/[?&]trimId=([^&]+)/); return m ? decodeURIComponent(m[1]) : "_"; }
+  function getCnt() { var c = ls(LS_CNT); if (!c || c.day !== today()) c = { day: today(), list: 0, detail: {} }; return c; }
   var bypass = false;
   document.addEventListener("click", function (e) {
     if (bypass || !e.target.closest) return;
@@ -216,15 +219,15 @@
     var wrap = chip.closest(".cond_wrap"); if (wrap.classList.contains("is-locked")) return;   // 아직 차량 미선택 (페이지가 안내)
     var kind = chip.closest(".detail_conds") ? "detail" : "list";
     if (member() || !(state && state.auth && state.auth.required)) return;
-    var cnt = ls(LS_CNT) || {}, n = cnt[kind] || 0;
+    var cnt = getCnt(), ck = carKey(), n = kind === "detail" ? (cnt.detail[ck] || 0) : (cnt.list || 0);
     if (n >= LIMIT[kind]) {
       e.preventDefault(); e.stopImmediatePropagation();
       var idx = [].indexOf.call(document.querySelectorAll(".cond_wrap .filter_chip"), chip);
       requireMember({ reason: "cond", pending: { action: "chip", data: { idx: idx } } }).then(function (m) { if (m) { bypass = true; try { chip.click(); } finally { bypass = false; } } }).catch(function () {});
       return;
     }
-    cnt[kind] = n + 1; ls(LS_CNT, cnt);
-    if (n + 1 === LIMIT[kind]) setTimeout(function () { toast("비회원은 여기까지 조건을 바꿀 수 있어요. 더 비교하려면 3초 가입해 주세요"); }, 300);
+    if (kind === "detail") cnt.detail[ck] = n + 1; else cnt.list = n + 1; ls(LS_CNT, cnt);
+    if (n + 1 === LIMIT[kind]) setTimeout(function () { toast(kind === "detail" ? "이 차량은 여기까지 조건을 바꿀 수 있어요. 계속 비교하려면 3초 가입해 주세요" : "오늘은 여기까지 조건을 바꿀 수 있어요. 계속 비교하려면 3초 가입해 주세요"); }, 300);
   }, true);
 
   // ---------------------------------------------------------------- 카카오 로그인 후 돌아왔을 때
