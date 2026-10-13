@@ -84,7 +84,7 @@ export async function reportView(token: string) {
     product: s.product || c.product || "", term: s.term || (c.term ? c.term + "개월" : ""), plan: s.plan || PLAN_KO[c.plan] || "", dist: s.dist || (c.dist ? "연 " + c.dist + "만 km" : ""),
     monthly: x.monthly, vehiclePrice: s.vehiclePrice ?? null, basePrice: s.basePrice ?? null, estimated: s.estimated === true, estKind: s.estKind || null,
     options: Array.isArray(s.options) && s.options.length ? s.options : (x.options || []).map((n: string) => ({ n, p: null })),
-    ext: s.ext || x.color || "", int: s.int || "", delivery: s.delivery || "", finance: s.finance || "",
+    ext: s.ext || x.color || "", int: s.int || "", delivery: s.delivery || "",   // 금융사(finance)는 고객 견적서에 내보내지 않음(#45)
   };
 }
 
@@ -101,7 +101,10 @@ export async function listInquiries(f: { status?: string; q?: string; page?: num
   const w = where.length ? "WHERE " + where.join(" AND ") : "";
   const total = (await q(`SELECT COUNT(*)::int AS n FROM inquiries ${w}`, params)).rows[0].n;
   params.push(size, (page - 1) * size);
-  const { rows } = await q(`SELECT * FROM inquiries ${w} ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
+  // #45: 문의 당시 그 견적 번호의 금융사(관리자 전용) — 문의 시각 이전 마지막 업로드 행, 없으면 가장 최근 행
+  const { rows } = await q(`SELECT i.*, (SELECT r.data->>'fin' FROM quote_rows r JOIN quote_batches b ON b.id = r.batch_id WHERE i.rec_id IS NOT NULL AND r.rec_id = i.rec_id
+      ORDER BY (b.created_at <= i.created_at) DESC, r.batch_id DESC LIMIT 1) AS quote_fin
+    FROM inquiries i ${w} ORDER BY i.created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
   const counts = (await q(`SELECT status, COUNT(*)::int AS n FROM inquiries GROUP BY status`)).rows;
   return { total, page, size, rows, counts: Object.fromEntries(counts.map((r) => [r.status, r.n])) };
 }

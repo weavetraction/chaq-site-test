@@ -49,7 +49,7 @@
   }
   /** 견적조회 '딜리버 기준가(추정)' 행 (DC-70, RL-19 #39): 금융사 칸이 실견적이 아닌 외부 기준가·역산 추정값 — 실견적이 있으면 뒤로, 노출 시 '추정' 표기 */
   var EST_FIN = "딜리버 기준가(추정)";
-  function isEstFin(rec) { var f = String((rec && rec.fin) || "").replace(/\s+/g, ""); return !!f && /기준가/.test(f) && /추정/.test(f); }
+  function isEstFin(rec) { if (rec && rec.est === true) return true; var f = String((rec && rec.fin) || "").replace(/\s+/g, ""); return !!f && /기준가/.test(f) && /추정/.test(f); }   // 공개 데이터는 금융사명 없이 est 플래그만(#45)
   /** 할인 금액 표기: −3,031,500원 */
   function discWon(n) { return "\u2212" + won(Math.abs(+n || 0)) + "원"; }
   /** 차량 총가격 = 기본 차량가 + 옵션가(견적 금액, 없으면 차량 데이터 공식가) − 세제혜택 − 차량가 할인 — 상세 가격 영역과 같은 계산 (목록 '차량가' 정렬용) */

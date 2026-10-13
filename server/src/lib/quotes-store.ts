@@ -27,7 +27,12 @@ export async function getPublished(): Promise<Published> {
   const { rows } = await q(`SELECT r.kind, r.data FROM published_sets p JOIN quote_batches b ON b.id = p.batch_id JOIN quote_rows r ON r.batch_id = p.batch_id AND r.kind = p.kind
     WHERE r.trim_id IS NOT NULL OR NOT b.strict_master ORDER BY r.kind, r.sort_order`);
   for (const r of rows) out[r.kind as Kind].push(r.data);
-  const json = JSON.stringify(out);
+  // #45 (대표 261013): 고객이 보는 데이터에는 금융사명을 넣지 않음 — 공개본에서 fin 제거, '딜리버 기준가(추정)' 행만 est:true 표시(실견적 우선 선택용).
+  //   서버 내부(out: 옛 번호 연결 등)와 관리자 화면은 금융사 그대로.
+  const isEst = (f: unknown) => { const s = String(f ?? "").replace(/\s+/g, ""); return /기준가/.test(s) && /추정/.test(s); };
+  const pubOut: Record<string, any[]> = {};
+  for (const k of Object.keys(out) as Kind[]) pubOut[k] = out[k].map((r: any) => { const { fin, ...rest } = r; return isEst(fin) ? { ...rest, est: true } : rest; });
+  const json = JSON.stringify(pubOut);
   const head = `/* 차큐 견적 데이터 (API 생성 ${new Date().toISOString()}) — window.CHAQ = { stock, fast, estimate } */\n`;
   publicCache = { at: Date.now(), version, data: out, json, js: head + "window.CHAQ = " + json + ";\n", etag: `"${hash(json)}"` };
   return out;
