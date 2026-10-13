@@ -53,8 +53,10 @@
       opts = OP ? OP.items.filter(function (it) { return !it.none; }).map(function (it) { var o = { n: String(it.n).slice(0, 120), p: it.price ? Number(it.price) : null }; if (it.id) o.id = it.id; return o; })
         : rec.opts.filter(function (o) { return o && o.n && !/^무옵션$/.test(String(o.n).trim()) && !isDisc(o); }).map(function (o) { var x = { n: String(o.n).slice(0, 120), p: o.p ? Number(o.p) : null }; if (o.id) x.id = o.id; return x; });
     }
-    // 할인 항목(예: 대리점 할인 5% −3,031,500원)은 옵션 뒤에 음수 금액 그대로 → 견적서에서 '할인' 줄
-    if (rec && rec.opts) rec.opts.forEach(function (o) { if (o && o.n && isDisc(o)) opts.push({ n: String(o.n).slice(0, 120), p: Number(o.p) < 0 ? Math.round(Number(o.p)) : null }); });
+    // 세제혜택·할인(2호 ①): 화면에 보이는 줄만 정규화된 이름으로 옵션 뒤에 → 견적서 '세제혜택'·'할인' 줄 (세제혜택은 토큰 없으면 차량 데이터 값)
+    var TAX = Number(window.CHAQ_DETAIL_TAX) || 0, PD = Number(window.CHAQ_DETAIL_PDISC) || 0, MD = window.CHAQ_DETAIL_MDISC === true;
+    if (TAX > 0) opts.push({ n: "세제혜택", p: -Math.round(TAX) });
+    if (kind === "stock" || kind === "fast") { if (PD > 0) opts.push({ n: "차량가 할인", p: -Math.round(PD) }); if (kind === "stock" && MD) opts.push({ n: "월납입료 할인", p: null }); }
     var bp = window.CHAQ_DETAIL_BASE, basePrice = typeof bp === "number" && bp > 0 && window.CHAQ_DETAIL_DECOMPOSED !== false ? Math.round(bp) : null;   // 분해 표시 아닌 재고(미매칭)는 기본가 없이 총차량가만 (#37)
     var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
     var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null, basePrice: basePrice, estimated: window.CHAQ_DETAIL_ESTIMATED === true, estKind: window.CHAQ_DETAIL_ESTIMATED === true ? (window.CHAQ_DETAIL_EST_KIND || 'coef') : undefined, optionExtra: window.CHAQ_DETAIL_ESTIMATED === true ? Math.round(Number(window.CHAQ_DETAIL_OPT_EXTRA) || 0) : undefined,

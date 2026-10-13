@@ -11,20 +11,48 @@
   function won(n) { return (n || 0).toLocaleString("ko-KR"); }
   /** 차량가 짧게: 만원 단위로 떨어지면 '4,287만원', 아니면 원 단위 그대로 (반올림으로 다른 금액처럼 보이지 않게) */
   function priceShort(n) { n = +n || 0; return n % 10000 ? won(n) + "원" : won(n / 10000) + "만원"; }
-  /** 견적 옵션 칸의 할인 항목: 금액이 음수(예: '대리점 할인 5%:-3031500'), 또는 금액 없이 이름에 '할인' → 옵션이 아니라 별도 할인 줄 */
-  function isDisc(o) { var p = o ? Number(o.p) : NaN; return !!o && (p < 0 || (/할인/.test(String(o.n || "")) && !(p > 0))); }
-  /** 장착 옵션(할인 제외) · 할인 항목 · 할인 합계(음수) */
+  /** 견적 옵션 칸의 특수 토큰 종류 (사이트 로직 지시 2호 ①, RL-41 / 08 §3):
+   *  'tax'   세제혜택:-N (구 토큰 '하이브리드 세제혜택:-N' 호환) → 상세 '세제혜택' 줄
+   *  'pdisc' 차량가 할인:-N · 할인:-N (구 토큰 '대리점 할인 n%:-N' 호환) → 할인 줄 '차량가 할인 −N원'
+   *  'mdisc' 월납입료 할인 (금액 없음) → 할인 줄 '월납입료 할인'
+   *  'opt'   그 외(옵션·색상 추가금·기타). 위 라벨 밖의 음수 토큰은 차량가 할인으로 합산 + 콘솔 경고(게이트가 막으므로 0건이어야 함) */
+  function tokKind(o) {
+    if (!o || !o.n) return "opt";
+    var n = String(o.n).replace(/\s+/g, " ").trim(), p = Number(o.p);
+    if (/^(하이브리드 )?세제혜택$/.test(n)) return "tax";
+    if (/^월납입료 할인$/.test(n)) return "mdisc";
+    if (/^(차량가 할인|할인)$/.test(n) || /^대리점 할인/.test(n)) return "pdisc";
+    if (p < 0) { try { console.warn("[chaq] 알 수 없는 음수 토큰 → 차량가 할인으로 처리:", n, p); } catch (e) {} return "pdisc"; }
+    if (/할인/.test(n) && !(p > 0)) return "mdisc";   // 금액 없는 '○○ 할인' 류 — 옵션 줄에 두지 않음
+    return "opt";
+  }
+  /** 견적 옵션 칸의 할인·세제혜택 항목(옵션 줄에 표시하지 않음) */
+  function isDisc(o) { return tokKind(o) !== "opt"; }
+  /** 장착 옵션(특수 토큰 제외) · 특수 항목 · 합계(음수) + 분해: tax(세제혜택, 양수) · pdisc(차량가 할인, 양수) · mdisc(월납입료 할인 여부) */
   function splitOpts(rec) {
-    var all = (rec && rec.opts) || [], opts = [], discs = [], disc = 0;
-    all.forEach(function (o) { if (!o || !o.n) return; if (isDisc(o)) { discs.push(o); if (Number(o.p) < 0) disc += Number(o.p); } else opts.push(o); });
-    return { opts: opts, discs: discs, disc: disc };
+    var all = (rec && rec.opts) || [], opts = [], discs = [], disc = 0, tax = 0, pdisc = 0, mdisc = false;
+    all.forEach(function (o) {
+      if (!o || !o.n) return;
+      var k = tokKind(o);
+      if (k === "opt") { opts.push(o); return; }
+      discs.push(o); var p = Number(o.p);
+      if (p < 0) disc += p;
+      if (k === "tax") tax += Math.abs(p) || 0; else if (k === "pdisc") pdisc += Math.abs(p) || 0; else if (k === "mdisc") mdisc = true;
+    });
+    return { opts: opts, discs: discs, disc: disc, tax: tax, pdisc: pdisc, mdisc: mdisc };
+  }
+  /** 세제혜택 금액: 토큰 'tax' 있으면 그 금액, 없으면 차량 데이터 트림 '세제혜택액'(> 0), 둘 다 없으면 0 (2호 ①) */
+  function taxBenefitOf(rec, sp) {
+    sp = sp || splitOpts(rec); if (sp.tax > 0) return sp.tax;
+    var VM = root.CHAQ_VM; if (VM && rec && rec.trimId && VM.getTaxBenefit) { var v = VM.getTaxBenefit(rec.trimId); if (v > 0) return v; }
+    return 0;
   }
   /** 견적조회 '딜리버 기준가(추정)' 행 (DC-70, RL-19 #39): 금융사 칸이 실견적이 아닌 외부 기준가·역산 추정값 — 실견적이 있으면 뒤로, 노출 시 '추정' 표기 */
   var EST_FIN = "딜리버 기준가(추정)";
   function isEstFin(rec) { var f = String((rec && rec.fin) || "").replace(/\s+/g, ""); return !!f && /기준가/.test(f) && /추정/.test(f); }
   /** 할인 금액 표기: −3,031,500원 */
   function discWon(n) { return "\u2212" + won(Math.abs(+n || 0)) + "원"; }
-  /** 차량 총가격 = 기본 차량가 + 옵션가(견적 금액, 없으면 차량 데이터 공식가) + 할인(음수) — 상세 가격 영역과 같은 계산 (목록 '차량가' 정렬용) */
+  /** 차량 총가격 = 기본 차량가 + 옵션가(견적 금액, 없으면 차량 데이터 공식가) − 세제혜택 − 차량가 할인 — 상세 가격 영역과 같은 계산 (목록 '차량가' 정렬용) */
   function carTotal(rec) {
     if (!rec) return 0;
     var VM = root.CHAQ_VM, base = rec.base;
@@ -32,7 +60,7 @@
     if (base == null) return 0;
     var sp = splitOpts(rec), sum = 0;
     sp.opts.forEach(function (o) { if (/^무옵션$/.test(String(o.n).trim())) return; var r = VM && VM.resolveOption ? VM.resolveOption(rec.trimId, o) : null; var p = r ? (r.price || 0) : (Number(o.p) > 0 && o.pSrc !== "VM" ? Number(o.p) : 0); sum += p; });   // 옵션ID → 마스터 공식가 / 미매칭은 견적 금액만 (RL-19 #36)
-    return base + sum + sp.disc;
+    return base + sum - taxBenefitOf(rec, sp) - sp.pdisc;   // 2호 ①: 총차량가 = 기본 + 옵션 − 세제혜택 − 차량가 할인
   }
   /** 견적 레코드의 차량 이미지: 차량 데이터 이미지(재고 외장색 → 색상 이미지, 없으면 대표) → 없으면 대체 이미지 */
   function carImg(r) {
@@ -86,5 +114,5 @@
     if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
-  root.CHAQ_UTIL = { EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, isDisc: isDisc, splitOpts: splitOpts, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  root.CHAQ_UTIL = { EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, tokKind: tokKind, isDisc: isDisc, splitOpts: splitOpts, taxBenefitOf: taxBenefitOf, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

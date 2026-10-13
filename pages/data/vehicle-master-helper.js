@@ -261,6 +261,8 @@
   function getPrimaryImage(trimId, colorKey, view) { var t = getTrim(trimId); if (!t) return null; var a = verifiedFirst(IX.imagesByTrim[trimId]); if (a.length) return pickByColor(a, colorKey, view); var b = verifiedFirst(IX.imagesByLineup[t.lineupId]); return pickByColor(b, colorKey, view); }
   // ---------------------------------------------------------------- 트림 가격 (final-1.2)
   /** 차량 데이터의 트림 기본가(listPrice). 파일 기준 기본값 — 견적 데이터가 있으면 화면은 견적 차량가 우선 */
+  /** 트림 '세제혜택액'(원, 2호 ②) — 없으면 0. 상세 세제혜택 줄은 견적 토큰이 없을 때만 이 값을 쓴다 */
+  function getTaxBenefit(trimId) { var t = getTrim(trimId); var v = t && t.taxBenefit != null ? Number(t.taxBenefit) : 0; return v > 0 ? v : 0; }
   function getListPrice(trimId) { var t = getTrim(trimId); if (!t || t.listPrice == null) return null; return { price: t.listPrice, beforeTaxBenefit: t.listPriceBeforeTaxBenefit == null ? null : t.listPriceBeforeTaxBenefit, basis: t.listPriceBasis || null, source: t.listPriceSource || null, date: t.listPriceDate || null }; }
   /** 화면용 차량가: 견적 레코드(rec.base) → 이 트림에 연결된 대표 견적 → 트림 기본가 순 */
   function getTrimPrice(trimId, rec) { if (rec && rec.base != null) return { price: rec.base, source: "QUOTE" }; var pk = pickQuote(trimId); if (pk && pk.rec && pk.rec.base != null) return { price: pk.rec.base, source: "QUOTE" }; var lp = getListPrice(trimId); return lp ? { price: lp.price, source: "VM_" + (lp.source || "FILE") } : null; }
@@ -441,7 +443,7 @@
     load: load, raw: function () { return D; }, meta: function () { return D.meta; },
     getBrands: getBrands, getBrand: getBrand, getModels: getModels, getModel: getModel, getModelsByFamily: getModelsByFamily,
     getLineups: getLineups, getLineup: getLineup, lineupLabel: lineupLabel,
-    carName: carName, getTrims: getTrims, getTrim: getTrim, successorOf: successorOf, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
+    carName: carName, getTrims: getTrims, getTrim: getTrim, getTaxBenefit: getTaxBenefit, successorOf: successorOf, getTrimsByModel: getTrimsByModel, getTrimGroups: getTrimGroups, trimLabel: trimLabel, describe: describe,
     getStandardItems: getStandardItems, getTrimOptions: getTrimOptions, getTrimColors: getTrimColors, getColorRules: getColorRules, allowedExteriorColors: allowedExteriorColors,
     getSpecs: getSpecs, getSpecList: getSpecList,
     getPrimaryImage: getPrimaryImage, getImages: getImages, resolveImageUrl: resolveImageUrl, imageCredit: imageCredit,

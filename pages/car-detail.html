@@ -95,6 +95,7 @@
             <div class="detail_price_table">
                 <div class="detail_price_row" id="rowBase"><span>기본 가격</span><strong id="pBase">26,850,000원</strong></div>
                 <div class="detail_price_row" id="rowOpt"><span>옵션 가격</span><strong id="pOpt">1,440,000원</strong></div>
+                <div class="detail_price_row is-tax" id="rowTax" style="display:none"><span>세제혜택</span><strong id="pTax">−0원</strong></div>
                 <div class="detail_price_row" id="rowDisc"><span>할인</span><strong id="pDisc">0원</strong></div>
                 <div class="detail_price_row total"><span>차량 총가격<i class="chip_help tag_help" data-help="totalPrice" aria-label="차량 총가격 설명">!</i></span><strong id="pTotal">28,290,000원</strong></div>
                 <div class="detail_price_row total"><span>인수 시 총 비용<i class="chip_help tag_help" data-help="acqCost" aria-label="인수 시 총 비용 설명">!</i></span><strong id="pAcq">27,576,000원</strong></div>
@@ -172,9 +173,13 @@
            할인 항목(음수 금액, 예: '대리점 할인 5%:-3031500')은 옵션이 아니라 discs·disc(음수 합)로 따로 — 총가격 = 기본 + 옵션 + 할인 */
         window.CHAQ_OPT_PRICES = function (rec) {
             var VM = window.CHAQ_VM, U = window.CHAQ_UTIL || {};
-            var out = { items: [], sum: 0, cnt: 0, priceable: 0, discs: [], disc: 0 };
+            var out = { items: [], sum: 0, cnt: 0, priceable: 0, discs: [], disc: 0, tax: 0, pdisc: 0, mdisc: false };
             ((rec && rec.opts) || []).forEach(function (o, idx) {
-                if (U.isDisc && U.isDisc(o)) { var dp = Number(o.p) < 0 ? Number(o.p) : null; out.discs.push({ n: o.n, price: dp, idx: idx }); if (dp != null) out.disc += dp; return; }   // 할인 항목(음수 금액): 옵션 아님 · 공식 옵션가 채움 제외
+                var tk = U.tokKind ? U.tokKind(o) : (U.isDisc && U.isDisc(o) ? 'pdisc' : 'opt');
+                if (tk !== 'opt') {   // 특수 토큰(2호 ①): 세제혜택·차량가 할인·월납입료 할인 — 옵션 아님 · 공식 옵션가 채움 제외 · 옵션 줄에 표시 안 함
+                    var dp = Number(o.p) < 0 ? Number(o.p) : null; out.discs.push({ n: o.n, price: dp, idx: idx, kind: tk }); if (dp != null) out.disc += dp;
+                    if (tk === 'tax') out.tax += Math.abs(dp || 0); else if (tk === 'pdisc') out.pdisc += Math.abs(dp || 0); else if (tk === 'mdisc') out.mdisc = true;
+                    return; }
                 if (/^무옵션$/.test(String(o.n || '').trim())) { out.items.push({ n: o.n, none: true, price: null, idx: idx }); return; }
                 // (RL-19 #36) 마스터 옵션ID 참조: ID → 마스터 옵션(표시명·공식가) / ID 없으면 이름 정확 일치 / 미매칭 '기타(원문명)' + 견적 금액만 (근사매칭·공식가 자동 채움 없음)
                 var r = (VM && VM.resolveOption) ? VM.resolveOption(rec.trimId, o) : null;
@@ -305,7 +310,11 @@
                     var D = window.CHAQ || {}, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1];
                     var rec = window.CHAQ_DETAIL_QUOTE || (idm ? (D.stock || []).concat(D.fast || [], D.estimate || []).filter(function (r) { return r.id === idm; })[0] : null);
                     var OP = rec ? window.CHAQ_OPT_PRICES(rec) : null;
-                    var discHtml = (OP && OP.discs.length) ? '<p class="opt_sec">할인</p>' + OP.discs.map(function (it) { return '<div class="opt_row is-static opt_disc"><span>' + esc(it.n) + '</span><em>' + (it.price != null ? window.CHAQ_UTIL.discWon(it.price) : '상담 시 안내') + '</em></div>'; }).join('') : '';
+                    // (2호 ①) 팝업 하단 세제혜택·할인: 상세 가격 줄과 같은 규칙(정규화 라벨 · 재고특가만 할인, 빠른인도는 차량가 할인만)
+                    var discHtml = (function(){ if(!rec) return ''; var U = window.CHAQ_UTIL, k0 = String(rec.id||'')[0]; var TX = Number(window.CHAQ_DETAIL_TAX)||0, PD = Number(window.CHAQ_DETAIL_PDISC)||0, MD = window.CHAQ_DETAIL_MDISC===true; var L = [];
+                        if(TX>0) L.push(['세제혜택', U.discWon(TX)]);
+                        if((k0==='s' && (PD>0||MD)) || (k0==='f' && PD>0)) L.push(['할인', PD>0 ? '차량가 할인 '+U.discWon(PD) : '월납입료 할인']);
+                        return L.length ? '<p class="opt_sec">세제혜택 · 할인</p>' + L.map(function(x){ return '<div class="opt_row is-static opt_disc"><span>'+esc(x[0])+'</span><em>'+esc(x[1])+'</em></div>'; }).join('') : ''; })();
                     if (rec && (!OP || !OP.items.filter(function (it) { return !it.none; }).length)) {   // 재고특가·빠른인도: 장착 옵션 없음
                         html = '<p class="opt_note opt_none">추가옵션이 포함되어 있지 않습니다.</p>' + discHtml;
                     } else if (OP && OP.items.length) {
@@ -417,7 +426,7 @@
                 set('.confirm-monthly strong','별도문의');
                 // 차량가: 견적이 없으면 차량 데이터의 트림 기본가(listPrice, 파일 기준 · 견적 데이터가 들어오면 견적 우선)
                 var lp = VM.getListPrice ? VM.getListPrice(trimId) : null;
-                set('#pBase', lp ? won(lp.price)+'원' : '차량가 문의'); window.CHAQ_DETAIL_BASE = lp ? lp.price : null; set('#pOpt', lp ? '0원' : '—'); set('#pDisc', lp ? '0원' : '—'); set('#pTotal', lp ? won(lp.price)+'원' : '—'); set('#pAcq','—');
+                set('#pBase', lp ? won(lp.price)+'원' : '차량가 문의'); window.CHAQ_DETAIL_BASE = lp ? lp.price : null; set('#pOpt', lp ? '0원' : '—'); set('#pDisc', lp ? '0원' : '—'); (function(){ var r=document.getElementById('rowDisc'); if(r) r.style.display='none'; })(); set('#pTotal', lp ? won(lp.price)+'원' : '—'); set('#pAcq','—');
                 var hm=document.querySelector('.detail_monthly strong'); if(hm) hm.style.color='#8a8f96';
                 var cm=document.querySelector('.confirm-monthly strong'); if(cm) cm.style.color='#8a8f96';
                 document.querySelectorAll('.detail_conds .filter_chip').forEach(function(ch){ ch.addEventListener('click', function(){ setTimeout(function(){ set('.detail_monthly strong','별도문의'); set('.confirm-monthly strong','별도문의'); },0); }); });
@@ -485,14 +494,22 @@
             var opts = (rec.opts||[]).filter(function(o){ return !(window.CHAQ_UTIL.isDisc && window.CHAQ_UTIL.isDisc(o)); });
             var priced = opts.filter(function(o){return o.p;});
             var optSum = OPS.sum, discSum = OPS.disc || 0;
-            (function(){   // 할인 줄: 항목명 · 음수 금액 · 강조색 (여러 개면 줄마다)
-                var row = document.getElementById('pDisc'); row = row && row.parentNode; if(!row) return;
-                var U = window.CHAQ_UTIL, ds = OPS.discs || [];
-                if(!ds.length) return;
-                row.classList.add('is-disc'); row.querySelector('span').textContent = ds[0].n; row.querySelector('strong').textContent = ds[0].price != null ? U.discWon(ds[0].price) : '상담 시 안내';
-                var after = row;
-                ds.slice(1).forEach(function(d){ var r2 = document.createElement('div'); r2.className = 'detail_price_row is-disc'; r2.innerHTML = '<span></span><strong></strong>'; r2.firstChild.textContent = d.n; r2.lastChild.textContent = d.price != null ? U.discWon(d.price) : '상담 시 안내'; after.parentNode.insertBefore(r2, after.nextSibling); after = r2; });
+            // (2호 ①, RL-41) 가격 분해 줄: 기본가격 → 옵션가격 → 세제혜택 → 할인 → 총차량가. 세제혜택 = 토큰 '세제혜택:-N' → 없으면 차량 데이터 트림 세제혜택액.
+            //   할인 줄: 라벨 '할인' 고정, 우측 '차량가 할인 −N원' 또는 '월납입료 할인'(금액 없음). 재고특가 상세만 표시 — 빠른인도는 '차량가 할인' 줄만(B안, 대표 결정 전 임시), 견적조회는 숨김.
+            var KIND0 = String(rec.id||'')[0];
+            var TAX = (window.CHAQ_UTIL.taxBenefitOf ? window.CHAQ_UTIL.taxBenefitOf(rec, OPS) : OPS.tax) || 0;
+            var PDISC = OPS.pdisc || 0, MDISC = !!OPS.mdisc;
+            var showDisc = KIND0 === 's' ? (PDISC > 0 || MDISC) : (KIND0 === 'f' ? PDISC > 0 : false);
+            (function(){
+                var U = window.CHAQ_UTIL, rt = document.getElementById('rowTax'), rd = document.getElementById('rowDisc');
+                if(rt){ if(TAX > 0){ rt.style.display=''; rt.querySelector('strong').textContent = U.discWon(TAX); } else rt.style.display='none'; }
+                if(rd){
+                    rd.querySelector('span').textContent = '할인';
+                    if(showDisc){ rd.classList.add('is-disc'); rd.querySelector('strong').textContent = PDISC > 0 ? '차량가 할인 ' + U.discWon(PDISC) : '월납입료 할인'; }
+                    else rd.style.display='none';
+                }
             })();
+            window.CHAQ_DETAIL_TAX = TAX; window.CHAQ_DETAIL_PDISC = PDISC; window.CHAQ_DETAIL_MDISC = MDISC;
             // (RL-19 #37, 08 §2) 재고특가·빠른인도 상세 '정가 → 옵션 → 할인 → 총차량가': 할인 줄이 있거나 옵션이 전부 마스터 매칭이면 분해 표시(기본 가격 라벨 = 정가).
             //   미매칭 옵션(기타(…))이 있는 재고 행은 정가·할인을 알 수 없으므로 '차량 총가격'만 표시(W7·W5 — 연식·옵션 미매칭)
             (function(){
@@ -505,12 +522,11 @@
                     if(prevs.length) atList = true;
                 }
                 var hasDiff = OPS.items.some(function(it){ return it.diffLine; });   // 기타(차액) 줄 = 게이트가 정가 기준으로 분해한 행
-                var decomposed = (OPS.discs||[]).length>0 || hasDiff || (!unmatched && atList);
-                var rb=document.getElementById('rowBase'), ro=document.getElementById('rowOpt'), rd=document.getElementById('rowDisc');
+                var decomposed = (OPS.discs||[]).length>0 || TAX > 0 || hasDiff || (!unmatched && atList);
+                var rb=document.getElementById('rowBase'), ro=document.getElementById('rowOpt'), rd=document.getElementById('rowDisc'), rt=document.getElementById('rowTax');
                 if(decomposed){ if(rb) rb.querySelector('span').textContent = '정가 (공식 가격표)'; window.CHAQ_DETAIL_DECOMPOSED = true; return; }
                 window.CHAQ_DETAIL_DECOMPOSED = false;
-                [rb, ro, rd].forEach(function(r){ if(r) r.style.display='none'; });
-                document.querySelectorAll('.detail_price_row.is-disc').forEach(function(r){ r.style.display='none'; });
+                [rb, ro, rd, rt].forEach(function(r){ if(r) r.style.display='none'; });
             })();
             var panel=document.getElementById('optionPanel');
             if(panel && !VMQ){
@@ -628,8 +644,7 @@
                 var dp=document.querySelector('.dts_price'); if(dp && base!=null && window.CHAQ_UTIL.priceShort) dp.textContent=window.CHAQ_UTIL.priceShort(base);
                 var extra=selExtra();
                 set('pOpt', (optSum+extra)>0?won(optSum+extra)+'원':(opts.length?'기본 포함':'0원'));
-                if(!(OPS.discs||[]).length) set('pDisc','0원');
-                set('pTotal', base!=null?won(base+optSum+extra+discSum)+'원':'—');
+                set('pTotal', base!=null?won(base+optSum+extra-TAX-PDISC)+'원':'—');   // 2호 ①: 총차량가 = 기본 + 옵션 − 세제혜택 − 차량가 할인
                 var acq = (m!=null && rv!=null)? (m*parseInt(c.term)+rv) : null;
                 animateNum(acqEl, acq, false);
                 if(acq==null && acqEl) acqEl.textContent='—';   // 금액 없음 표시 통일 ('—원' → '—')
