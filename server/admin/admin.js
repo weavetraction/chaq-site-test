@@ -50,7 +50,11 @@
   function showInvite() {
     $("#loginView").hidden = true; $("#appView").hidden = true; $("#inviteView").hidden = false;
     api("/api/admin/invite/" + inviteToken).then(function (r) { $("#inviteWho").textContent = (r.name ? r.name + "님 · " : "") + r.email; })
-      .catch(function (er) { $("#inviteWho").textContent = ""; $("#inviteErr").textContent = er.message; $("#inviteForm button").disabled = true; });
+      .catch(function () {
+        // 이미 비밀번호를 정한(또는 만료된) 링크로 다시 들어오면 로그인 화면으로 — 링크는 1회용, 이후엔 이메일·비밀번호로 로그인
+        history.replaceState(null, "", location.pathname); inviteToken = null;
+        api("/api/admin/me").then(showApp).catch(function () { showLogin(); $("#loginErr").textContent = "이미 사용했거나 만료된 초대 링크예요. 비밀번호를 정했다면 이메일·비밀번호로 로그인하세요. 비밀번호를 모르면 대표에게 재설정 링크를 요청하세요."; });
+      });
   }
   $("#inviteForm").addEventListener("submit", function (e) {
     e.preventDefault(); $("#inviteErr").textContent = "";
