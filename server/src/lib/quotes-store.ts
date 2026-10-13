@@ -34,6 +34,35 @@ export async function getPublished(): Promise<Published> {
 }
 export async function getPublicPayload() { await getPublished(); return publicCache!; }
 
+/** 옛 견적 번호 → 지금 사이트 견적 (RL-21·RL-30, 261013 대표 '오류 없는 방향')
+ *  업로드 때 견적ID가 새로 매겨져 끊긴 저장 견적·공유 링크·문의 '다시 보기'를 같은 차량의 현재 견적으로 연결한다.
+ *  ① 지금 사이트에 그 번호가 있으면 그대로 ② 없으면 그 번호의 가장 최근 행(모든 업로드 이력)을 찾아
+ *     같은 구분 → 다른 구분(재고특가↔빠른인도) 순으로 '같은 트림(없으면 같은 브랜드·모델·등급)' 현재 행 중
+ *     금융사·외장색·내장색이 가장 많이 같고 총차량가가 가장 가까운 행 ③ 그래도 없으면 트림만 돌려줌(사이트가 트림 상세로) */
+export async function resolveQuoteAlias(id: string): Promise<{ id?: string; trimId?: string | null; kind?: string; moved?: boolean }> {
+  const pub = await getPublished();
+  const all = (["stock", "fast", "estimate"] as Kind[]).flatMap((k) => pub[k].map((r: any) => ({ k, r })));
+  if (all.some((x) => x.r.id === id)) return { id };
+  const old = (await q(`SELECT kind, trim_id, data FROM quote_rows WHERE rec_id = $1 ORDER BY batch_id DESC LIMIT 1`, [id])).rows[0];
+  if (!old) return {};
+  const o: any = old.data || {}, tid: string | null = old.trim_id || o.trimId || null;
+  const total = (r: any) => (Number(r.base) || 0) + ((r.opts || []) as any[]).reduce((a, x) => a + (Number(x?.p) || 0), 0);
+  const nz = (v: unknown) => String(v ?? "").replace(/\s+/g, "").toLowerCase();
+  const sameCar = (r: any) => tid ? r.trimId === tid : signatureLoose(r) === signatureLoose(o);
+  const order: Kind[] = old.kind === "estimate" ? ["estimate"] : [old.kind as Kind, old.kind === "stock" ? "fast" : "stock"];
+  for (const k of order) {
+    const c = all.filter((x) => x.k === k && sameCar(x.r));
+    if (!c.length) continue;
+    const t0 = total(o);
+    c.sort((a, b) => {
+      const sc = (r: any) => (nz(r.fin) === nz(o.fin) ? 4 : 0) + (nz(r.ext) === nz(o.ext) ? 2 : 0) + (nz(r.int) === nz(o.int) ? 1 : 0);
+      return sc(b.r) - sc(a.r) || Math.abs(total(a.r) - t0) - Math.abs(total(b.r) - t0);
+    });
+    return { id: c[0].r.id, kind: k, moved: true };
+  }
+  return { trimId: tid, kind: old.kind, moved: true };
+}
+
 function hash(s: string) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); }
 
 /** 기존 데이터에서 '같은 차량 → 트림' 연결표 (최근 것 우선) */

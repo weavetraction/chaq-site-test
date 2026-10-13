@@ -1,7 +1,7 @@
 // 공개 API (사이트에서 호출)
 import { Router } from "express";
 import { limiter } from "../lib/limits.js";
-import { getPublicPayload } from "../lib/quotes-store.js";
+import { getPublicPayload, resolveQuoteAlias } from "../lib/quotes-store.js";
 import { InquiryInput, createInquiry, channelMessage } from "../lib/inquiries.js";
 import { currentMember, contactOf } from "../lib/members.js";
 import { integrations, loginAvailable, smsOn } from "../lib/integrations.js";
@@ -33,6 +33,16 @@ publicRouter.get(["/api/quotes.js", "/api/quotes.json"], async (req, res, next) 
 });
 
 // ---------------------------------------------------------------- 공개 데이터 (/api/pub/* — CloudFront 가 캐시)
+/** 옛 견적 번호 연결 (RL-30): /api/pub/quote-alias/s188 → { id: 's244' } · 같은 차량이 없으면 { trimId } · 모르는 번호면 {} */
+const aliasLimit = limiter("qal", { windowMs: 60_000, limit: 60, message: { error: "잠시 후 다시 시도해 주세요" } });
+publicRouter.get("/api/pub/quote-alias/:id", aliasLimit, async (req, res, next) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!/^[a-z]\d{1,8}$/i.test(id)) return res.status(400).json({ error: "bad id" });
+    res.setHeader("Cache-Control", "public, max-age=60"); res.setHeader("Access-Control-Allow-Origin", "*");
+    res.json(await resolveQuoteAlias(id.toLowerCase()));
+  } catch (e) { next(e); }
+});
 /** 차량 데이터 공통본: 기존 pages/data/vehicle-master.js 와 같은 모양 (window.CHAQ_VEHICLE_MASTER) */
 publicRouter.get("/api/pub/vm/core.js", async (req, res, next) => {
   try {

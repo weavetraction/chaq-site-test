@@ -478,5 +478,6 @@
         })();
     </script>
     <script src="data/auth.js"></script>   <!-- 회원: 비회원 조건 변경 제한(5회) · 가입 시트 -->
+    <script>/* 옛 견적 번호로 들어왔는데 같은 차량이 더 없을 때 (RL-30) */ (function(){ if(!/[?&]moved=1/.test(location.search)) return; setTimeout(function(){ var U=window.CHAQ_UTIL; if(U&&U.toast) U.toast('요청하신 견적은 마감됐어요. 지금 조건의 다른 차량을 확인해 보세요'); }, 600); })();</script>
 </body>
 </html>

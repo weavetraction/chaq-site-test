@@ -144,6 +144,29 @@
     <script src="data/api-config.js"></script>
     <script>/* 견적 데이터: 차큐 API(관리자에서 올린 최신 데이터) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/quotes.js"><\/script>');})();</script>
     <script>window.CHAQ || document.write('<script src="data/quotes.js"><\/script>');</script>
+    <script>
+        /* 옛 견적 번호 연결 (RL-30, 대표 261013 '오류 없는 방향'): 주소의 견적 번호가 지금 데이터에 없으면 다른 차를 보여주지 않고
+           서버에 '같은 차량의 현재 견적'을 물어 그 번호로 이동(조건 파라미터 유지) → 같은 차량이 없으면 그 트림 상세 → 모르면 해당 목록. 이동한 페이지에 안내 토스트 */
+        (function () {
+            var q = location.search, m = q.match(/[?&]id=([a-z]\d+)/i); if (!m) return;
+            var id = m[1].toLowerCase(), D = window.CHAQ || {}, all = (D.stock || []).concat(D.fast || [], D.estimate || []);
+            if (!all.length || all.some(function (r) { return r.id === id; })) return;
+            window.CHAQ_ID_RESOLVING = true; document.documentElement.style.visibility = 'hidden';
+            var kindPage = { s: 'stock', f: 'fast', e: 'estimate' }[id[0]] || 'stock';
+            var rest = q.replace(/^\?/, '').split('&').filter(function (p) { return p && !/^(id|trimId|moved)=/.test(p); }).join('&');
+            function go(url) { location.replace(url + (url.indexOf('?') > -1 ? '&' : '?') + 'moved=1'); }
+            function toList() { go('special-price-car__list.html?from=' + kindPage); }
+            var guard = setTimeout(toList, 6000);
+            var b = String((window.CHAQ_API || {}).base || '').replace(/\/$/, '');
+            if (!b) { clearTimeout(guard); return toList(); }
+            fetch(b + '/api/pub/quote-alias/' + id).then(function (r) { return r.ok ? r.json() : {}; }).then(function (a) {
+                clearTimeout(guard);
+                if (a && a.id && a.id !== id) return go('car-detail.html?id=' + encodeURIComponent(a.id) + (rest ? '&' + rest : ''));
+                if (a && a.trimId) return go('car-detail.html?trimId=' + encodeURIComponent(a.trimId) + (rest ? '&' + rest.replace(/(^|&)from=[^&]*/g, '') : '').replace(/&&+/g, '&').replace(/&$/, ''));
+                toList();
+            }).catch(function () { clearTimeout(guard); toList(); });
+        })();
+    </script>
     <script>/* 차량 데이터: 차큐 API(관리자에서 '사이트 반영'한 최신본) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/vm/core.js"><\/script>');})();</script>
     <script>window.CHAQ_VEHICLE_MASTER || document.write('<script src="data/vehicle-master.js"><\/script>');</script>
     <script src="data/vehicle-master-helper.js"></script>
@@ -903,5 +926,6 @@
             });
         })();
     </script>
+    <script>/* 옛 견적 번호로 들어와 이동한 경우 안내 (RL-30) */ (function(){ if(!/[?&]moved=1/.test(location.search)) return; setTimeout(function(){ var U=window.CHAQ_UTIL; if(U&&U.toast) U.toast('요청하신 견적이 최신 견적으로 바뀌어 같은 차량의 지금 조건으로 보여드려요'); }, 600); })();</script>
 </body>
 </html>
