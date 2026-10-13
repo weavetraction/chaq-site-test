@@ -91,7 +91,8 @@ function handler(event) {
         "/api/quotes.*": { ...dynamic, allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD, cachePolicy: quotesCache, originRequestPolicy: undefined, compress: true },
         "/api/pub/*": { ...dynamic, allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD, cachePolicy: pubCache, originRequestPolicy: undefined, compress: true },
         "/api/*": dynamic,
-        "/admin*": dynamic,
+        // 관리자 화면: http 로 들어오면(카카오톡 인앱 브라우저 등 주소 직접 입력) 403 대신 https 로 이동 (#49)
+        "/admin*": { ...dynamic, viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS },
       },
     });
 
