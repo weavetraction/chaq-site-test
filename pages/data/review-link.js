@@ -88,14 +88,15 @@
       var tag = x.level === 3 ? "같은 등급" : x.level === 2 ? "같은 모델" : x.level === 1 ? "같은 계열" : "";
       return '<a class="drv_card" role="listitem" href="review__list.html?id=' + encodeURIComponent(r.id) + '" data-review-id="' + esc(r.id) + '">' +
         '<span class="drv_top"><span class="drv_avatar">' + esc(String(r.name || "").charAt(0)) + '</span>' +
-        '<span class="drv_meta"><strong>' + esc(r.name) + '</strong><span class="drv_stars" aria-label="별점 ' + (+r.stars || 0) + '점">' + stars(r.stars) + '</span></span>' +
+        '<span class="drv_meta"><strong>' + esc(r.name) + ((root.CHAQ_UTIL && root.CHAQ_UTIL.sampleBadge) ? root.CHAQ_UTIL.sampleBadge(r) : '') + '</strong><span class="drv_stars" aria-label="별점 ' + (+r.stars || 0) + '점">' + stars(r.stars) + '</span></span>' +
         (tag ? '<em class="drv_tag drv_tag' + x.level + '">' + tag + '</em>' : '') + '</span>' +
         '<span class="drv_car"><strong>' + esc(r.car) + '</strong>' + (r.trim ? '<em>' + esc(r.trim) + '</em>' : '') + '</span>' +
         '<span class="drv_text">' + esc(r.text) + '</span>' +
         (ph.length ? '<span class="drv_photos">' + ph.map(function (u) { return '<img src="' + esc(u) + '" alt="" loading="lazy">'; }).join("") + ((r.photos || []).length > 3 ? '<b>+' + ((r.photos || []).length - 3) + '</b>' : '') + '</span>' : '') +
         '</a>';
     }).join("");
-    sec.innerHTML = '<div class="drv_head"><p class="cond_label">' + (fallback ? "차큐 고객 이용 후기" : "이 차량 이용 후기") + ' <b>' + rows.length + '</b></p><a class="drv_more" href="' + esc(listUrl) + '">전체보기</a></div>' +
+    var allS = rows.every(function (x) { return x.review && x.review.sample; });   // 전부 예시 후기면 제목에 '예시'(#44)
+    sec.innerHTML = '<div class="drv_head"><p class="cond_label">' + (allS ? "이용 후기 예시" : fallback ? "차큐 고객 이용 후기" : "이 차량 이용 후기") + ' <b>' + rows.length + '</b></p><a class="drv_more" href="' + esc(listUrl) + '">전체보기</a></div>' +
       '<div class="drv_track" role="list">' + cards + '</div>' +
       (rows.length > 1 ? '<div class="drv_dots">' + rows.map(function (_, i) { return '<button type="button" aria-label="' + (i + 1) + '번째 후기"' + (i ? '' : ' class="on"') + '></button>'; }).join("") + '</div>' : '');
     anchor.parentNode.insertBefore(sec, anchor.nextSibling);

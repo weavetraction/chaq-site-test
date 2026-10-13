@@ -114,5 +114,9 @@
     if (!t) { t = document.createElement("div"); t.id = "chaqToast"; t.setAttribute("role", "status"); t.style.cssText = "position:fixed;left:50%;bottom:96px;z-index:9998;transform:translateX(-50%);max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;background:rgba(32,33,36,.92);color:#fff;font-size:14px;line-height:1.4;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none"; document.body.appendChild(t); }
     t.textContent = msg; t.style.opacity = "1"; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = "0"; }, 2200);
   }
-  root.CHAQ_UTIL = { EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, tokKind: tokKind, isDisc: isDisc, splitOpts: splitOpts, taxBenefitOf: taxBenefitOf, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
+  /** 예시 후기(#44): 실제 고객 후기가 아닌 항목 표기 — 카드 배지 HTML · 목록이 전부 예시인지 */
+  var SAMPLE_BADGE = '<em class="rv_sample_badge" style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#eef0f3;color:#6b7280;font-size:11px;font-style:normal;font-weight:600;line-height:1.5;vertical-align:middle">예시</em>';
+  function sampleBadge(r) { return r && r.sample ? SAMPLE_BADGE : ""; }
+  function allSample(list) { return !!(list && list.length) && list.every(function (r) { return r && (r.sample || (r.review && r.review.sample)); }); }
+  root.CHAQ_UTIL = { sampleBadge: sampleBadge, allSample: allSample, EST_FIN: EST_FIN, isEstFin: isEstFin, PH: PH, esc: esc, won: won, priceShort: priceShort, tokKind: tokKind, isDisc: isDisc, splitOpts: splitOpts, taxBenefitOf: taxBenefitOf, discWon: discWon, carTotal: carTotal, carImg: carImg, hex: hex, animateNum: animateNum, store: store, toast: toast };
 })(window);

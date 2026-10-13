@@ -24,7 +24,7 @@
   function summary(it) {
     var d = it.data;
     if (S.kind === "faq") { var c = S.cats.filter(function (x) { return x.id === d.cat; })[0]; return '<span class="pill">' + esc(c ? c.name : "분류 없음") + '</span> <b>' + esc(d.q) + '</b><br><small class="hint">' + esc(strip(d.a).slice(0, 90)) + '</small>'; }
-    if (S.kind === "review") return (d.photos && d.photos[0] ? '<img class="ct_thumb" src="' + esc(imgSrc(d.photos[0])) + '" alt="">' : '') + '<b>' + esc(d.name) + '</b> ' + "★★★★★".slice(0, d.stars) + ' · ' + esc(d.car || "") + ' ' + esc(d.trim || "") + (d.trimId || d.modelId ? ' <span class="pill live">차량 연결</span>' : '') + '<br><small class="hint">' + esc(String(d.text || "").slice(0, 90)) + '</small>';
+    if (S.kind === "review") return (d.photos && d.photos[0] ? '<img class="ct_thumb" src="' + esc(imgSrc(d.photos[0])) + '" alt="">' : '') + (d.sample ? '<span class="pill">예시</span> ' : '') + '<b>' + esc(d.name) + '</b> ' + "★★★★★".slice(0, d.stars) + ' · ' + esc(d.car || "") + ' ' + esc(d.trim || "") + (d.trimId || d.modelId ? ' <span class="pill live">차량 연결</span>' : '') + '<br><small class="hint">' + esc(String(d.text || "").slice(0, 90)) + '</small>';
     if (S.kind === "event") {
       var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10), end = d.forceEnd || (d.end && d.end < today);
       return (d.img ? '<img class="ct_thumb" src="' + esc(imgSrc(d.img)) + '" alt="">' : '') + '<span class="pill ' + (end ? "" : "live") + '">' + (end ? "종료" : "진행중") + '</span> <b>' + esc(d.title) + '</b><br><small class="hint">' + esc(d.periodText || ((d.start || "") + " ~ " + (d.end || ""))) + '</small>';
@@ -162,6 +162,7 @@
       html += '<label><span>고객 표시 이름</span><input name="name" value="' + esc(d.name || "") + '" placeholder="홍**님"></label>' +
         '<label><span>별점</span><select name="stars">' + [5, 4, 3, 2, 1].map(function (n) { return '<option value="' + n + '"' + ((d.stars || 5) === n ? " selected" : "") + '>' + "★★★★★".slice(0, n) + '</option>'; }).join("") + '</select></label>' +
         '<label><span>작성일</span><input type="date" name="date" value="' + esc(d.date || "") + '"></label>' +
+        '<label class="wide"><span>예시 후기 — 실제 출고 고객 후기가 아니면 반드시 체크(사이트에 \'예시\'로 표시, 표시광고법)</span><select name="sample"><option value="">실제 고객 후기</option><option value="1"' + (d.sample ? " selected" : "") + '>예시 후기</option></select></label>' +
         '<label class="wide"><span>출고 차량 — 차량 데이터에서 고르면 차량 상세 하단 후기와 연결됩니다</span><div class="picker"><div class="done" id="ctCar">' + (d.trimId || d.modelId ? "✔ 연결됨 · " : "") + esc((d.car || "") + " " + (d.trim || "")) + '</div><input type="search" id="ctCarQ" placeholder="트림 검색 (예: 팰리세이드 캘리그래피)"><div class="res" hidden id="ctCarRes"></div></div></label>' +
         '<label><span>차량명 (표시)</span><input name="car" value="' + esc(d.car || "") + '"></label><label><span>등급 (표시)</span><input name="trim" value="' + esc(d.trim || "") + '"></label>' +
         '<input type="hidden" name="modelId" value="' + esc(d.modelId || "") + '"><input type="hidden" name="trimId" value="' + esc(d.trimId || "") + '">' +
@@ -191,7 +192,7 @@
     $("#ctModalSave").onclick = function () {
       var g = function (n) { var e = $("[name=" + n + "]", body); return e ? e.value.trim() : undefined; }, out = {};
       if (k === "faq") out = { cat: g("cat"), q: g("q"), a: rteValue(body, "a") };
-      else if (k === "review") out = { name: g("name"), stars: +g("stars"), date: g("date"), car: g("car"), trim: g("trim"), modelId: g("modelId"), trimId: g("trimId"), text: $("[name=text]", body).value, photos: S.photos.slice() };
+      else if (k === "review") out = { name: g("name"), stars: +g("stars"), date: g("date"), sample: g("sample") === "1", car: g("car"), trim: g("trim"), modelId: g("modelId"), trimId: g("trimId"), text: $("[name=text]", body).value, photos: S.photos.slice() };
       else if (k === "event") out = { title: g("title"), start: g("start"), end: g("end"), periodText: g("periodText"), forceEnd: !!g("forceEnd"), img: g("img"), lead: g("lead"), html: rteValue(body, "html"), cta: g("cta"), ctaHref: g("ctaHref") };
       else out = { title: g("title"), cat: g("cat"), date: g("date"), img: g("img"), lead: g("lead"), html: rteValue(body, "html") };
       (it ? api("/api/admin/content/" + k + "/" + encodeURIComponent(it.id), { method: "PUT", json: out }) : api("/api/admin/content/" + k, { method: "POST", json: out }))

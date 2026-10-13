@@ -60,7 +60,7 @@ export function cleanInput(kind: ContentKind, inp: any): any {
       const text = S(inp.text, 3000); if (!text) throw new ContentError("후기 내용을 입력하세요");
       const name = S(inp.name, 30); if (!name) throw new ContentError("고객 표시 이름을 입력하세요 (예: 홍**님)");
       const photos = (Array.isArray(inp.photos) ? inp.photos : []).map(SAFE_IMG).filter(Boolean).slice(0, 10);
-      return { name, stars, car: S(inp.car, 60), trim: S(inp.trim, 60), modelId: S(inp.modelId, 120) || null, trimId: S(inp.trimId, 160) || null, text, photos, date: ymd(inp.date, "작성일") || today() };
+      return { name, stars, car: S(inp.car, 60), trim: S(inp.trim, 60), modelId: S(inp.modelId, 120) || null, trimId: S(inp.trimId, 160) || null, text, photos, date: ymd(inp.date, "작성일") || today(), sample: inp.sample === true || inp.sample === "1" || inp.sample === "on" };   // sample = 예시 후기(실제 고객 후기 아님) — 사이트에 '예시' 표기(#44)
     }
     case "article": {
       const title = S(inp.title, 120); if (!title) throw new ContentError("제목을 입력하세요");
@@ -85,7 +85,7 @@ function toSite(kind: ContentKind, row: { id: string; data: any }, catIndex?: Ma
   const d = row.data;
   switch (kind) {
     case "faq": return { id: row.id, c: catIndex?.get(d.cat) ?? 0, q: d.q, a: d.a, p: d.p || firstPara(d.a) };
-    case "review": return { id: Number(row.id) || row.id, modelId: d.modelId || null, trimId: d.trimId || null, name: d.name, stars: d.stars, car: d.car, trim: d.trim, text: d.text, photos: d.photos || [], date: d.date ? dot(d.date) : undefined };
+    case "review": return { id: Number(row.id) || row.id, ...(d.sample ? { sample: true } : {}), modelId: d.modelId || null, trimId: d.trimId || null, name: d.name, stars: d.stars, car: d.car, trim: d.trim, text: d.text, photos: d.photos || [], date: d.date ? dot(d.date) : undefined };
     case "article": return { id: row.id, cat: d.cat, title: d.title, date: dot(d.date || ""), img: d.img, lead: d.lead, ...(d.html ? { html: d.html, body: [] } : { body: d.body || [] }) };
     case "event": {
       const st = eventStatus(d);
