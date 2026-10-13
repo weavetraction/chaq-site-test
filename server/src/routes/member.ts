@@ -91,11 +91,22 @@ memberRouter.get("/api/auth/kakao/callback", async (req, res) => {
   const ret = (st && safeReturn(st.r)) || siteHome();
   try {
     if (!st) throw new HttpError("로그인 시간이 지났어요. 다시 시도해 주세요");
+    // 추가 동의(전화번호) 화면에서 취소: 로그인은 첫 번째 단계에서 끝났으므로 번호 직접 입력으로
+    if (req.query.error && st.p && (await currentMember(req))) return res.redirect(back(ret, "needphone"));
     if (req.query.error) throw new HttpError(req.query.error === "access_denied" ? "카카오 동의를 취소했어요" : "카카오 로그인에 실패했어요");
     const k = await kakaoExchange(String(req.query.code || ""), redirectUri(req));
     const id = await kakaoLogin(k, st.a);
     issueMember(res, id);
-    const m = (await q(`SELECT phone FROM members WHERE id = $1`, [id])).rows[0];
+    const m = (await q(`SELECT phone, name FROM members WHERE id = $1`, [id])).rows[0];
+    // #50 동의항목 승인(이름 필수·전화번호 선택) 전에 가입한 회원은 카카오가 새 항목을 자동으로 묻지 않음 → 번호가 없으면 1회만 추가 동의 요청
+    if (!m?.phone && !k.phone && !st.p) {
+      const i = await integrations();
+      const u = new URL("https://kauth.kakao.com/oauth/authorize");
+      u.searchParams.set("client_id", i.kakaoRestApiKey); u.searchParams.set("redirect_uri", redirectUri(req));
+      u.searchParams.set("response_type", "code"); u.searchParams.set("scope", m?.name ? "phone_number" : "phone_number,name");
+      u.searchParams.set("state", kakaoState(ret, st.a, true));
+      return res.redirect(u.toString());
+    }
     res.redirect(back(ret, m?.phone ? "ok" : "needphone"));
   } catch (e: any) {
     res.redirect(back(ret, "error&msg=" + encodeURIComponent(e instanceof HttpError ? e.message : "카카오 로그인에 실패했어요")));

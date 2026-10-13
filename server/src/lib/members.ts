@@ -120,11 +120,11 @@ export async function verifyPhone(phone: string, code: string, agree: AgreeT, cu
 
 // ---------------------------------------------------------------- 카카오 로그인 (REST API 방식)
 /** 로그인 시작: 동의 내용·돌아갈 주소를 서명해서 state 로 */
-export function kakaoState(ret: string, agree: AgreeT) {
-  return jwt.sign({ r: ret, a: agree, n: crypto.randomBytes(8).toString("hex") }, config.jwtSecret, { expiresIn: "15m" });
+export function kakaoState(ret: string, agree: AgreeT, more = false) {
+  return jwt.sign({ r: ret, a: agree, n: crypto.randomBytes(8).toString("hex"), ...(more ? { p: 1 } : {}) }, config.jwtSecret, { expiresIn: "15m" });
 }
 export function readKakaoState(s: string) {
-  try { return jwt.verify(s, config.jwtSecret) as { r: string; a: AgreeT; n: string }; } catch { return null; }
+  try { return jwt.verify(s, config.jwtSecret) as { r: string; a: AgreeT; n: string; p?: 1 }; } catch { return null; }
 }
 export async function kakaoExchange(code: string, redirectUri: string) {
   const i = await integrations();
