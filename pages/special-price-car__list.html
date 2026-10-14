@@ -34,33 +34,7 @@
                     <button type="button" class="filter_select" data-filter="trim" aria-label="등급"><span class="fs_text">등급 선택</span><span class="fs_clear" role="button" aria-label="등급 선택 해제"></span></button>
                 </div>
                 <h2>계약 조건</h2>
-                <button type="button" class="cond_summary" aria-expanded="false"><span class="cs_label">계약 조건</span><span class="cs_val"></span><span class="cs_edit">변경</span></button>
-                <div class="cond_wrap">
-                    <div class="filter_group">
-                        <span class="filter_sub">계약 기간</span>
-                        <div class="filter_row">
-                            <button class="filter_chip" type="button">36개월</button>
-                            <button class="filter_chip" type="button">48개월</button>
-                            <button class="filter_chip on" type="button">60개월</button>
-                        </div>
-                    </div>
-                    <div class="filter_group">
-                        <span class="filter_sub">초기 비용</span>
-                        <div class="filter_row">
-                            <button class="filter_chip on" type="button">0원</button>
-                            <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">보증금<i class="tag_info" data-info="deposit" role="button" tabindex="0" aria-label="보증금 설명"></i></em><b class="chip_num">30%</b></span></button>
-                            <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">선납금<i class="tag_info" data-info="prepay" role="button" tabindex="0" aria-label="선납금 설명"></i></em><b class="chip_num">30%</b></span></button>
-                        </div>
-                    </div>
-                    <div class="filter_group">
-                        <span class="filter_sub">주행 거리</span>
-                        <div class="filter_row">
-                            <button class="filter_chip on" type="button">1만 km</button>
-                            <button class="filter_chip" type="button">2만 km</button>
-                            <button class="filter_chip" type="button">3만 km</button>
-                        </div>
-                    </div>
-                </div>
+                <button type="button" class="cond_summary" aria-haspopup="dialog" aria-label="계약 조건 변경"><span class="cs_tags"></span></button>
             </section>
 
             <section class="special_results">
@@ -108,6 +82,43 @@
                 <div class="fpop_foot"><button type="button" class="fpop_apply" id="fpopApply">전체 보기</button></div>
             </div>
         </div>
+        <div class="fpop cond_pop" id="condPop" aria-hidden="true" role="dialog" aria-label="계약 조건">
+            <div class="fpop_sheet cond_sheet">
+                <div class="fpop_head">
+                    <h3 class="cond_title">계약 조건</h3>
+                    <button type="button" class="fpop_close" id="condClose" aria-label="닫기">&times;</button>
+                </div>
+                <div class="fpop_body cond_body">
+                    <div class="cond_wrap">
+                        <div class="filter_group">
+                            <span class="filter_sub">계약 기간</span>
+                            <div class="filter_row">
+                                <button class="filter_chip" type="button">36개월</button>
+                                <button class="filter_chip" type="button">48개월</button>
+                                <button class="filter_chip on" type="button">60개월</button>
+                            </div>
+                        </div>
+                        <div class="filter_group">
+                            <span class="filter_sub">초기 비용</span>
+                            <div class="filter_row">
+                                <button class="filter_chip on" type="button">0원</button>
+                                <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">보증금<i class="tag_info" data-info="deposit" role="button" tabindex="0" aria-label="보증금 설명"></i></em><b class="chip_num">30%</b></span></button>
+                                <button class="filter_chip has_tag" type="button"><span class="chip_col"><em class="chip_tag">선납금<i class="tag_info" data-info="prepay" role="button" tabindex="0" aria-label="선납금 설명"></i></em><b class="chip_num">30%</b></span></button>
+                            </div>
+                        </div>
+                        <div class="filter_group">
+                            <span class="filter_sub">주행 거리</span>
+                            <div class="filter_row">
+                                <button class="filter_chip on" type="button">1만 km</button>
+                                <button class="filter_chip" type="button">2만 km</button>
+                                <button class="filter_chip" type="button">3만 km</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fpop_foot"><button type="button" class="fpop_apply" id="condApply">확인</button></div>
+            </div>
+        </div>
     </div>
 
     <script src="data/api-config.js"></script>
@@ -139,7 +150,7 @@
             function animateNum(el, to, em){ window.CHAQ_UTIL.animateNum(el, to, em); }
 
             function cond() {
-                var groups = document.querySelectorAll('.filter_panel .filter_group');
+                var groups = document.querySelectorAll('.cond_wrap .filter_group');
                 function onText(g){ var b=g.querySelector('.filter_chip.on'); return b?b.textContent:''; }
                 var term = (onText(groups[0]).match(/[0-9]+/)||['60'])[0];
                 var initTxt = onText(groups[1]);
@@ -201,6 +212,10 @@
                 var t = USE_VM && r.trimId ? VM.getTrim(r.trimId) : null; if (!t) return '';
                 TG.groupOfTrim(r.trimId); return '<span class="opt-tag trim-tag">'+escT(TG.shortName(t))+'</span>';
             }
+            function lineupTag(r){   // 견적조회 카드: 같은 등급 이름(예: 트렌디)이 여러 라인업에 있을 때 구분 — 차량 데이터의 라인업(예: 가솔린 1.0 (밴))
+                var t = USE_VM && r.trimId ? VM.getTrim(r.trimId) : null, ln = t && t.fileTrimName ? String(t.fileTrimName).split(' / ')[0] : '';
+                return ln ? '<span class="opt-tag lineup-tag">'+escT(ln)+'</span>' : '';
+            }
             function inquiryCard(tid, title, sub, c){   // 견적 데이터가 없는 차량: 비용칸 '별도문의'
                 return '<a class="stock-card is-inquiry" href="car-detail.html?trimId='+encodeURIComponent(tid)+'&from='+page+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
                     '<img src="'+escT(vmImg(tid))+'" alt="'+escT(title)+'" loading="lazy" onerror="this.onerror=null;this.src=\''+PH+'\'">'+
@@ -218,9 +233,9 @@
                 // 차량가 정렬 = 차량 총가격(기본 + 옵션 + 할인, 상세 가격 영역과 같은 계산)
                 var tot = {}, U = window.CHAQ_UTIL, carP = function(r){ if(!(r.id in tot)) tot[r.id] = U && U.carTotal ? U.carTotal(r) : (r.base||0); return tot[r.id]; };
                 arr.sort(function(a,b){
-                    if (!byCar) { var am = monthly(a,c), bm = monthly(b,c); if ((am==null) !== (bm==null)) return am==null ? 1 : -1; }   // 이 조건 월 납입금이 없는 차량(별도문의)은 항상 뒤로
-                    var av = byCar ? carP(a) : (monthly(a,c)||0);
-                    var bv = byCar ? carP(b) : (monthly(b,c)||0);
+                    if (!byCar) { var am = mOf(a,c), bm = mOf(b,c); if ((am==null) !== (bm==null)) return am==null ? 1 : -1; }   // 이 조건 월 납입금이 없는 차량(별도문의)은 항상 뒤로
+                    var av = byCar ? carP(a) : (mOf(a,c)||0);
+                    var bv = byCar ? carP(b) : (mOf(b,c)||0);
                     return desc ? bv-av : av-bv;
                 });
                 return arr;
@@ -231,26 +246,18 @@
             var noEl = document.getElementById('noResult');
             var countEl = document.querySelector('.result_header p strong');
 
-            // 견적조회 첫 화면: 모델별 '지금 조건' 최저 월 납입금 차량 (실견적 우선, 없으면 추정) — 브랜드를 고르기 전에도 바로 비교
-            var EST_TOP = 20;
-            function renderEstTop(c){
-                var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; }, byModel = {};
-                records.forEach(function(r){
-                    var m = monthlyExact(r,c); if (m==null) return;
-                    var k = (USE_VM && VMK[r.id]) ? VMK[r.id].mid : (r.brand+'|'+r.model), est = isEF(r), cur = byModel[k];
-                    if (!cur || (cur.est && !est) || (cur.est === est && m < cur.m)) byModel[k] = { r: r, m: m, est: est };
+            // 목록 월 납입금: 견적조회는 고른 조건 그대로의 칸만(다른 조건 값으로 대신하지 않음), 재고특가·빠른인도는 기존 규칙
+            var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
+            function mOf(r,c){ return isEstimate ? monthlyExact(r,c) : monthly(r,c); }
+            function estPerTrim(arr, c){   // 견적조회 목록: 같은 트림의 금융사별 견적 중 최저가 1개 (실견적 우선, 없으면 딜리버 기준가)
+                var by = {}, order = [];
+                arr.forEach(function(r){
+                    var k = r.trimId || r.id, m = monthlyExact(r,c), est = isEF(r), cur = by[k];
+                    if (!cur) { order.push(k); by[k] = { r: r, m: m, est: est }; return; }
+                    var better = (m!=null && cur.m==null) || (m!=null && cur.est && !est) || (m!=null && cur.est === est && m < cur.m);
+                    if (better) by[k] = { r: r, m: m, est: est };
                 });
-                var list = Object.keys(byModel).map(function(k){ return byModel[k]; }).sort(function(a,b){ return (a.est-b.est) || (a.m-b.m); }).slice(0, EST_TOP);
-                if (countEl) countEl.textContent = list.length;
-                var hint = '<p class="est_top_hint">지금 조건의 <b>모델별 최저가</b>예요. 브랜드를 고르면 원하는 차량만 볼 수 있어요.</p>';
-                listEl.innerHTML = hint + list.map(function(o){ var r = o.r;
-                    return '<a class="stock-card" href="car-detail.html?id='+r.id+'&from=estimate&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
-                        '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'" loading="lazy">'+
-                        '<span class="stock-copy"><small class="cn">'+carNameH(r)+'</small>'+
-                        '<strong>'+(o.est?'예상 ':'')+'월 '+won(o.m)+'원</strong>'+
-                        '<b><span class="opt-tag">'+(o.est?'딜리버 기준가(추정)':'금융사 최저가')+'</span></b></span>'+
-                        '<span class="stock-cta">상세견적</span></a>'; }).join('');
-                listEl.hidden = false; noEl.hidden = list.length > 0;
+                return order.map(function(k){ return by[k].r; });
             }
             // 선택·조건을 주소에 남김 → 상세 갔다가 뒤로 와도 그대로 (공유 링크에도 유지)
             function saveState(c){
@@ -271,7 +278,7 @@
                 if (g('b') && g('m')) { F.model = g('m'); LABEL.model = g('ml') || g('m'); }
                 if (g('b') && g('m') && g('t')) { F.trim = g('t'); LABEL.trim = g('tl') || g('t'); }
                 if (g('all') === '1') F.all = true;
-                var groups = document.querySelectorAll('.filter_panel .filter_group');
+                var groups = document.querySelectorAll('.cond_wrap .filter_group');
                 function pick(gi, test){ var row = groups[gi] && groups[gi].querySelector('.filter_row'); if (!row) return; var t = [].filter.call(row.children, test)[0]; if (!t) return; [].forEach.call(row.children, function(x){ x.classList.remove('on'); }); t.classList.add('on'); }
                 if (/^(36|48|60)$/.test(g('term')||'')) pick(0, function(b){ return b.textContent.indexOf(g('term')) > -1; });
                 if (g('plan') === 'b') pick(1, function(b){ return b.textContent.indexOf('보증') > -1; });
@@ -279,25 +286,34 @@
                 if (/^[123]$/.test(g('dist')||'')) pick(2, function(b){ return b.textContent.indexOf(g('dist')+'만') > -1; });
                 if (sortSel && g('sort') && [].some.call(sortSel.options, function(o){ return o.value === g('sort'); })) sortSel.value = g('sort');
             }
-            var condSum = document.querySelector('.cond_summary');
+            // 계약 조건: 요약 칸(선택값 태그) → 누르면 아래에서 올라오는 선택창 (차량 선택창과 같은 방식, #54)
+            var condSum = document.querySelector('.cond_summary'), condPop = document.getElementById('condPop'), condApply = document.getElementById('condApply');
+            var PLAN_KO = { '0': '초기비용 0원', b: '보증금 30%', s: '선납금 30%' };
             function updateCondSummary(c){
                 if (!condSum) return;
-                condSum.querySelector('.cs_val').textContent = c.term + '개월 · ' + ({ '0': '초기비용 0원', b: '보증금 30%', s: '선납금 30%' })[c.plan] + ' · 연 ' + c.dist + '만 km';
+                condSum.querySelector('.cs_tags').innerHTML = [c.term + '개월', PLAN_KO[c.plan], '연 ' + c.dist + '만 km'].map(function(t){ return '<span class="cs_tag">' + t + '</span>'; }).join('');
+                condSum.setAttribute('aria-label', '계약 조건 변경: ' + c.term + '개월, ' + PLAN_KO[c.plan] + ', 연 ' + c.dist + '만 km');
             }
-            if (condSum) condSum.addEventListener('click', function(){ var open = !document.querySelector('.filter_panel').classList.contains('cond-open'); document.querySelector('.filter_panel').classList.toggle('cond-open', open); condSum.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+            function openCond(){ if (!condPop) return; condPop.classList.add('is-open'); condPop.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+            function closeCond(){ if (!condPop) return; condPop.classList.remove('is-open'); condPop.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+            if (condSum) condSum.addEventListener('click', openCond);
+            if (condPop) {
+                document.getElementById('condClose').addEventListener('click', closeCond);
+                condApply.addEventListener('click', closeCond);
+                condPop.addEventListener('click', function(e){ if (e.target === condPop) closeCond(); });
+            }
+            function updateCondApply(){ if (!condApply) return; var n = countEl ? countEl.textContent : ''; condApply.textContent = (isEstimate && F.trim) ? '견적 보기' : (n && n !== '0' ? n + '대 보기' : '확인'); }
 
-            function render() {
+            function render() { renderList(); document.body.classList.toggle('est-single', isEstimate && !!F.trim); updateCondApply(); }
+            function renderList() {
                 var c = cond(); updateCondSummary(c); saveState(c);
                 var arr = records.filter(matches);
-                if (isEstimate) {
+                if (isEstimate && F.trim) {   // 견적조회: 등급까지 고르면 그 차량의 최저가 견적 카드 1장 (고르기 전·전체 보기 = 아래 전체 차량 목록, #54)
                     listEl.hidden = true; noEl.hidden=true;
                     function guide(msg){ estEl.hidden=false; estEl.classList.add('est-empty'); estEl.removeAttribute('href'); estEl.innerHTML='<span class="est_guide">'+msg+'</span>'; }
-                    if (!F.brand && !F.all) { estEl.hidden = true; renderEstTop(c); return; }
-                    if (!F.model && !F.all) { guide('차량 모델을 선택해주세요'); return; }
-                    if (!F.trim && !F.all)  { guide('차량 등급을 선택해주세요'); return; }
                     // 견적조회 = 같은 차량의 금융사별 견적 중 '고른 조건 그대로'의 최저가 (다른 조건 값으로 대신하지 않음)
                     // 실견적(금융사) 우선 — '딜리버 기준가(추정)' 행(DC-70)은 같은 조건에 실견적이 하나도 없을 때만
-                    var best=null, bestM=Infinity, isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
+                    var best=null, bestM=Infinity;
                     arr.forEach(function(r){ if(isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
                     if(!best) arr.forEach(function(r){ if(!isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
                     var bestEst = !!(best && isEF(best));
@@ -331,7 +347,8 @@
                     return;
                 }
                 estEl.hidden=true;
-                if (hideZero()) arr = arr.filter(function(r){ return monthly(r,c)!=null; });   // 재고특가·빠른인도: 이 조건 월 납입금이 없는 재고(별도문의)는 '0대 제외' 켜짐이면 숨김
+                if (isEstimate) arr = estPerTrim(arr, c);   // 견적조회 목록: 트림마다 '지금 조건 그대로'의 최저가 1대 (실견적 우선)
+                if (hideZero()) arr = arr.filter(function(r){ return mOf(r,c)!=null; });   // 재고특가·빠른인도: 이 조건 월 납입금이 없는 재고(별도문의)는 '0대 제외' 켜짐이면 숨김
                 sortList(arr, c);
                 if (countEl) countEl.textContent = arr.length;
                 // 견적(재고) 없는 차량도 노출: 브랜드/모델/등급을 고른 경우, 이 목록에 0대인 모델·등급 묶음을 '별도문의' 카드로 뒤에 붙임 ('0대 제외'를 켜면 숨김)
@@ -345,14 +362,15 @@
                 noEl.hidden=true;
                 var html='';
                 arr.forEach(function(r){
-                    var m=monthly(r,c);
-                    html += '<a class="stock-card" href="car-detail.html?id='+r.id+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
-                        '<span class="stock-badge">특가</span>'+
+                    var m=mOf(r,c), est=isEstimate && isEF(r);
+                    html += '<a class="stock-card" href="car-detail.html?id='+r.id+(isEstimate?'&from=estimate':'')+'&term='+c.term+'&plan='+c.plan+'&dist='+c.dist+'">'+
+                        (isEstimate?'':'<span class="stock-badge">특가</span>')+
                         '<img src="'+carImg(r)+'" alt="'+escT(carName(r))+'" loading="lazy" decoding="async">'+
                         '<span class="stock-copy"><small class="cn">'+carNameH(r)+'</small>'+
-                        (m==null ? '<strong class="is-inquiry">월 별도문의</strong>' : '<strong>월 '+won(m)+'원</strong>')+
-                        '<b><span class="opt-tag">옵션 <em>'+(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0))+'</em>개</span>'+trimTag(r)+
-                        '</b></span>'+
+                        (m==null ? '<strong class="is-inquiry">월 별도문의</strong>' : '<strong>'+(est?'예상 ':'')+'월 '+won(m)+'원</strong>')+
+                        (isEstimate
+                            ? '<b>'+lineupTag(r)+trimTag(r)+'</b></span>'
+                            : '<b><span class="opt-tag">옵션 <em>'+(window.CHAQ_UTIL?window.CHAQ_UTIL.splitOpts(r).opts.length:(r.opts?r.opts.length:0))+'</em>개</span>'+trimTag(r)+'</b></span>')+
                         '<span class="stock-cta">상세견적</span></a>';
                 });
                 listEl.hidden=false;
@@ -458,7 +476,7 @@
             });
             // '차량 브랜드를 선택해주세요' 같은 안내 카드를 누르면 그 단계 선택창
             if (estEl) estEl.addEventListener('click', function(e){ if (!estEl.classList.contains('est-empty') || !(F && (!F.brand || !F.model || !F.trim))) return; if (estEl.querySelector('.est_guide') && /선택해주세요/.test(estEl.textContent)) { e.preventDefault(); openPop(firstMissing()); } });
-            document.querySelector('.fpop_close').addEventListener('click', closePop);
+            pop.querySelector('.fpop_close').addEventListener('click', closePop);
             popApply.addEventListener('click', function(){   // 전체 보기: 이 단계(와 하위 단계) 선택을 풀고 해당 범위 전체를 보여줌
                 if(currentFilter){
                     F[currentFilter]=null; LABEL[currentFilter]=null;

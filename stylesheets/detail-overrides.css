@@ -1568,8 +1568,10 @@ body.local-sub {
     color: inherit;
     text-decoration: none;
 }
-.local-special-list.view-estimate .result_header,
-.local-special-list.view-estimate .special_stock_panel { display: none; }
+.local-special-list.view-estimate .est_card[hidden] { display: none; }
+/* #54: 견적조회도 기본은 전체 차량 목록 — 등급까지 골랐을 때(est-single)만 최저가 카드 1장 */
+.local-special-list.view-estimate.est-single .result_header,
+.local-special-list.view-estimate.est-single .special_stock_panel { display: none; }
 
 .local-special-list .est_card .est_visual {
     position: absolute;
@@ -2683,16 +2685,18 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-special-list .filter_select.is-selected .fs_clear{right:2px;width:22px;height:22px}
 .local-special-list .filter_select.is-selected{padding-right:24px}
 .local-special-list .filter_select.is-disabled{border:1px solid #e3e5e8;color:#5f6670}
-.local-special-list .cond_summary{display:flex;align-items:center;gap:8px;width:100%;margin-top:8px;padding:11px 12px;border:0;border-radius:10px;background:#f4f5f6;color:#2b2f34;font-size:14px;text-align:left;cursor:pointer}
-.local-special-list .cond_summary .cs_label{flex:none;font-weight:700}
-.local-special-list .cond_summary .cs_val{flex:1;min-width:0;color:#18a85c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.local-special-list .cond_summary .cs_edit{flex:none;color:#5c6169;font-weight:600;font-size:13px}
-.local-special-list .cond_summary .cs_edit::after{content:"";display:inline-block;width:8px;height:8px;margin-left:5px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:translateY(-3px) rotate(45deg)}
-.local-special-list .filter_panel.cond-open .cond_summary .cs_edit::after{transform:translateY(1px) rotate(-135deg)}
-.local-special-list .filter_panel .cond_wrap{display:none;margin-top:8px}
-.local-special-list .filter_panel.cond-open .cond_wrap{display:flex}
-.local-special-list .est_top_hint{margin:0 0 10px;color:#5c6169;font-size:13px;line-height:1.5}
-.local-special-list .est_top_hint b{color:#16181b}
 /* 잠긴 칸 글자 대비(접근성) */
 .local-special-list .filter_select.is-disabled .fs_text{color:#5f6670}
 .local-special-list .filter_select.is-disabled{pointer-events:auto;cursor:pointer}
+
+/* ===== #54 계약 조건: 차량 선택 칸과 같은 크기의 요약 칸(흰 태그) + 아래에서 올라오는 선택창 ===== */
+.local-special-list .cond_summary{position:relative;display:flex;align-items:center;width:100%;min-height:46px;margin-top:8px;padding:0 30px 0 8px;border:0;border-radius:10px;background:#f4f5f6;text-align:left;cursor:pointer}
+.local-special-list .cond_summary::after{content:"";position:absolute;right:9px;top:50%;width:11px;height:7px;transform:translateY(-50%);background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='15' height='9' viewBox='0 0 15 9'><path d='M1.5 1.5l6 6 6-6' fill='none' stroke='%235b616a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center/contain}
+.local-special-list .cond_summary .cs_tags{display:flex;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
+.local-special-list .cond_summary .cs_tag{flex:none;padding:5px 10px;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.07);color:#18a85c;font-size:13px;font-weight:700;line-height:1.3;white-space:nowrap}
+@media(max-width:360px){.local-special-list .cond_summary .cs_tag{padding:5px 8px;font-size:12.5px}.local-special-list .cond_summary .cs_tags{gap:5px}}
+.local-special-list .cond_sheet{height:auto;max-height:88vh;max-height:88dvh}
+.local-special-list .cond_title{margin:0;color:#16181b;font-size:17px;font-weight:700}
+.local-special-list .cond_body{padding-top:2px}
+.local-special-list .cond_pop .cond_wrap{display:flex}
+.local-special-list .stock-card .opt-tag.lineup-tag{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
