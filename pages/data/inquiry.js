@@ -157,6 +157,15 @@
       (j.report ? '<a class="iqf_close" href="' + reportHref(j.report) + '" style="display:block;flex:none;text-align:center;text-decoration:none;border-radius:12px;padding:14px;font-weight:700">견적서 보기</a>' : '') +
       '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
   }
+  // 차량 상세 '이 조건 그대로 문의하기': 바로 접수하지 않고 상담 방법 선택 — 카톡상담(기존 접수 → 견적서) / 전화상담(견적번호 안내) (대표 261014)
+  function chooseDetail() {
+    var q = window.CHAQ_DETAIL_QUOTE, qid = q && q.id ? String(q.id) : (new URLSearchParams(location.search).get("id") || "");
+    var bg = sheet('<h3>상담 방법을 선택해 주세요</h3><div class="iqf_pick">' +
+      '<button type="button" class="iqf_opt" data-pick="kakao"><b>카톡상담</b><span>견적서 자동 발송</span></button>' +
+      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><b>전화상담 <small>' + TEL + '</small></b><span>보고계신 견적번호를 말씀해주세요</span>' + (qid ? '<em>견적번호 ' + esc(qid) + '</em>' : '') + '</a>' +
+      '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
+    bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () { close(); openChat(detailContext()); });
+  }
   function showError(msg) {
     sheet('<h3>접수하지 못했어요</h3><p class="iqf_sub">' + esc(msg || "잠시 후 다시 시도해 주세요.") + '</p><p class="iqf_sub">급하신 문의는 <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p><div class="iqf_btns"><button type="button" class="iqf_send" data-close>확인</button></div>');
   }
@@ -176,7 +185,7 @@
   document.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest('[data-pending-link][data-action="inquiry"]') : null; if (!b) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    if (b.classList.contains("detail_inquiry")) openChat(detailContext());
+    if (b.classList.contains("detail_inquiry")) chooseDetail();
     else { var tp = b.getAttribute("data-topic") || (b.querySelector("strong") ? b.querySelector("strong").textContent.trim() : ""); openChat(guideContext(tp, b.getAttribute("data-car") || "")); }
   }, true);
 
@@ -195,7 +204,10 @@
     ".iqf .iqf_btns{display:flex;gap:8px}.iqf button{font:inherit;cursor:pointer;border-radius:12px;padding:14px;font-size:15.5px;font-weight:700;border:0}" +
     ".iqf .iqf_close{flex:0 0 96px;background:#f1f3f4;color:#3c4043}.iqf .iqf_send{flex:1;background:#1c1f23;color:#fff}.iqf .iqf_send:disabled{opacity:.6;cursor:default}" +
     ".iqf .iqf_done{text-align:center;padding:10px 0 4px}.iqf .iqf_done i{display:inline-flex;width:56px;height:56px;margin-bottom:12px;border-radius:50%;background:#e8f7ef;color:#18a85c;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:800}" +
-    ".iqf .iqf_done p{margin:0 0 6px;color:#5f6368;font-size:14px;line-height:1.55}.iqf .iqf_done a{color:#18a85c;font-weight:700}.iqf .iqf_hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}";
+    ".iqf .iqf_done p{margin:0 0 6px;color:#5f6368;font-size:14px;line-height:1.55}.iqf .iqf_done a{color:#18a85c;font-weight:700}.iqf .iqf_hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}" +
+    ".iqf .iqf_pick{display:flex;flex-direction:column;gap:10px;margin:16px 0}.iqf .iqf_opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:16px;border:1px solid #e3e6ea;border-radius:12px;background:#fff;color:#16181b;text-align:left;text-decoration:none;font:inherit;cursor:pointer;box-sizing:border-box}" +
+    ".iqf .iqf_opt:hover{background:#f5f5f5}.iqf .iqf_opt b{font-size:16px;font-weight:700}.iqf .iqf_opt b small{margin-left:4px;color:#5f6670;font-size:13px;font-weight:500}.iqf .iqf_opt span{color:#5f6670;font-size:13.5px;font-weight:400;line-height:1.45}" +
+    ".iqf .iqf_opt em{margin-top:4px;padding:2px 8px;border-radius:7px;background:#f2f3f5;color:var(--detail-green,#18a85c);font-size:12.5px;font-style:normal;font-weight:700}";
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   function fmtPhone(v) { var d = String(v || "").replace(/\D/g, "").slice(0, 11); if (d.length < 4) return d; if (d.indexOf("02") === 0) return d.length <= 5 ? d.slice(0, 2) + "-" + d.slice(2) : d.length <= 9 ? d.slice(0, 2) + "-" + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.slice(0, 2) + "-" + d.slice(2, 6) + "-" + d.slice(6, 10); if (d.length <= 7) return d.slice(0, 3) + "-" + d.slice(3); return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }
   function condLine(c) { var k = c.conditions || {}; return [k.product, k.term ? k.term + "개월" : "", PLAN[k.plan] || "", k.dist ? "연 " + k.dist + "만 km" : "", c.monthly ? "월 " + Number(c.monthly).toLocaleString("ko-KR") + "원" : ""].filter(Boolean).join(" · "); }

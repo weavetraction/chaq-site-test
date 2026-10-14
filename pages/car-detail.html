@@ -690,9 +690,9 @@
                     var hint=document.getElementById('estHint'); if(estimated && estKind!=='coef'){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent='실견적과 다를 수 있어요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
                     // 3호 ②·③ 안내 1줄씩 (조건이 바뀌면 다시 맞춤)
                     function hintLine(id, t){ var h=document.getElementById(id); if(t){ if(!h && cm){ h=document.createElement('p'); h.id=id; h.className='est_hint'; cm.parentNode.appendChild(h); } if(h) h.textContent=t; } else if(h) h.remove(); }
-                    hintLine('distHint', distUp ? '연 '+ec.dist+'만km 약정 상품이 더 저렴해 이 조건으로 안내합니다.' : null);
+                    hintLine('distHint', null);
                     hintLine('optRowHint', null);
-                    if(note) note.textContent = (EST_POOL && rec.optCoef) ? '선택한 옵션·색상 추가금은 차량 총가격과 월 납입금(예상)에 반영됩니다. 문의 시 실제 견적으로 확정돼요.' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다.';
+                    if(note){ var coefNote = !!(EST_POOL && rec.optCoef); note.textContent = coefNote ? '' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다.'; note.style.display = coefNote ? 'none' : ''; }
                 })();
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
@@ -860,8 +860,8 @@
                             var c = cond();
                             ssPop.body.innerHTML = '<p class="opt_sec">'+esc(VM.carName(rec)+' · '+name)+' · '+list.length+'대</p>' + list.map(function (r) {
                                 var on = r.id === rec.id, m = monthly(r, c), oc = window.CHAQ_UTIL.splitOpts(r).opts.length;   // 할인 항목은 옵션 수에서 제외
-                                return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+esc([r.ext, r['int']].filter(Boolean).join(' / ') || '색상 정보 없음')+(on?' <small>현재</small>':'')+
-                                    '<small class="ss_sub ss_tag">옵션 '+oc+'개</small></span><em>'+(m!=null?'월 '+won(m)+'원':'해당 조건 미제공')+'</em></button>';
+                                return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+esc([r.ext, r['int']].filter(Boolean).join(' / ') || '색상 정보 없음')+
+                                    '<span class="ss_meta"><small class="ss_sub ss_tag">옵션 '+oc+'개</small>'+(on?'<small>현재</small>':'')+'</span></span><em>'+(m!=null?'월 '+won(m)+'원':'해당 조건 미제공')+'</em></button>';
                             }).join('');
                             ssPop.open();
                         });

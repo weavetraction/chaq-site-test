@@ -2736,3 +2736,8 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_price_row.is-disc strong { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 7px; background: #f2f3f5; color: var(--detail-green); line-height: 1.35; }
 /* 261014 대표: 같은 차량 다른 재고 팝업 — 연식 글씨 빼고 '옵션 N개' 태그 */
 .local-car-detail .dts_pop .ss_row .ss_sub.ss_tag { display: block; width: fit-content; margin: 5px 0 0; padding: 2px 7px; border: 1px solid #e3e6ea; border-radius: 7px; background: #fff; color: #4a5058; font-size: 12px; font-weight: 500; line-height: 1.35; }
+/* 261014 대표: 같은 차량 다른 재고 — 색상명 1px 작게, '현재'는 색상 아래 옵션 태그 오른쪽 */
+.local-car-detail .dts_pop .ss_row > span { font-size: 14.5px; }
+.local-car-detail .dts_pop .ss_row .ss_meta { display: flex; align-items: center; gap: 6px; margin: 5px 0 0; }
+.local-car-detail .dts_pop .ss_row .ss_meta .ss_sub.ss_tag { margin: 0; }
+.local-car-detail .dts_pop .ss_row .ss_meta small:not(.ss_sub) { margin-left: 0; }
