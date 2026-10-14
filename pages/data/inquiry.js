@@ -99,10 +99,20 @@
   // ---------------------------------------------------------------- 회원 문의: 견적 그대로 접수 → 카카오톡(알림톡) 견적서 → 카카오 상담
   function pendingData(c) {
     if (c.source !== "DETAIL") return { source: c.source, topic: c.topic || "", car: c.carName || "" };
-    return { source: "DETAIL", chips: [].map.call(document.querySelectorAll(".cond_wrap .filter_chip"), function (b, i) { return b.classList.contains("on") ? i : -1; }).filter(function (i) { return i > -1; }) };
+    return { source: "DETAIL", go: goKakao ? "kakao" : "", chips: [].map.call(document.querySelectorAll(".cond_wrap .filter_chip"), function (b, i) { return b.classList.contains("on") ? i : -1; }).filter(function (i) { return i > -1; }) };
   }
   function guideContext(topic, car) { return { source: "GUIDE", topic: topic || "", carName: car || "", spec: "", trimName: "", conditions: {}, options: [], color: "", pageUrl: location.href.slice(0, 500) }; }
-  var sending = false;
+  var sending = false, goKakao = false;   // goKakao: 상담 방법 '카톡상담'으로 들어온 접수 → 완료 창 없이 카카오톡 채팅방으로 바로 연결 (대표 261014)
+  function quoteId() { var q = window.CHAQ_DETAIL_QUOTE; return q && q.id ? String(q.id) : (new URLSearchParams(location.search).get("id") || ""); }
+  function goChat(c, j) {
+    var st = (window.CHAQ_AUTH && window.CHAQ_AUTH.state()) || {}, ch = st.kakaoChannel, sent = !!(j.kakao && j.kakao.sent), U = window.CHAQ_UTIL, qid = quoteId();
+    goKakao = false;
+    if (!ch || !ch.chat) return false;
+    if (!sent) copyText("차큐 견적서 요청 (접수번호 #" + (j.id || "") + (qid ? " · 견적번호 " + qid : "") + ")");
+    if (U && U.toast) U.toast(sent ? "카카오톡으로 견적서를 보냈어요. 채팅방으로 연결할게요" : "채팅방으로 연결할게요. 복사된 요청 메시지를 붙여넣어 보내 주세요");
+    setTimeout(function () { location.href = ch.chat; }, 900);
+    return true;
+  }
   function submitMember(c) {
     if (sending) return; sending = true;
     var AU = window.CHAQ_AUTH, T = window.CHAQ_TRACK, body = {}, k;
@@ -113,6 +123,7 @@
       sending = false;
       try { if (T) T.lead(j.id, c); } catch (x) {}
       var list = lsGet(LS_INQ); list.unshift({ id: j.id, at: new Date().toISOString(), car: (c.carName + " " + (c.trimName || "")).trim(), cond: condLine(c), topic: c.topic || "", recId: c.recId || null, report: j.report || null }); lsSet(LS_INQ, list.slice(0, 20));
+      if (goKakao && c.source === "DETAIL" && goChat(c, j)) return;
       showDone(c, j);
     }).catch(function (e) {
       sending = false;
@@ -159,12 +170,16 @@
   }
   // 차량 상세 '이 조건 그대로 문의하기': 바로 접수하지 않고 상담 방법 선택 — 카톡상담(기존 접수 → 견적서) / 전화상담(견적번호 안내) (대표 261014)
   function chooseDetail() {
-    var q = window.CHAQ_DETAIL_QUOTE, qid = q && q.id ? String(q.id) : (new URLSearchParams(location.search).get("id") || "");
+    var qid = quoteId();
     var bg = sheet('<h3>상담 방법을 선택해 주세요</h3><div class="iqf_pick">' +
       '<button type="button" class="iqf_opt" data-pick="kakao"><b>카톡상담</b><span>견적서 자동 발송</span></button>' +
       '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><b>전화상담 <small>' + TEL + '</small></b><span>보고계신 견적번호를 말씀해주세요</span>' + (qid ? '<em>견적번호 ' + esc(qid) + '</em>' : '') + '</a>' +
       '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
-    bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () { close(); openChat(detailContext()); });
+    bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () {
+      var st = (window.CHAQ_AUTH && window.CHAQ_AUTH.state && window.CHAQ_AUTH.state()) || {};
+      if (!(st.auth && st.auth.alimtalk)) copyText("차큐 견적서 요청" + (qid ? " (견적번호 " + qid + ")" : ""));   // 알림톡 전: 채팅방에 붙여넣을 요청 메시지 (누른 순간 복사 — 로그인 후 자동 진행 땐 복사가 막힐 수 있어서)
+      goKakao = true; close(); openChat(detailContext());
+    });
   }
   function showError(msg) {
     sheet('<h3>접수하지 못했어요</h3><p class="iqf_sub">' + esc(msg || "잠시 후 다시 시도해 주세요.") + '</p><p class="iqf_sub">급하신 문의는 <a href="tel:' + TEL.replace(/-/g, "") + '">' + TEL + '</a>로 전화 주세요.</p><div class="iqf_btns"><button type="button" class="iqf_send" data-close>확인</button></div>');
@@ -177,7 +192,7 @@
       if (d.source === "DETAIL") {
         var chips = document.querySelectorAll(".cond_wrap .filter_chip");
         AU.withoutLimit(function () { (d.chips || []).forEach(function (i) { var b = chips[i]; if (b && !b.classList.contains("on")) b.click(); }); });
-        setTimeout(function () { submitMember(detailContext()); }, 250);
+        setTimeout(function () { goKakao = d.go === "kakao"; submitMember(detailContext()); }, 250);
       } else submitMember(guideContext(d.topic, d.car));
     }, 300);
   });
