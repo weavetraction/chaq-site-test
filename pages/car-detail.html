@@ -616,7 +616,7 @@
 
             // ===== 조건 → 월납입금/잔가/인수비용 계산 =====
             // 견적조회: 같은 차량(트림ID)의 금융사별 견적 중 '고른 조건 그대로'의 최저가 견적을 그때그때 고른다 (조건을 바꾸면 금융사가 바뀔 수 있음)
-            var EST_POOL = (/[?&]from=estimate(&|$)/.test(location.search) && rec.trimId && String(rec.id)[0]==='e')
+            var EST_POOL = (rec.trimId && String(rec.id)[0]==='e')   // 3호 ①: 견적조회 행(e)은 들어온 경로(from=estimate 여부)와 상관없이 같은 트림 전체에서 칸별 최저
                 ? (DATA.estimate||[]).filter(function(r){ return r.trimId===rec.trimId; }) : null;
             function exactCost(r,c){ var t=r.cost&&r.cost[c.dist]&&r.cost[c.dist][c.term]; return (t&&t[c.plan]>0)?t[c.plan]:null; }
             var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
@@ -624,10 +624,10 @@
             function pickEst(c){ var b=null,bm=Infinity; EST_POOL.forEach(function(r){ if(isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); if(!b) EST_POOL.forEach(function(r){ if(!isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); return b; }
             function monthly(c){
                 if(EST_POOL){ var b=pickEst(c); if(b){ rec=b; window.CHAQ_DETAIL_QUOTE=b; } return b?exactCost(b,c):null; }   // 문의도 이 견적(금융사)으로 저장
-                var d=rec.cost&&rec.cost[c.dist]; if(!d) return null; var t=d[c.term]||d[Object.keys(d)[0]]; if(!t) return null; if(t[c.plan]!=null) return t[c.plan]>0?t[c.plan]:null; for(var p in t) return t[p]>0?t[p]:null; return null; }
+                return exactCost(rec,c); }   // 3호 ①: 빈 칸은 다른 기간·초기비용 값으로 대체하지 않음 → '해당 조건 미제공'
             function resid(c){
                 if(EST_POOL){ var d0=rec.resid&&rec.resid[c.dist]; return (d0&&d0[c.term]!=null)?d0[c.term]:null; }   // 최저가로 고른 견적의 같은 거리·기간 잔가만
-                var d=rec.resid&&rec.resid[c.dist]; if(!d) return null; if(d[c.term]!=null) return d[c.term]; for(var k in d) return d[k]; return null; }
+                var d=rec.resid&&rec.resid[c.dist]; return (d&&d[c.term]!=null)?d[c.term]:null; }
             function readCond(){
                 function on(g){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+g+'"].on'); return b?b.textContent:''; }
                 var term=(on('term').match(/[0-9]+/)||['60'])[0];
@@ -674,7 +674,7 @@
                 })();
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
-                if(m==null){ if(hm){ hm.innerHTML="별도문의"; hm.style.color="#8a8f96"; } if(cm){ cm.textContent="별도문의"; cm.style.color="#8a8f96"; } }   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
+                if(m==null){ var noCell = EST_POOL ? EST_POOL.some(function(r){ return r.cost; }) : !!(rec && rec.cost), nt = noCell ? '해당 조건 미제공' : '별도문의'; if(hm){ hm.innerHTML=nt; hm.style.color="#8a8f96"; } if(cm){ cm.textContent=nt; cm.style.color="#8a8f96"; } }   // 3호 ①: 견적은 있는데 이 칸만 없으면 '해당 조건 미제공'(문의 버튼은 그대로), 견적 자체가 없으면 '별도문의'   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
                 var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 금융사 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
                 var set=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
                 set('pBase', base!=null?won(base)+'원':'차량가 문의');
@@ -827,7 +827,7 @@
                         return rec.trimId ? r.trimId === rec.trimId : (!r.trimId && r.brand===rec.brand && r.model===rec.model && r.year===rec.year && r.trim===rec.trim);
                     });
                     var others = list.filter(function(r){ return r.id !== rec.id; });
-                    function monthly(r, c){ var d=r.cost&&r.cost[c.dist]; if(!d) return null; var x=d[c.term]||d[Object.keys(d)[0]]; if(!x) return null; if(x[c.plan]!=null) return x[c.plan]>0?x[c.plan]:null; for(var p in x) return x[p]>0?x[p]:null; return null; }   // 페이지 표시값과 같은 규칙
+                    function monthly(r, c){ var x=r.cost&&r.cost[c.dist]&&r.cost[c.dist][c.term]; return (x&&x[c.plan]>0)?x[c.plan]:null; }   // 페이지 표시값과 같은 규칙(3호 ①: 칸 대체 없음)
                     var w = document.createElement('button'); w.type = 'button'; w.className = 'detail_samestock' + (others.length ? '' : ' is-empty');
                     w.innerHTML = '<span class="dss_t">같은 차량 다른 재고</span><span class="dss_n">'+(others.length ? others.length+'대' : '없음')+'</span>'+(others.length ? '<span class="dss_go">'+CHEV+'</span>' : '');
                     if (!others.length) { w.disabled = true; w.hidden = true; }   // 다른 재고 없으면 줄 자체를 숨김 (사용성 점검 261014)
@@ -839,7 +839,7 @@
                             ssPop.body.innerHTML = '<p class="opt_sec">'+esc(VM.carName(rec)+' · '+name)+' · '+list.length+'대</p>' + list.map(function (r) {
                                 var on = r.id === rec.id, m = monthly(r, c), oc = window.CHAQ_UTIL.splitOpts(r).opts.length;   // 할인 항목은 옵션 수에서 제외
                                 return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+esc([r.ext, r['int']].filter(Boolean).join(' / ') || '색상 정보 없음')+(on?' <small>현재</small>':'')+
-                                    '<small class="ss_sub">'+esc(r.year||'')+' · 옵션 '+oc+'개</small></span><em>'+(m!=null?'월 '+won(m)+'원':'별도문의')+'</em></button>';
+                                    '<small class="ss_sub">'+esc(r.year||'')+' · 옵션 '+oc+'개</small></span><em>'+(m!=null?'월 '+won(m)+'원':'해당 조건 미제공')+'</em></button>';
                             }).join('');
                             ssPop.open();
                         });
