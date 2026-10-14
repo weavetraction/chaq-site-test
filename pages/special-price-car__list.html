@@ -172,6 +172,11 @@
                 var t = rec.cost && rec.cost[c.dist] && rec.cost[c.dist][c.term];
                 return (t && t[c.plan] > 0) ? t[c.plan] : null;
             }
+            function monthlyCapped(rec, c) {   // 3호 ③ 거리 상한: 이 칸과 더 긴 거리 칸 중 최저 (상세 페이지와 같은 금액)
+                var m = monthlyExact(rec, c);
+                ['2','3'].forEach(function(d){ if (+d <= +c.dist) return; var x = monthlyExact(rec, {term:c.term, plan:c.plan, dist:d}); if (x != null && (m == null || x < m)) m = x; });
+                return m;
+            }
 
             var F = {brand:null, model:null, trim:null, all:false};   // 레거시: 이름 문자열 / 차량 데이터 모드: brandId, modelId, 등급 묶음 key · all = '전체 보기'
             // ★ 차량 모델 선택 = 차량 데이터(Vehicle Master) 기준: 견적이 없는 차량도 모두 선택 가능, 숫자 = 이 목록의 견적 차량 수(0대 가능)
@@ -250,11 +255,11 @@
 
             // 목록 월 납입금: 견적조회는 고른 조건 그대로의 칸만(다른 조건 값으로 대신하지 않음), 재고특가·빠른인도는 기존 규칙
             var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
-            function mOf(r,c){ return isEstimate ? monthlyExact(r,c) : monthly(r,c); }
+            function mOf(r,c){ return isEstimate ? monthlyCapped(r,c) : monthly(r,c); }
             function estPerTrim(arr, c){   // 견적조회 목록: 같은 트림의 금융사별 견적 중 최저가 1개 (실견적 우선, 없으면 딜리버 기준가)
                 var by = {}, order = [];
                 arr.forEach(function(r){
-                    var k = r.trimId || r.id, m = monthlyExact(r,c), est = isEF(r), cur = by[k];
+                    var k = r.trimId || r.id, m = monthlyCapped(r,c), est = isEF(r), cur = by[k];
                     if (!cur) { order.push(k); by[k] = { r: r, m: m, est: est }; return; }
                     var better = (m!=null && cur.m==null) || (m!=null && cur.est && !est) || (m!=null && cur.est === est && m < cur.m);
                     if (better) by[k] = { r: r, m: m, est: est };
@@ -316,8 +321,8 @@
                     // 견적조회 = 같은 차량의 금융사별 견적 중 '고른 조건 그대로'의 최저가 (다른 조건 값으로 대신하지 않음)
                     // 실견적(금융사) 우선 — '딜리버 기준가(추정)' 행(DC-70)은 같은 조건에 실견적이 하나도 없을 때만
                     var best=null, bestM=Infinity;
-                    arr.forEach(function(r){ if(isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
-                    if(!best) arr.forEach(function(r){ if(!isEF(r)) return; var m=monthlyExact(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    arr.forEach(function(r){ if(isEF(r)) return; var m=monthlyCapped(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
+                    if(!best) arr.forEach(function(r){ if(!isEF(r)) return; var m=monthlyCapped(r,c); if(m!=null && m<bestM){bestM=m; best=r;} });
                     var bestEst = !!(best && isEF(best));
                     if (!best && USE_VM && F.model) {   // 견적 데이터가 없는 차량 → 월 납입금 '별도문의'
                         var eg = F.trim ? TG.groupByKey(F.model, F.trim) : null, er = eg ? { g: eg, tid: groupRep(eg) } : modelRep(F.model);

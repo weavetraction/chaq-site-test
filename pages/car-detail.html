@@ -622,11 +622,18 @@
             var isEF = (window.CHAQ_UTIL||{}).isEstFin || function(){ return false; };
             // 실견적(금융사) 행 우선 — '딜리버 기준가(추정)'(DC-70, #39) 행은 그 조건에 실견적이 없을 때만 고른다
             function pickEst(c){ var b=null,bm=Infinity; EST_POOL.forEach(function(r){ if(isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); if(!b) EST_POOL.forEach(function(r){ if(!isEF(r)) return; var m=exactCost(r,c); if(m!=null&&m<bm){bm=m;b=r;} }); return b; }
+            // 3호 ③ 거리 상한: 표시 월납(거리 d) = min(d 칸 최저, d보다 긴 거리 칸 최저). 긴 거리가 이기면 그 행·그 거리로 안내(약정거리 = 긴 거리)
+            var EFF = null;   // 실제로 고른 칸 {term, plan, dist} — 거리 상한으로 긴 거리가 고를 수 있음
+            function pickCapped(c){
+                var b=pickEst(c), bm=b?exactCost(b,c):null, bc=c;
+                ['2','3'].forEach(function(d){ if(+d<=+c.dist) return; var cc={term:c.term,plan:c.plan,dist:d}, x=pickEst(cc), xm=x?exactCost(x,cc):null; if(xm!=null && (bm==null || xm<bm)){ b=x; bm=xm; bc=cc; } });
+                return b ? {r:b, m:bm, c:bc} : null;
+            }
             function monthly(c){
-                if(EST_POOL){ var b=pickEst(c); if(b){ rec=b; window.CHAQ_DETAIL_QUOTE=b; } return b?exactCost(b,c):null; }   // 문의도 이 견적(금융사)으로 저장
+                if(EST_POOL){ var pk=pickCapped(c); EFF = pk ? pk.c : c; if(pk){ rec=pk.r; window.CHAQ_DETAIL_QUOTE=pk.r; } return pk?pk.m:null; }   // 문의도 이 견적(금융사)으로 저장
                 return exactCost(rec,c); }   // 3호 ①: 빈 칸은 다른 기간·초기비용 값으로 대체하지 않음 → '해당 조건 미제공'
             function resid(c){
-                if(EST_POOL){ var d0=rec.resid&&rec.resid[c.dist]; return (d0&&d0[c.term]!=null)?d0[c.term]:null; }   // 최저가로 고른 견적의 같은 거리·기간 잔가만
+                if(EST_POOL){ var ec=EFF||c, d0=rec.resid&&rec.resid[ec.dist]; return (d0&&d0[ec.term]!=null)?d0[ec.term]:null; }   // 최저가로 고른 견적의 같은 거리(거리 상한 적용)·기간 잔가만
                 var d=rec.resid&&rec.resid[c.dist]; return (d&&d[c.term]!=null)?d[c.term]:null; }
             function readCond(){
                 function on(g){ var b=document.querySelector('.detail_conds .filter_chip[data-group="'+g+'"].on'); return b?b.textContent:''; }
@@ -648,6 +655,7 @@
                     if(hm){ hm.innerHTML='별도문의'; hm.style.color='#8a8f96'; }
                     if(cm){ cm.textContent='별도문의'; cm.style.color='#8a8f96'; }
                     if(acqEl){ acqEl.textContent='상담 시 안내'; acqEl.style.color='#8a8f96'; }
+                    ['distHint','optRowHint'].forEach(function(id){ var h=document.getElementById(id); if(h) h.remove(); });
                     return;
                 }
                 if(hm) hm.style.color='';
@@ -655,8 +663,18 @@
                 if(acqEl) acqEl.style.color='';
                 var m=monthly(c), rv=resid(c);
                 // 견적조회 옵션 증분 역산(07-1 v1.7): 행에 옵션증분계수(optCoef, 원/100만원)가 있으면 선택 옵션·색상 추가금만큼 월 납입금·잔가를 예상값으로 올림. 계수가 없으면 기본 사양 월납 그대로(옵션 미반영 안내)
-                var extra0=selExtra(), kc=(EST_POOL && rec.optCoef && rec.optCoef[c.dist] && rec.optCoef[c.dist][c.term]) ? rec.optCoef[c.dist][c.term][c.plan] : null;
-                var estimated=false, estKind=null;
+                var ec = (EST_POOL && EFF) ? EFF : c, distUp = !!(EST_POOL && m!=null && ec.dist!==c.dist);
+                window.CHAQ_DETAIL_DIST_UP = distUp ? ec.dist : null;   // 문의 스냅샷: 약정거리 = 긴 거리
+                function coefOf(r){ var o=r.optCoef&&r.optCoef[ec.dist]&&r.optCoef[ec.dist][ec.term]; return o ? o[ec.plan] : null; }
+                var extra0=selExtra(), kc=(EST_POOL && m!=null) ? coefOf(rec) : null;
+                var estimated=false, estKind=null, optSwitch=false, optAsk=false;
+                if(EST_POOL && m!=null && extra0>0 && kc==null){
+                    // 3호 ②: 고른 최저 행에 옵션증분계수가 없으면 → 같은 트림·같은 칸에서 계수 있는 행들의 '옵션 포함 월납' 최저로 전환, 하나도 없으면 상담 시 확정
+                    var alt=null, am=Infinity;
+                    EST_POOL.forEach(function(r){ var b0=exactCost(r,ec), k0=coefOf(r); if(b0==null||k0==null) return; var v=b0+Math.round(extra0/1e6*k0/10)*10; if(v<am){ am=v; alt=r; } });
+                    if(alt){ rec=alt; window.CHAQ_DETAIL_QUOTE=alt; m=exactCost(alt,ec); rv=resid(c); kc=coefOf(alt); optSwitch=true; }
+                    else { m=null; optAsk=true; }
+                }
                 if(EST_POOL && m!=null && extra0>0 && kc!=null){
                     m = m + Math.round(extra0/1e6*kc/10)*10;
                     if(rv!=null && rec.base){ rv = Math.round(rv/rec.base*(rec.base+extra0)/100)*100; }
@@ -670,11 +688,15 @@
                     if(l1) l1.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월 납입금' : '예상 월 납입금') : '월 납입금';
                     if(l2) l2.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월납입금' : '예상 월납입금') : '선택 조건 월납입금';
                     var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent=(estKind==='coef')?'옵션 추가금을 반영한 예상 금액이에요.':'실견적과 다를 수 있어요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
+                    // 3호 ②·③ 안내 1줄씩 (조건이 바뀌면 다시 맞춤)
+                    function hintLine(id, t){ var h=document.getElementById(id); if(t){ if(!h && cm){ h=document.createElement('p'); h.id=id; h.className='est_hint'; cm.parentNode.appendChild(h); } if(h) h.textContent=t; } else if(h) h.remove(); }
+                    hintLine('distHint', distUp ? '연 '+ec.dist+'만km 약정 상품이 더 저렴해 이 조건으로 안내합니다.' : null);
+                    hintLine('optRowHint', optSwitch ? '옵션 포함 견적이 가능한 금융사 견적으로 안내합니다.' : null);
                     if(note) note.textContent = (EST_POOL && rec.optCoef) ? '선택한 옵션·색상 추가금은 차량 총가격과 월 납입금(예상)에 반영됩니다. 문의 시 실제 견적으로 확정돼요.' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.';
                 })();
                 animateNum(hm, m, true);
                 animateNum(cm, m, false);
-                if(m==null){ var noCell = EST_POOL ? EST_POOL.some(function(r){ return r.cost; }) : !!(rec && rec.cost), nt = noCell ? '해당 조건 미제공' : '별도문의'; if(hm){ hm.innerHTML=nt; hm.style.color="#8a8f96"; } if(cm){ cm.textContent=nt; cm.style.color="#8a8f96"; } }   // 3호 ①: 견적은 있는데 이 칸만 없으면 '해당 조건 미제공'(문의 버튼은 그대로), 견적 자체가 없으면 '별도문의'   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
+                if(m==null){ var noCell = EST_POOL ? EST_POOL.some(function(r){ return r.cost; }) : !!(rec && rec.cost), nt = optAsk ? '옵션 포함 견적은 상담 시 확정' : noCell ? '해당 조건 미제공' : '별도문의'; if(hm){ hm.innerHTML= optAsk ? '별도문의' : nt; hm.style.color="#8a8f96"; } if(cm){ cm.textContent=nt; cm.style.color="#8a8f96"; } }   // 3호 ①: 견적은 있는데 이 칸만 없으면 '해당 조건 미제공'(문의 버튼은 그대로), 견적 자체가 없으면 '별도문의'   // 이 조건(예: 주행거리 1만 km)의 견적 금액 없음 → 별도문의
                 var base=rec.base; if(base==null && window.CHAQ_VM && rec.trimId && window.CHAQ_VM.getListPrice){ var lp2=window.CHAQ_VM.getListPrice(rec.trimId); if(lp2) base=lp2.price; }   // 금융사 견적 차량가 우선, 없으면 차량 데이터 트림 기본가
                 var set=function(id,v){var e=document.getElementById(id); if(e) e.textContent=v;};
                 set('pBase', base!=null?won(base)+'원':'차량가 문의');

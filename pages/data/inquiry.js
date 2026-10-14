@@ -36,7 +36,7 @@
     return {
       source: "DETAIL", kind: kind, recId: rec ? rec.id : null, trimId: (rec && rec.trimId) || (tm ? decodeURIComponent(tm) : null),
       carName: txt(".detail_header h1"), spec: txt(".detail_card .detail_year"), trimName: txt(".dts_name"),
-      conditions: { product: onChip("type"), term: (onChip("term").match(/\d+/) || [""])[0], plan: it.indexOf("보증") > -1 ? "b" : it.indexOf("선납") > -1 ? "s" : "0", dist: (onChip("dist").match(/(\d)만/) || [, ""])[1] },
+      conditions: { product: onChip("type"), term: (onChip("term").match(/\d+/) || [""])[0], plan: it.indexOf("보증") > -1 ? "b" : it.indexOf("선납") > -1 ? "s" : "0", dist: window.CHAQ_DETAIL_DIST_UP || (onChip("dist").match(/(\d)만/) || [, ""])[1] },   // 3호 ③: 거리 상한으로 긴 거리 상품이면 약정거리 = 긴 거리
       monthly: m ? Number(m) : null, options: opts.slice(0, 40), color: col, pageUrl: location.href.slice(0, 500),
       snapshot: snapshot(rec, kind),
     };
@@ -61,6 +61,7 @@
     var price = txt("#pTotal").replace(/[^\d]/g, ""), ext = txt('#optPop .opt_row.on[data-grp="color"] span') || (rec && rec.ext) || "";
     var o = { product: onChip("type") || "장기렌트", term: onChip("term"), plan: plan, dist: onChip("dist") ? "연 " + onChip("dist") : "", vehiclePrice: price ? Number(price) : null, basePrice: basePrice, estimated: window.CHAQ_DETAIL_ESTIMATED === true, estKind: window.CHAQ_DETAIL_ESTIMATED === true ? (window.CHAQ_DETAIL_EST_KIND || 'coef') : undefined, optionExtra: window.CHAQ_DETAIL_ESTIMATED === true ? Math.round(Number(window.CHAQ_DETAIL_OPT_EXTRA) || 0) : undefined,
       options: opts.slice(0, 40), ext: String(ext).slice(0, 80), int: String((rec && rec["int"]) || "").slice(0, 80), delivery: kind === "stock" ? "재고 차량 · 바로 출고" : kind === "fast" ? "빠른 인도" : "" };
+    if (window.CHAQ_DETAIL_DIST_UP) { o.dist = "연 " + window.CHAQ_DETAIL_DIST_UP + "만 km"; o.distanceUpgraded = true; }   // 3호 ③ 거리 상한: 약정거리 = 긴 거리
     // 이미지 주소는 '../' 없이 사이트 기준(assets/…)으로 — '../' 가 들어가면 AWS 방화벽(WAF)이 경로 공격으로 보고 문의 자체를 막음(261009 운영 확인)
     src = src.replace(/^(\.\.\/)+/, "").replace(/^\//, "");
     if (/^assets\/|^api\/pub\/media\/|^https:\/\//.test(src) && src.length <= 300) o.image = /^api\//.test(src) ? "/" + src : src;
