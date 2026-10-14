@@ -2715,3 +2715,17 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .detail_card:first-of-type .detail_car_visual{top:calc(26px + var(--nx,0px) + var(--iy,0px));right:16px;width:149px;height:99px}   /* #62 10% 축소(165×110→149×99) · 261014 위로 20%(46→26px, 차량명이 그림에 닿으면 --iy 만큼 차량명 아래로) */   /* 이미지 10% 크게(150×100→165×110) · 아래로 20%+20%(6→26→46px) */
 .local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:var(--trim-gap,31px)}
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag.dy_wrap{white-space:normal;word-break:keep-all}   /* #60 혼자 있어도 차 그림에 닿는 아주 긴 유종: 태그 안에서 줄바꿈 */
+
+/* 261014 대표: 연한 초록으로 강조되던 선택 칸(옵션·색상·같은 차량 다른 재고·등급 팝업의 현재/선택 행, 옵션 상세 '옵션 합계', 요약 카드 등급 칩) → 진한 회색 + 흰 글씨 */
+.local-car-detail .opt_row.on { background: #3a3d42; border-color: #3a3d42; color: #fff; }
+.local-car-detail .opt_row.on span,
+.local-car-detail .opt_row.on em,
+.local-car-detail .opt_row.on small,
+.local-car-detail .dts_pop .opt_row.on small,
+.local-car-detail .dts_pop .opt_row.on em small { color: #fff; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total { background: #3a3d42; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total span,
+.local-car-detail .opt_detail_pop .opt_row.opt_total em { color: #fff; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total small { color: rgba(255,255,255,.75); }
+.local-car-detail .detail_trimsel .dts_chip.on { border-color: #3a3d42; background: #3a3d42; color: #fff; }
+.local-car-detail .detail_trimsel .dts_chip.on small { color: #fff; }
