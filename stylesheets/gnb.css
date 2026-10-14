@@ -1,6 +1,6 @@
 /* 하단 GNB · 전체메뉴 공통 (#55) — 모든 페이지가 이 파일 하나로 같은 모양 (페이지별 GNB 스타일 사용 안 함)
    라벨 12.5px · 굵기 360(선택 630) = 기존 13px · 400/700 에서 0.5px·10% 줄임 */
-.chaq-gnb{position:fixed;bottom:0;left:50%;z-index:150;display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:var(--gnb-w,500px);height:calc(72px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;transform:translateX(-50%);border-top:1px solid #e6e9ec;background:rgba(255,255,255,.97);box-shadow:0 -3px 15px rgba(24,35,45,.04);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}
+.chaq-gnb{position:fixed;bottom:0;left:50%;z-index:150;display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:var(--gnb-w,500px);height:calc(72px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;transform:translateX(-50%);border-top:1px solid #e6e9ec;background:#fff;box-shadow:0 -2px 12px rgba(20,30,40,.08);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}
 .chaq-gnb>a,.chaq-gnb>button{position:relative;display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;padding:0;border:0;background:transparent;color:#5f6670;font:inherit;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .chaq-gnb span{font-size:12.5px;font-weight:360;line-height:1.2;letter-spacing:0;white-space:nowrap}
 .chaq-gnb .is-on{color:#239e5a}

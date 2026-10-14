@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
+    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 */ function specTags(t){ return String(t||'').split(/\s*·\s*/).filter(Boolean).map(function(x){ return '<span class="dy_tag">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }).join(''); }</script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-car-detail">
@@ -395,9 +396,9 @@
             var name = d.fullName;
             document.querySelector('.detail_header h1').textContent = name;
             document.title = name+' · 차큐 셀프견적';
-            var h2=document.querySelector('.detail_card h2'); if(h2) h2.textContent=name;
+            var h2=document.querySelector('.detail_card h2'); if(h2) h2.textContent=(d.model && d.model.nameKo) || name;   // 요약 카드: 차량명만 (브랜드 제외, 상단 제목은 브랜드+차량명 그대로)
             var TGd = window.CHAQ_TRIM_GROUPS, spec = TGd ? TGd.specLine(trimId, pk ? pk.rec : null, false) : null;   // 카탈로그 표기: 연식 · 라인업 · 인승 · 구동 (세부 등급은 아래 '세부 등급' 줄)
-            var yr=document.querySelector('.detail_year'); if(yr) yr.textContent = spec || (qv ? ([qv.yearLabel, qv.trimLabel].filter(Boolean).join(' · ')) : (d.lineupName+' · '+d.trimName));
+            var yr=document.querySelector('.detail_year'); if(yr) yr.innerHTML = specTags(spec || (qv ? ([qv.yearLabel, qv.trimLabel].filter(Boolean).join(' · ')) : (d.lineupName+' · '+d.trimName)));
             // 색상: 외장(제조사 코드 data-color-code) + 내장
             var ext = useVM ? VM.getTrimColors(trimId,'EXTERIOR') : [], intc = useVM ? VM.getTrimColors(trimId,'INTERIOR') : [];
             // 이미지: 차큐 자체 제작 이미지(세대 × 외장색). 초기 색 = 재고 견적 색상(이름 일치) → 기본 색(추가금 0 첫 색) → 대표(default) → placeholder
@@ -493,9 +494,9 @@
             if (!VMQ) {
             document.querySelector('.detail_header h1').textContent = name;
             document.title = name+' · 차큐 셀프견적';
-            var h2=document.querySelector('.detail_card h2'); if(h2) h2.textContent=name;
+            var h2=document.querySelector('.detail_card h2'); if(h2) { var dsc = (window.CHAQ_VM && rec.trimId && window.CHAQ_VM.describe) ? window.CHAQ_VM.describe(rec.trimId) : null; h2.textContent = (dsc && dsc.model && dsc.model.nameKo) || rec.model || name; }   // 요약 카드: 차량명만
             var spec = (window.CHAQ_TRIM_GROUPS && rec.trimId) ? window.CHAQ_TRIM_GROUPS.specLine(rec.trimId, rec, false) : null;
-            var yr=document.querySelector('.detail_year'); if(yr) yr.textContent = spec || (rec.year+(rec.trim?(' · '+rec.trim):''));
+            var yr=document.querySelector('.detail_year'); if(yr) yr.innerHTML = specTags(spec || (rec.year+(rec.trim?(' · '+rec.trim):'')));
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
             // 이미지 우선순위: trim VERIFIED → lineup VERIFIED → 차큐 직접 이미지(rec.img) → placeholder  (rec.trimId 는 STEP 8 매핑 후 채워짐)
             var recCK = (window.CHAQ_VM && rec.trimId && (rec.ext || rec.extId)) ? (window.CHAQ_VM.colorKeyForQuote || window.CHAQ_VM.colorKeyByName)(rec.trimId, rec.ext, rec.extId) : null;   // 재고 실차 외장색 → 자체 제작 이미지 색상 (색상ID 우선, RL-19 #36)
