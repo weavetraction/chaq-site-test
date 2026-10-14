@@ -399,3 +399,7 @@ main{background:#fff}
 .menu-guides{transform:none;margin-bottom:22px}
 .menu-links a{min-height:76px}
 
+/* #55 공통 GNB(gnb.css): 메인은 앱 틀 폭 480px, 넓은 화면에서는 틀 안쪽 아래에 붙임 */
+:root{--gnb-w:480px}
+@media(min-width:700px){.chaq-gnb{bottom:22px;border-radius:0 0 18px 18px}}
+[hidden]{display:none!important}

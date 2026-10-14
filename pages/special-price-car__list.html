@@ -14,6 +14,7 @@
   <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+    <link rel="stylesheet" href="../stylesheets/gnb.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
@@ -64,13 +65,13 @@
             <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="privacy.html">개인정보처리방침</a></p>
         </footer>
 
-        <footer class="special_footer">
-            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
-            <button class="on" type="button" id="navStock" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
-            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
-            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
-            <button type="button" onclick="location.href='../index.html#menu'">•••<span>전체메뉴</span></button>
-        </footer>
+        <nav class="chaq-gnb" aria-label="하단 메뉴">
+          <a href="../index.html" data-gnb="home"><i class="gnb-ic"><img class="d" src="../assets/icons/home.svg" alt=""><img class="c" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></a>
+          <a id="navStock" class="is-on" aria-current="page" href="special-price-car__list.html" data-gnb="stock"><i class="gnb-ic"><img class="d" src="../assets/icons/special-gray.svg" alt=""><img class="c" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></a>
+          <a href="event__list__ing.html" data-gnb="event"><em class="gnb-badge">최대 100만원</em><i class="gnb-ic"><img class="d" src="../assets/icons/event.svg" alt=""><img class="c" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></a>
+          <a href="mypage.html" data-gnb="my"><i class="gnb-ic"><img class="d" src="../assets/icons/mypage.svg" alt=""><img class="c" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></a>
+          <button type="button" data-gnb-menu aria-haspopup="dialog"><i class="gnb-more" aria-hidden="true"></i><span>전체메뉴</span></button>
+        </nav>
 
         <div class="fpop" id="filterPop" aria-hidden="true">
             <div class="fpop_sheet">
@@ -140,7 +141,7 @@
             var titles = { estimate: '견적조회', fast: '빠른인도', stock: '특가차량' };
             document.querySelector('.special_header h1').textContent = titles[page];
             document.title = '차큐 ' + ({ estimate: '견적조회', fast: '빠른인도', stock: '재고특가' })[page];
-            var navStock = document.getElementById('navStock'); if (navStock && page !== 'stock') navStock.classList.remove('on');
+            var navStock = document.getElementById('navStock'); if (navStock && page !== 'stock') { navStock.classList.remove('is-on'); navStock.removeAttribute('aria-current'); }
             if (isEstimate) document.body.classList.add('view-estimate');
 
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
@@ -568,5 +569,6 @@
     </script>
     <script src="data/auth.js"></script>   <!-- 회원: 비회원 조건 변경 제한(5회) · 가입 시트 -->
     <script>/* 옛 견적 번호로 들어왔는데 같은 차량이 더 없을 때 (RL-30) */ (function(){ if(!/[?&]moved=1/.test(location.search)) return; setTimeout(function(){ var U=window.CHAQ_UTIL; if(U&&U.toast) U.toast('요청하신 견적은 마감됐어요. 지금 조건의 다른 차량을 확인해 보세요'); }, 600); })();</script>
+    <script src="data/gnb.js"></script>
 </body>
 </html>

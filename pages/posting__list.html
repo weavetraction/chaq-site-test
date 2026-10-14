@@ -14,6 +14,7 @@
   <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+    <link rel="stylesheet" href="../stylesheets/gnb.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
     <script src="data/analytics.js"></script>
@@ -39,13 +40,13 @@
             <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="privacy.html">개인정보처리방침</a></p>
         </footer>
 
-        <footer class="sub_footer">
-            <button type="button" onclick="location.href='../index.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/home.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></button>
-            <button type="button" onclick="location.href='special-price-car__list.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/special-gray.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></button>
-            <button type="button" onclick="location.href='event__list__ing.html'"><b>최대 100만원</b><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/event.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></button>
-            <button type="button" onclick="location.href='mypage.html'"><i class="gnb-icon-pair"><img class="gnb-icon-default" src="../assets/icons/mypage.svg" alt=""><img class="gnb-icon-color" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></button>
-            <button class="on" type="button" onclick="location.href='../index.html#menu'"><i class="nav_more">•••</i><span>전체메뉴</span></button>
-        </footer>
+        <nav class="chaq-gnb" aria-label="하단 메뉴">
+          <a href="../index.html" data-gnb="home"><i class="gnb-ic"><img class="d" src="../assets/icons/home.svg" alt=""><img class="c" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></a>
+          <a href="special-price-car__list.html" data-gnb="stock"><i class="gnb-ic"><img class="d" src="../assets/icons/special-gray.svg" alt=""><img class="c" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></a>
+          <a href="event__list__ing.html" data-gnb="event"><em class="gnb-badge">최대 100만원</em><i class="gnb-ic"><img class="d" src="../assets/icons/event.svg" alt=""><img class="c" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></a>
+          <a href="mypage.html" data-gnb="my"><i class="gnb-ic"><img class="d" src="../assets/icons/mypage.svg" alt=""><img class="c" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></a>
+          <button type="button" data-gnb-menu aria-haspopup="dialog"><i class="gnb-more" aria-hidden="true"></i><span>전체메뉴</span></button>
+        </nav>
     </div>
 
     <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/content.js"><\/script>');})();</script>
@@ -67,5 +68,6 @@
             }).join('');
         })();
     </script>
+    <script src="data/gnb.js"></script>
 </body>
 </html>
