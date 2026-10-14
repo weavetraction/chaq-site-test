@@ -2705,11 +2705,10 @@ html.chaq-detail-loading .local-car-detail::after{
 [hidden]{display:none!important}
 
 /* #55 차량 상세 요약 카드: 차량명·연식/사양·이미지 위치 고정 (차량마다 글자 길이가 달라도 움직이지 않음)
-   차량명 1줄(길면 글자 크기를 줄여 맞춤 → 그래도 길면 …) · 연식/사양 2줄 칸 고정 · 이미지 우측 상단 고정
-   트림 바(검은색)부터 아래 전체: 기존 최대 위치(카드 위에서 107px)보다 15% 아래(123px)로 */
+   차량명: 위 기준 고정, 자르지 않음(길면 줄바꿈) · 연식/사양: 차량명 바로 아래(이름이 두 줄이면 그만큼 내려감) · 이미지 우측 상단 고정
+   트림 바(검은색)부터 아래 전체: 기본 위치 123px(기존 최대 107px의 115%), 이름·사양이 길면 그만큼 아래로 */
 .local-car-detail .detail_card:first-of-type{position:relative}
-.local-car-detail .detail_card:first-of-type > h2{height:30px;margin:6px 0 4px;line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.local-car-detail .detail_card:first-of-type > .detail_year{display:-webkit-box;height:32px;margin:0;line-height:16px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;word-break:keep-all}
+.local-car-detail .detail_card:first-of-type > h2{min-height:30px;margin:6px 0 4px;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.local-car-detail .detail_card:first-of-type > .detail_year{margin:0;line-height:16px;word-break:keep-all}
 .local-car-detail .detail_card:first-of-type .detail_car_visual{top:6px;right:16px;width:150px;height:100px}
-.local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:31px}
-.local-car-detail .detail_card:first-of-type > h2.is-2line{display:-webkit-box;font-size:14.5px;line-height:15px;white-space:normal;word-break:keep-all;-webkit-box-orient:vertical;-webkit-line-clamp:2;text-overflow:clip}
+.local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:var(--trim-gap,31px)}
