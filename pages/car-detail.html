@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
-    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function cardName(n){ var o=String(n||''), x=o.replace(/^일렉트리파이드\s+/,'').replace(/\s+(?:플러그인\s+)?하이브리드$/,'').replace(/\s+(?:일렉트릭|EV)$/,'').trim(); return x||o; }   // 요약 카드 차량명: 연료 수식어(하이브리드·플러그인 하이브리드·일렉트릭·EV·일렉트리파이드) 제외 — 연료는 태그로 표시
+    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function cardName(n){ var o=String(n||''), x=o.replace(/(^|\s)(?:플러그인\s+)?하이브리드(?=\s|$)/g,' ').replace(/(^|\s)(?:일렉트릭|일렉트리파이드|EV)(?=\s|$)/g,' ').replace(/\s{2,}/g,' ').trim(); return x||o; }   // 요약 카드 차량명: 연료 수식어(하이브리드·플러그인 하이브리드·일렉트릭·EV·일렉트리파이드) 제외 — 연료는 태그로 표시
  function specFuel(id){ var vm=window.CHAQ_VM, t=id&&vm&&vm.getTrim&&vm.getTrim(id), l=t&&vm.getLineup&&vm.getLineup(t.lineupId); return l&&l.fuelType||null; } function specTags(t,ft){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x,g){ return '<span class="dy_tag" data-g="'+g+'">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; p=p.map(function(x){ return /하이브리드/.test(x) ? (/플러그인/.test(x) ? '플러그인 하이브리드' : '하이브리드') : x; });
  var hx=''; if((ft==='HEV'||ft==='PHEV') && !p.slice(1).some(function(x){ return /하이브리드/.test(x); })){ var hl = ft==='PHEV' ? '플러그인 하이브리드' : '하이브리드', hm=/^(?:가솔린|디젤|LPG|터보|\S*\d\.\d)/.test(p[1]||'') && /^.*?\d\.\d\s*(.*)$/.exec(p[1]); if(hm){ p[1]=hl; hx=hm[1]||''; } else p.splice(1,0,hl); }   // #60 보완: 라인업 이름이 엔진만('가솔린 2.0')인 하이브리드 라인업도 연료 유형으로 '하이브리드' 표기   // #60 하이브리드 유종은 엔진 표기 없이 '하이브리드'·'플러그인 하이브리드'만
  var r1=p.slice(0,2), r2=p.slice(2);
