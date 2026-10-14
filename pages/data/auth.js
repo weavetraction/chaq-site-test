@@ -52,14 +52,14 @@
     ".au .au_or{display:flex;align-items:center;gap:10px;margin:16px 0;color:#5f6670;font-size:12.5px}.au .au_or:before,.au .au_or:after{content:'';flex:1;height:1px;background:#e8eaed}" +
     ".au label.f{display:block;margin:0 0 10px;font-size:13px;font-weight:700;color:#3c4043}" +
     ".au .au_row{display:flex;gap:8px;margin-top:6px}.au input[type=tel],.au input[type=text]{flex:1;min-width:0;width:100%;padding:13px;border:1px solid #dadce0;border-radius:10px;font:inherit;font-size:15.5px;box-sizing:border-box;background:#fff;color:#202124}" +
-    ".au input:focus{outline:none;border-color:#18a85c}.au .au_btn2{flex:none;padding:0 14px;border:1px solid #18a85c;border-radius:10px;background:#fff;color:#18a85c;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}.au .au_btn2:disabled{opacity:.5;cursor:default}" +
+    ".au input:focus{outline:none;border-color:#18a85c}.au .au_btn2{flex:none;padding:0 14px;border:1px solid #1c1f23;border-radius:10px;background:#fff;color:#1c1f23;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}.au .au_btn2:disabled{opacity:.5;cursor:default}" +
     ".au .au_timer{margin:6px 0 0;color:#e5484d;font-size:12.5px}.au .au_hint{margin:6px 0 0;color:#5f6368;font-size:12.5px}" +
     ".au .au_agree{margin:16px 0 4px;padding:12px 14px;border-radius:12px;background:#f8f9fa;font-size:13.5px}.au .au_agree.need{outline:2px solid #e5484d}" +
     ".au .au_agree label{display:flex;gap:8px;align-items:flex-start;margin:6px 0;line-height:1.45;cursor:pointer}.au .au_agree label.all{margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid #e8eaed;font-weight:700}" +
     ".au .au_agree input{width:18px;height:18px;margin:1px 0 0;accent-color:#18a85c;flex:none}.au .au_agree a{margin-left:auto;color:#5f6670;font-size:12px;white-space:nowrap}" +
     ".au .au_agree small{display:block;color:#5f6670;font-size:12px;margin-top:2px}" +
     ".au .au_err{min-height:18px;margin:8px 0;color:#e5484d;font-size:13px;line-height:1.45}" +
-    ".au .au_go{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:#18a85c;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}.au .au_go:disabled{opacity:.55;cursor:default}" +
+    ".au .au_go{display:block;width:100%;padding:15px;border:0;border-radius:12px;background:#1c1f23;color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}.au .au_go:disabled{opacity:.55;cursor:default}" +
     ".au .au_kakao.is-off,.au .au_send.is-off{opacity:.45}.au .au_agree_hint{margin:6px 0 0;color:#5f6670;font-size:12px}" +
     ".au .au_note{margin:12px 0 0;color:#5f6670;font-size:12px;line-height:1.5;text-align:center}";
   var KAKAO_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3.5C6.75 3.5 2.5 6.86 2.5 11c0 2.65 1.74 4.98 4.37 6.31l-.9 3.3c-.08.3.26.54.52.37l3.93-2.6c.52.06 1.04.1 1.58.1 5.25 0 9.5-3.36 9.5-7.48S17.25 3.5 12 3.5z"/></svg>';

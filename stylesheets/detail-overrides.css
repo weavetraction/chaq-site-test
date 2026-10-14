@@ -592,7 +592,7 @@ body.local-special-list {
     height: 56px;
     border: 0;
     border-radius: 12px;
-    background: var(--detail-green);
+    background: #1c1f23;   /* 하단 팝업 버튼 검정(대표 261014) */
     color: #fff;
     font-weight: 700;
     cursor: pointer;
@@ -1518,7 +1518,7 @@ body.local-sub {
     height: 54px;
     border: 0;
     border-radius: 12px;
-    background: var(--detail-green);
+    background: #1c1f23;   /* 하단 팝업 버튼 검정(대표 261014) */
     color: #fff;
     font-weight: 700;
     cursor: pointer;
@@ -2708,10 +2708,10 @@ html.chaq-detail-loading .local-car-detail::after{
    차량명: 위 기준 고정, 자르지 않음(길면 줄바꿈) · 연식/사양: 차량명 바로 아래(이름이 두 줄이면 그만큼 내려감) · 이미지 우측 상단 고정
    트림 바(검은색)부터 아래 전체: 기본 위치 123px(기존 최대 107px의 115%), 이름·사양이 길면 그만큼 아래로 */
 .local-car-detail .detail_card:first-of-type{position:relative}
-.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(44px + var(--nx,0px) + var(--nd,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
-.local-car-detail .detail_card:first-of-type > .detail_year{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:calc(26px + var(--nx,0px) + var(--nd,0px)) 0 0;line-height:16px;word-break:keep-all}
+.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(84px + var(--nx,0px) + var(--nd,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
+.local-car-detail .detail_card:first-of-type > .detail_year{/* 261014 차량명·태그 50% 아래로(+40px) · 태그 왼쪽 5%(-18px) */display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:calc(66px + var(--nx,0px) + var(--nd,0px)) 0 0 -18px;line-height:16px;word-break:keep-all}
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_row{display:flex;flex-wrap:nowrap;gap:4px}   /* #59 첫 줄 연식·유종, 둘째 줄 구동 */
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid #e3e6ea;border-radius:7px;background:#fff;color:#4a5058;font-size:12px;font-weight:500;line-height:1.35;white-space:nowrap}
-.local-car-detail .detail_card:first-of-type .detail_car_visual{top:calc(46px + var(--nx,0px));right:16px;width:149px;height:99px}   /* #62 10% 축소(165×110→149×99) */   /* 이미지 10% 크게(150×100→165×110) · 아래로 20%+20%(6→26→46px) */
+.local-car-detail .detail_card:first-of-type .detail_car_visual{top:calc(26px + var(--nx,0px) + var(--iy,0px));right:16px;width:149px;height:99px}   /* #62 10% 축소(165×110→149×99) · 261014 위로 20%(46→26px, 차량명이 그림에 닿으면 --iy 만큼 차량명 아래로) */   /* 이미지 10% 크게(150×100→165×110) · 아래로 20%+20%(6→26→46px) */
 .local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:var(--trim-gap,31px)}
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag.dy_wrap{white-space:normal;word-break:keep-all}   /* #60 혼자 있어도 차 그림에 닿는 아주 긴 유종: 태그 안에서 줄바꿈 */

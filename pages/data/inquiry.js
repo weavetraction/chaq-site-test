@@ -192,7 +192,7 @@
     ".iqf details{margin:0 0 14px;font-size:12px;color:#5f6368;line-height:1.55}.iqf details summary{cursor:pointer;color:#5f6368;text-decoration:underline}.iqf details dl{margin:6px 0 0;padding:10px 12px;border-radius:10px;background:#f8f9fa}.iqf details dt{font-weight:700;color:#3c4043}.iqf details dd{margin:0 0 6px}" +
     ".iqf .iqf_err{min-height:18px;margin:0 0 8px;color:#e5484d;font-size:13px}" +
     ".iqf .iqf_btns{display:flex;gap:8px}.iqf button{font:inherit;cursor:pointer;border-radius:12px;padding:14px;font-size:15.5px;font-weight:700;border:0}" +
-    ".iqf .iqf_close{flex:0 0 96px;background:#f1f3f4;color:#3c4043}.iqf .iqf_send{flex:1;background:#18a85c;color:#fff}.iqf .iqf_send:disabled{opacity:.6;cursor:default}" +
+    ".iqf .iqf_close{flex:0 0 96px;background:#f1f3f4;color:#3c4043}.iqf .iqf_send{flex:1;background:#1c1f23;color:#fff}.iqf .iqf_send:disabled{opacity:.6;cursor:default}" +
     ".iqf .iqf_done{text-align:center;padding:10px 0 4px}.iqf .iqf_done i{display:inline-flex;width:56px;height:56px;margin-bottom:12px;border-radius:50%;background:#e8f7ef;color:#18a85c;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:800}" +
     ".iqf .iqf_done p{margin:0 0 6px;color:#5f6368;font-size:14px;line-height:1.55}.iqf .iqf_done a{color:#18a85c;font-weight:700}.iqf .iqf_hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}";
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }

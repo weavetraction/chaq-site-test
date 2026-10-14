@@ -207,6 +207,7 @@
             function vmCount(pred){ var n=0; records.forEach(function(r){ var k=VMK[r.id]; if(k && pred(k)) n++; }); return n; }
             function vmImg(tid){ try { return (tid && VM.resolveImageUrl(tid,[PH],true)) || PH; } catch(e){ return PH; } }
             var escT = window.CHAQ_UTIL.esc;
+            function estName(r){ var d=(window.CHAQ_VM && r && r.trimId && window.CHAQ_VM.describe) ? window.CHAQ_VM.describe(r.trimId) : null, o=String((d && d.model && d.model.nameKo) || (r && r.model) || carName(r) || ''), x=o.replace(/(^|\s)(?:플러그인\s+)?하이브리드(?=\s|$)/g,' ').replace(/(^|\s)(?:일렉트릭|일렉트리파이드|EV)(?=\s|$)/g,' ').replace(/\s{2,}/g,' ').trim(); return escT(x||o); }   // 견적조회 등급 선택 카드 차명 = 상세 요약 카드와 같은 규칙(모델명만 · 연료 수식어 제외)
             function carNameH(r){ return (window.CHAQ_VM && window.CHAQ_VM.carNameHtml) ? window.CHAQ_VM.carNameHtml(r) : escT(carName(r)); }   // 카드 차명: 길면 '브랜드 모델 / 세부 모델' 두 줄
             function carName(r){ return (window.CHAQ_VM && window.CHAQ_VM.carName) ? window.CHAQ_VM.carName(r) : (r.brand+' '+r.model); }   // 카탈로그 차명 (차량 데이터 연결 시)
             function trimTag(r){   // 재고특가·빠른인도 카드: 옵션 태그 옆 세부 등급 태그 (차량 데이터 트림명, 묶음에 나온 구동·인승 표기 제외)
@@ -327,7 +328,7 @@
                             estEl.innerHTML =
                                 '<span class="est_type">장기렌트</span>'+
                                 '<div class="est_visual"><img src="'+escT(vmImg(er.tid))+'" alt=""></div>'+
-                                '<strong class="est_name cn">'+carNameH({trimId: er.tid})+'</strong>'+
+                                '<strong class="est_name cn">'+estName({trimId: er.tid})+'</strong>'+
                                 '<span class="est_year">'+escT(F.trim ? (TG.basicLine ? TG.basicLine(er.tid) : er.g.label) : '전체 등급')+'</span>'+
                                 '<div class="est_bottom"><div class="est_monthly"><small>월 납입금</small><b class="is-inquiry">별도문의</b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
                                 '<span class="est_tag">상담 시 금융사/렌트사 견적 안내</span></div>';
@@ -340,7 +341,7 @@
                     estEl.innerHTML =
                         '<span class="est_type">장기렌트</span>'+
                         '<div class="est_visual"><img src="'+carImg(best)+'" alt=""></div>'+
-                        '<strong class="est_name cn">'+carNameH(best)+'</strong>'+
+                        '<strong class="est_name cn">'+estName(best)+'</strong>'+
                         '<span class="est_year">'+escT((USE_VM && best.trimId && (TG.basicLine ? TG.basicLine(best.trimId, best) : TG.specLine(best.trimId, best))) || best.year || '')+'</span>'+
                         '<div class="est_bottom"><div class="est_monthly"><small>'+(bestEst?'예상 월 납입금':'월 납입금')+'</small><b>0<em>원</em></b>'+'<i class="est_go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></i>'+'</div>'+
                         (bestEst ? '<span class="est_tag est_tag_est">딜리버 기준가(추정) · 문의 시 실견적 확정</span>' : '<span class="est_tag">금융사/렌트사 실시간 최저가</span>')+'</div>';

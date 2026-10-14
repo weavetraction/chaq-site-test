@@ -100,7 +100,7 @@
                 </div>
             </div>
             <div class="detail_price_row total confirm-monthly">
-                <span>선택 조건 확정 월납입금</span>
+                <span>선택 조건 월납입금</span>
                 <strong>459,600원</strong>
             </div>
         </section>
@@ -363,7 +363,7 @@
                         });
                         html = '<p class="opt_sec">장착 옵션 ' + OP.items.length + '개</p>' + rows +
                             (OP.cnt ? '<div class="opt_row is-static opt_total"><span>옵션 합계' + (OP.cnt < OP.priceable ? ' <small>(금액 확인된 ' + OP.cnt + '개)</small>' : '') + '</span><em>' + OP.sum.toLocaleString('ko-KR') + '원</em></div>' : '') +
-                            discHtml + '<p class="opt_note">옵션 비용은 견적 금액 기준이며, 견적에 없는 항목은 공식 가격표의 옵션가입니다.' + (OP.items.some(function (it) { return it.other; }) ? ' 기타(…) 항목은 공식 가격표에 없는 옵션·용품이에요.' : '') + '</p>';
+                            discHtml + (OP.items.some(function (it) { return it.other; }) ? '<p class="opt_note">기타(…) 항목은 공식 가격표에 없는 옵션·용품이에요.</p>' : '');
                     }
                     detPop.querySelector('.opt_body').innerHTML = html || '<p class="opt_note">옵션 정보가 없습니다.</p>';
                     detPop.classList.add('is-open'); detPop.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden'; detPop.querySelector('.opt_body').scrollTop = 0;
@@ -668,8 +668,8 @@
                 (function(){ var lt=document.querySelector('.detail_includes .lowest-tag'); if(!lt) return; var want = baseEst ? '딜리버 기준가(추정)' : '금융사/렌트사 실시간 최저가'; if(lt.firstChild && lt.firstChild.nodeValue !== want){ lt.firstChild.nodeValue = want; lt.classList.toggle('is-est', baseEst); } })();
                 (function(){ var l1=document.querySelector('.detail_monthly small'), l2=document.querySelector('.confirm-monthly span'), note=document.getElementById('optPopNote');
                     if(l1) l1.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월 납입금' : '예상 월 납입금') : '월 납입금';
-                    if(l2) l2.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월납입금' : '예상 월납입금') : '선택 조건 확정 월납입금';
-                    var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent=(estKind==='coef')?'옵션 추가금을 반영한 예상 금액이에요. 문의하시면 실제 견적으로 확정돼요.':'실견적과 다를 수 있어요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
+                    if(l2) l2.textContent = estimated ? (estKind==='coef' ? '옵션 포함 예상 월납입금' : '예상 월납입금') : '선택 조건 월납입금';
+                    var hint=document.getElementById('estHint'); if(estimated){ if(!hint && cm){ hint=document.createElement('p'); hint.id='estHint'; hint.className='est_hint'; hint.textContent=(estKind==='coef')?'옵션 추가금을 반영한 예상 금액이에요.':'실견적과 다를 수 있어요. 문의하시면 실제 견적으로 확정돼요.'; cm.parentNode.appendChild(hint); } } else if(hint) hint.remove();
                     if(note) note.textContent = (EST_POOL && rec.optCoef) ? '선택한 옵션·색상 추가금은 차량 총가격과 월 납입금(예상)에 반영됩니다. 문의 시 실제 견적으로 확정돼요.' : '선택한 옵션·색상 추가금은 차량 총가격에 반영됩니다. 월 납입금은 금융사 견적(기본 사양) 기준입니다.';
                 })();
                 animateNum(hm, m, true);
@@ -932,6 +932,9 @@
             var vv = card.querySelector(':scope > .detail_car_visual'), nd = 0;
             if (h && vv) { var rg = document.createRange(); rg.selectNodeContents(h); var tr = rg.getBoundingClientRect().right, il = vv.getBoundingClientRect().left; if (tr > 0 && tr < il - 6) nd = 8; }
             card.style.setProperty('--nd', nd + 'px');
+            // 261014 이미지 20% 위·차량명 50% 아래로 겹치는 높이가 생김 → 차량명 글자가 '차 그림'에 닿으면 이미지를 차량명 바로 아래로(#58 차량명·이미지 안 닿게 유지)
+            card.style.setProperty('--iy', '0px');
+            if (h && vv) { var rn = document.createRange(); rn.selectNodeContents(h); if (hitsCar(rn.getBoundingClientRect(), vv)) card.style.setProperty('--iy', (60 + nd) + 'px'); }
             // #60 태그 줄 배치: 첫 줄 연식·유종, 다음 줄 구동 등. 태그가 '차 그림'에 닿으면 그 태그만 다음 줄로,
             //     혼자 있는 줄에서도 닿으면(아주 긴 유종) 태그 안에서 줄바꿈 — 매번 원래 순서에서 다시 배치
             var yy = card.querySelector(':scope > .detail_year'), tags = yy ? [].slice.call(yy.querySelectorAll('.dy_tag')) : [];
