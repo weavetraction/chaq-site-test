@@ -2708,8 +2708,9 @@ html.chaq-detail-loading .local-car-detail::after{
    차량명: 위 기준 고정, 자르지 않음(길면 줄바꿈) · 연식/사양: 차량명 바로 아래(이름이 두 줄이면 그만큼 내려감) · 이미지 우측 상단 고정
    트림 바(검은색)부터 아래 전체: 기본 위치 123px(기존 최대 107px의 115%), 이름·사양이 길면 그만큼 아래로 */
 .local-car-detail .detail_card:first-of-type{position:relative}
-.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(44px + var(--nx,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
-.local-car-detail .detail_card:first-of-type > .detail_year{display:flex;flex-wrap:wrap;gap:4px;margin:calc(26px + var(--nx,0px)) 0 0;line-height:16px;word-break:keep-all}
+.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(44px + var(--nx,0px) + var(--nd,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
+.local-car-detail .detail_card:first-of-type > .detail_year{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:calc(26px + var(--nx,0px) + var(--nd,0px)) 0 0;line-height:16px;word-break:keep-all}
+.local-car-detail .detail_card:first-of-type > .detail_year .dy_row{display:flex;flex-wrap:nowrap;gap:4px}   /* #59 첫 줄 연식·유종, 둘째 줄 구동 */
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid #e3e6ea;border-radius:7px;background:#fff;color:#4a5058;font-size:12px;font-weight:500;line-height:1.35;white-space:nowrap}
 .local-car-detail .detail_card:first-of-type .detail_car_visual{top:calc(46px + var(--nx,0px));right:16px;width:165px;height:110px}   /* 이미지 10% 크게(150×100→165×110) · 아래로 20%+20%(6→26→46px) */
 .local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:var(--trim-gap,31px)}

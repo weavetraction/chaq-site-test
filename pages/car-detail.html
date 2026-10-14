@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
-    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 */ function specTags(t){ return String(t||'').split(/\s*·\s*/).filter(Boolean).map(function(x){ return '<span class="dy_tag">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }).join(''); }</script>
+    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function specTags(t){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x){ return '<span class="dy_tag">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; var r1=p.slice(0,2), r2=p.slice(2); return '<span class="dy_row">'+r1.map(tag).join('')+'</span>'+(r2.length?'<span class="dy_row">'+r2.map(tag).join('')+'</span>':''); }</script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-car-detail">
@@ -903,7 +903,11 @@
     (function(){
         var IMG_GAP = 6, GAP = 16, card = document.querySelector('.detail_card');
         function place(){ if(!card) return;
-            var h = card.querySelector(':scope > h2'); if (h) { var nx = Math.max(0, Math.round(h.getBoundingClientRect().height) - 31); card.style.setProperty('--nx', nx + 'px'); }   // #58 차량명이 두 줄이면 그만큼만 카드 안쪽을 늘려 이름이 카드 밖으로 나가지 않게 (한 줄이면 0)
+            var h = card.querySelector(':scope > h2'); if (h) { var nx = Math.max(0, Math.round(h.getBoundingClientRect().height) - 31); card.style.setProperty('--nx', nx + 'px'); }
+            // #59 차량명이 이미지와 가로로 겹치지 않으면(이름 글자 오른쪽 끝 < 이미지 왼쪽) 차량명·태그를 8px 더 아래로
+            var vv = card.querySelector(':scope > .detail_car_visual'), nd = 0;
+            if (h && vv) { var rg = document.createRange(); rg.selectNodeContents(h); var tr = rg.getBoundingClientRect().right, il = vv.getBoundingClientRect().left; if (tr > 0 && tr < il - 6) nd = 8; }
+            card.style.setProperty('--nd', nd + 'px');   // #58 차량명이 두 줄이면 그만큼만 카드 안쪽을 늘려 이름이 카드 밖으로 나가지 않게 (한 줄이면 0)
             var y = card.querySelector(':scope > .detail_year'), t = card.querySelector(':scope > .detail_trimsel'), v = card.querySelector(':scope > .detail_car_visual'); if(!y || !t) return;
             var ct = card.getBoundingClientRect().top, yb = y.getBoundingClientRect().bottom - ct, top = v ? v.getBoundingClientRect().bottom - ct + IMG_GAP : 123;
             card.style.setProperty('--trim-gap', Math.max(GAP, Math.round(top - yb)) + 'px'); }
