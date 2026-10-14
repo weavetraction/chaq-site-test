@@ -32,8 +32,8 @@
             <div class="detail_car_visual">
                 <img src="../assets/icons/car-placeholder.svg" alt="">
             </div>
-            <p class="detail_year">2027년형 가솔린 터보 1.6 · H-Pick 2WD</p>
             <h2>현대 코나</h2>
+            <p class="detail_year">2027년형 가솔린 터보 1.6 · H-Pick 2WD</p>
             <!-- 컬러 태그: 차량 DB의 컬러칩(color-chip) 데이터 바인딩용 구조.
                  style의 background(색상값)와 data-color-code를 서버 컬러데이터로 채우면 됨 -->
             <div class="detail_tags detail_colors">
@@ -782,7 +782,7 @@
                       (t ? '<span class="dts_std">기본옵션 '+sc+'개<button type="button" class="dts_info" aria-label="기본옵션 상세 보기">i</button></span>' : '') +
                       (selectable ? '<span class="dts_go">'+CHEV+'</span>' : '') +
                     '</div>';
-                var anchor = document.querySelector('.detail_card > h2'); if (!anchor) return;   // 연식 태그가 차량명 위로 올라가서(#57) 차량명 바로 아래
+                var anchor = document.querySelector('.detail_card > .detail_year'); if (!anchor) return;   // #58: 차량명 → 태그 순서, 트림 바는 태그 바로 아래
                 anchor.parentNode.insertBefore(box, anchor.nextSibling);
                 // (i) 기본옵션 상세
                 var stdPop = null;
@@ -891,7 +891,7 @@
             if (!rec) { var D = window.CHAQ || {}, idm = (location.search.match(/[?&]id=([a-z0-9]+)/i) || [])[1]; rec = idm ? (D.stock || []).concat(D.fast || [], D.estimate || []).filter(function (r) { return r.id === idm; })[0] : null; }
             var tid = (rec && rec.trimId) || (tm ? decodeURIComponent(tm) : null), t = tid && VM.getTrim(tid); if (!t || t.status !== 'INACTIVE') return;
             var succ = VM.successorOf ? VM.successorOf(tid) : null; if (!succ) return;
-            var yr = document.querySelector('.detail_card > h2'); if (!yr || document.querySelector('.succ_link')) return;
+            var yr = document.querySelector('.detail_card > .detail_year'); if (!yr || document.querySelector('.succ_link')) return;
             var d = VM.describe(succ), label = d && d.lineup && d.lineup.modelYear ? d.lineup.modelYear + '년형 신형 보기' : '신형 보기';
             var a = document.createElement('a'); a.className = 'succ_link'; a.href = 'car-detail.html?trimId=' + encodeURIComponent(succ) + (/[?&]from=estimate/.test(location.search) ? '&from=estimate' : '');
             a.innerHTML = '<span>이전 연식 차량이에요.</span> ' + label.replace(/</g, '&lt;') + ' →';
@@ -902,7 +902,9 @@
     <script>/* #55·#57 요약 카드: 트림 바(검은색)는 차량 이미지 아래(이미지 칸 아래 끝 + 6px)에서 시작 — 차량명·태그가 더 길게 내려오면 그만큼만(16px 띄우고) 아래로 */
     (function(){
         var IMG_GAP = 6, GAP = 16, card = document.querySelector('.detail_card');
-        function place(){ if(!card) return; var y = card.querySelector(':scope > h2'), t = card.querySelector(':scope > .detail_trimsel'), v = card.querySelector(':scope > .detail_car_visual'); if(!y || !t) return;
+        function place(){ if(!card) return;
+            var h = card.querySelector(':scope > h2'); if (h) { var nx = Math.max(0, Math.round(h.getBoundingClientRect().height) - 31); card.style.setProperty('--nx', nx + 'px'); }   // #58 차량명이 두 줄이면 그만큼만 카드 안쪽을 늘려 이름이 카드 밖으로 나가지 않게 (한 줄이면 0)
+            var y = card.querySelector(':scope > .detail_year'), t = card.querySelector(':scope > .detail_trimsel'), v = card.querySelector(':scope > .detail_car_visual'); if(!y || !t) return;
             var ct = card.getBoundingClientRect().top, yb = y.getBoundingClientRect().bottom - ct, top = v ? v.getBoundingClientRect().bottom - ct + IMG_GAP : 123;
             card.style.setProperty('--trim-gap', Math.max(GAP, Math.round(top - yb)) + 'px'); }
         if(card && window.MutationObserver) new MutationObserver(place).observe(card,{childList:true,characterData:true,subtree:true});
