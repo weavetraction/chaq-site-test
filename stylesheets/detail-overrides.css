@@ -2708,24 +2708,25 @@ html.chaq-detail-loading .local-car-detail::after{
    차량명: 위 기준 고정, 자르지 않음(길면 줄바꿈) · 연식/사양: 차량명 바로 아래(이름이 두 줄이면 그만큼 내려감) · 이미지 우측 상단 고정
    트림 바(검은색)부터 아래 전체: 기본 위치 123px(기존 최대 107px의 115%), 이름·사양이 길면 그만큼 아래로 */
 .local-car-detail .detail_card:first-of-type{position:relative}
-.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(84px + var(--nx,0px) + var(--nd,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
-.local-car-detail .detail_card:first-of-type > .detail_year{/* 261014 차량명·태그 50% 아래로(+40px) · 태그 왼쪽 5%(-18px) */display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:calc(66px + var(--nx,0px) + var(--nd,0px)) 0 0 -18px;line-height:16px;word-break:keep-all}
+.local-car-detail .detail_card:first-of-type > h2{position:absolute;left:18px;right:18px;top:calc(64px + var(--nx,0px) + var(--nd,0px));transform:translateY(-100%);min-height:30px;margin:0;padding-right:0;line-height:28px;padding-top:1px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}   /* #58 차량명: 이미지 위쪽 한 줄(전체 폭), 아래 끝을 이미지 위(44px)에 맞춤 → 길어지면 위로 늘어남 */
+.local-car-detail .detail_card:first-of-type > .detail_year{/* 261014 차량명·태그 50% 아래로(+40px) · 태그 왼쪽 5%(-18px) */display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:calc(66px + var(--nx,0px) + var(--nd,0px)) 0 0 -10px;line-height:16px;word-break:keep-all}
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_row{display:flex;flex-wrap:nowrap;gap:4px}   /* #59 첫 줄 연식·유종, 둘째 줄 구동 */
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid #e3e6ea;border-radius:7px;background:#fff;color:#4a5058;font-size:12px;font-weight:500;line-height:1.35;white-space:nowrap}
 .local-car-detail .detail_card:first-of-type .detail_car_visual{top:calc(26px + var(--nx,0px) + var(--iy,0px));right:16px;width:149px;height:99px}   /* #62 10% 축소(165×110→149×99) · 261014 위로 20%(46→26px, 차량명이 그림에 닿으면 --iy 만큼 차량명 아래로) */   /* 이미지 10% 크게(150×100→165×110) · 아래로 20%+20%(6→26→46px) */
 .local-car-detail .detail_card:first-of-type > .detail_trimsel{margin-top:var(--trim-gap,31px)}
 .local-car-detail .detail_card:first-of-type > .detail_year .dy_tag.dy_wrap{white-space:normal;word-break:keep-all}   /* #60 혼자 있어도 차 그림에 닿는 아주 긴 유종: 태그 안에서 줄바꿈 */
 
-/* 261014 대표: 연한 초록으로 강조되던 선택 칸(옵션·색상·같은 차량 다른 재고·등급 팝업의 현재/선택 행, 옵션 상세 '옵션 합계', 요약 카드 등급 칩) → 진한 회색 + 흰 글씨 */
-.local-car-detail .opt_row.on { background: #3a3d42; border-color: #3a3d42; color: #fff; }
-.local-car-detail .opt_row.on span,
-.local-car-detail .opt_row.on em,
-.local-car-detail .opt_row.on small,
-.local-car-detail .dts_pop .opt_row.on small,
-.local-car-detail .dts_pop .opt_row.on em small { color: #fff; }
-.local-car-detail .opt_detail_pop .opt_row.opt_total { background: #3a3d42; }
-.local-car-detail .opt_detail_pop .opt_row.opt_total span,
-.local-car-detail .opt_detail_pop .opt_row.opt_total em { color: #fff; }
-.local-car-detail .opt_detail_pop .opt_row.opt_total small { color: rgba(255,255,255,.75); }
-.local-car-detail .detail_trimsel .dts_chip.on { border-color: #3a3d42; background: #3a3d42; color: #fff; }
-.local-car-detail .detail_trimsel .dts_chip.on small { color: #fff; }
+/* 261014 대표: 선택·현재 칸(옵션·색상·같은 차량 다른 재고·등급 팝업, 옵션 상세 '옵션 합계', 요약 카드 등급 칩) 배경 #f5f5f5 · 활성화된(선택·현재) 금액만 초록, 선택 안 된 칸 금액은 회색 */
+.local-car-detail .opt_row:not(.is-static):not(.on) em { color: #8a8f96; }
+.local-car-detail .opt_row.on { background: #f5f5f5; border-color: #3a3d42; color: #16181b; }
+.local-car-detail .opt_row.on span { color: #16181b; }
+.local-car-detail .opt_row.on em { color: var(--detail-green); }
+.local-car-detail .dts_pop .opt_row.on small { color: var(--detail-green); }
+.local-car-detail .dts_pop .opt_row.on em small { color: #5f6670; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total { background: #f5f5f5; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total span { color: #232733; }
+.local-car-detail .opt_detail_pop .opt_row.opt_total em { color: var(--detail-green); }
+.local-car-detail .opt_detail_pop .opt_row.opt_total small { color: #5f6670; }
+.local-car-detail .detail_trimsel .dts_chip.on { border-color: #3a3d42; background: #f5f5f5; color: #16181b; }
+.local-car-detail .detail_trimsel .dts_chip.on small { color: var(--detail-green); }
+.local-car-detail .dts_pop .ss_row.on .ss_sub { color: #5f6670; }

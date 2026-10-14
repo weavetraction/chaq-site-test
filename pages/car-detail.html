@@ -956,7 +956,7 @@
             card.style.setProperty('--nd', nd + 'px');
             // 261014 이미지 20% 위·차량명 50% 아래로 겹치는 높이가 생김 → 차량명 글자가 '차 그림'에 닿으면 이미지를 차량명 바로 아래로(#58 차량명·이미지 안 닿게 유지)
             card.style.setProperty('--iy', '0px');
-            if (h && vv) { var rn = document.createRange(); rn.selectNodeContents(h); if (hitsCar(rn.getBoundingClientRect(), vv)) card.style.setProperty('--iy', (60 + nd) + 'px'); }
+            if (h && vv) { var rn = document.createRange(); rn.selectNodeContents(h); if (hitsCar(rn.getBoundingClientRect(), vv)) card.style.setProperty('--iy', (40 + nd) + 'px'); }
             // #60 태그 줄 배치: 첫 줄 연식·유종, 다음 줄 구동 등. 태그가 '차 그림'에 닿으면 그 태그만 다음 줄로,
             //     혼자 있는 줄에서도 닿으면(아주 긴 유종) 태그 안에서 줄바꿈 — 매번 원래 순서에서 다시 배치
             var yy = card.querySelector(':scope > .detail_year'), tags = yy ? [].slice.call(yy.querySelectorAll('.dy_tag')) : [];
