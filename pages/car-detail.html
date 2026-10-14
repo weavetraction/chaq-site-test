@@ -18,7 +18,8 @@
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
-    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function specTags(t){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x){ return '<span class="dy_tag">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; var r1=p.slice(0,2), r2=p.slice(2); return '<span class="dy_row">'+r1.map(tag).join('')+'</span>'+(r2.length?'<span class="dy_row">'+r2.map(tag).join('')+'</span>':''); }</script>
+    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function specTags(t){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x,g){ return '<span class="dy_tag" data-g="'+g+'">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; p=p.map(function(x){ return /하이브리드/.test(x) ? (/플러그인/.test(x) ? '플러그인 하이브리드' : '하이브리드') : x; });   // #60 하이브리드 유종은 엔진 표기 없이 '하이브리드'·'플러그인 하이브리드'만
+ var r1=p.slice(0,2), r2=p.slice(2); return '<span class="dy_row">'+r1.map(function(x){ return tag(x,0); }).join('')+'</span>'+(r2.length?'<span class="dy_row">'+r2.map(function(x){ return tag(x,1); }).join('')+'</span>':''); }</script>
     <script src="data/analytics.js"></script>
 </head>
 <body class="local-car-detail">
@@ -902,16 +903,52 @@
     <script>/* #55·#57 요약 카드: 트림 바(검은색)는 차량 이미지 아래(이미지 칸 아래 끝 + 6px)에서 시작 — 차량명·태그가 더 길게 내려오면 그만큼만(16px 띄우고) 아래로 */
     (function(){
         var IMG_GAP = 6, GAP = 16, card = document.querySelector('.detail_card');
+        // #60 태그가 '차 그림'(이미지의 투명하지 않은 부분)에 실제로 닿는지 — 이미지 칸의 빈 여백은 겹쳐도 됨
+        var cv = document.createElement('canvas'), cx = null, cvSrc = '';
+        function hitsCar(tr, box){
+            var img = box.querySelector('img'), b = box.getBoundingClientRect();
+            if (tr.right <= b.left - 2) return false;                                  // 이미지 칸에도 안 닿음
+            if (!img || !img.complete || !img.naturalWidth) return true;               // 아직 그림을 모르면 안전하게 닿은 것으로
+            try {
+                var ib = img.getBoundingClientRect(), nw = img.naturalWidth, nh = img.naturalHeight, k = Math.min(ib.width / nw, ib.height / nh), dw = nw * k, dh = nh * k;
+                var ox = ib.right - dw, oy = ib.top + (ib.height - dh) / 2;              // object-fit:contain · object-position:right center
+                var x1 = Math.max(tr.left - 3, ox), y1 = Math.max(tr.top - 3, oy), x2 = Math.min(tr.right + 3, ox + dw), y2 = Math.min(tr.bottom + 3, oy + dh);
+                if (x2 <= x1 || y2 <= y1) return false;
+                if (cvSrc !== img.currentSrc) { cv.width = nw; cv.height = nh; cx = cv.getContext('2d'); cx.clearRect(0, 0, nw, nh); cx.drawImage(img, 0, 0); cvSrc = img.currentSrc; }
+                var sx = Math.floor((x1 - ox) / k), sy = Math.floor((y1 - oy) / k), sw = Math.max(1, Math.ceil((x2 - x1) / k)), sh = Math.max(1, Math.ceil((y2 - y1) / k));
+                var d = cx.getImageData(sx, sy, Math.min(sw, nw - sx), Math.min(sh, nh - sy)).data;
+                for (var i = 3; i < d.length; i += 4) if (d[i] > 40) return true;
+                return false;
+            } catch (e) { return true; }
+        }
+        var vimg = card && card.querySelector('.detail_car_visual img'); if (vimg) vimg.addEventListener('load', function(){ place(); });
         function place(){ if(!card) return;
             var h = card.querySelector(':scope > h2'); if (h) { var nx = Math.max(0, Math.round(h.getBoundingClientRect().height) - 31); card.style.setProperty('--nx', nx + 'px'); }
             // #59 차량명이 이미지와 가로로 겹치지 않으면(이름 글자 오른쪽 끝 < 이미지 왼쪽) 차량명·태그를 8px 더 아래로
             var vv = card.querySelector(':scope > .detail_car_visual'), nd = 0;
             if (h && vv) { var rg = document.createRange(); rg.selectNodeContents(h); var tr = rg.getBoundingClientRect().right, il = vv.getBoundingClientRect().left; if (tr > 0 && tr < il - 6) nd = 8; }
-            card.style.setProperty('--nd', nd + 'px');   // #58 차량명이 두 줄이면 그만큼만 카드 안쪽을 늘려 이름이 카드 밖으로 나가지 않게 (한 줄이면 0)
+            card.style.setProperty('--nd', nd + 'px');
+            // #60 태그 줄 배치: 첫 줄 연식·유종, 다음 줄 구동 등. 태그가 '차 그림'에 닿으면 그 태그만 다음 줄로,
+            //     혼자 있는 줄에서도 닿으면(아주 긴 유종) 태그 안에서 줄바꿈 — 매번 원래 순서에서 다시 배치
+            var yy = card.querySelector(':scope > .detail_year'), tags = yy ? [].slice.call(yy.querySelectorAll('.dy_tag')) : [];
+            if (yy && vv && tags.length) {
+                var mkRow = function(){ var r = document.createElement('span'); r.className = 'dy_row'; yy.appendChild(r); return r; };
+                tags.forEach(function(tg){ tg.classList.remove('dy_wrap'); tg.style.maxWidth = ''; });
+                yy.innerHTML = '';
+                var groups = [tags.filter(function(tg){ return tg.getAttribute('data-g') !== '1'; }), tags.filter(function(tg){ return tg.getAttribute('data-g') === '1'; })];
+                groups.forEach(function(gr){ if (!gr.length) return; var row = mkRow();
+                    gr.forEach(function(tg){
+                        row.appendChild(tg);
+                        if (row.children.length > 1 && hitsCar(tg.getBoundingClientRect(), vv)) { row = mkRow(); row.appendChild(tg); }
+                        if (row.children.length === 1 && hitsCar(tg.getBoundingClientRect(), vv)) { tg.classList.add('dy_wrap'); tg.style.maxWidth = Math.max(60, Math.floor(vv.getBoundingClientRect().left - tg.getBoundingClientRect().left - 6)) + 'px'; }
+                    });
+                });
+                if (mo) mo.takeRecords();   // 다시 배치한 변경으로 이 함수가 또 불리지 않게
+            }
             var y = card.querySelector(':scope > .detail_year'), t = card.querySelector(':scope > .detail_trimsel'), v = card.querySelector(':scope > .detail_car_visual'); if(!y || !t) return;
             var ct = card.getBoundingClientRect().top, yb = y.getBoundingClientRect().bottom - ct, top = v ? v.getBoundingClientRect().bottom - ct + IMG_GAP : 123;
             card.style.setProperty('--trim-gap', Math.max(GAP, Math.round(top - yb)) + 'px'); }
-        if(card && window.MutationObserver) new MutationObserver(place).observe(card,{childList:true,characterData:true,subtree:true});
+        var mo = (card && window.MutationObserver) ? new MutationObserver(place) : null; if (mo) mo.observe(card,{childList:true,characterData:true,subtree:true});
         window.addEventListener('resize', place); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(place); place();
     })();
     </script>
