@@ -8,16 +8,18 @@
   var inPages = /\/pages\//.test(location.pathname);
   var R = inPages ? "../" : "", P = inPages ? "" : "pages/", A = R + "assets/";
 
-  function banner() {
-    var HM = window.CHAQ_HOME, mb = HM && HM.midBanners && HM.midBanners[0];   // 관리자 '메인 화면' 중간 배너가 있으면 그것
-    if (mb && mb.img) { var img = String(mb.img); if (inPages && /^(assets|pages)\//.test(img)) img = "../" + img; return { img: img, href: mb.href || (P + "event__list__ing.html"), alt: mb.alt || "" }; }
-    return { img: A + "img/banner-cash.jpg?v=261014", href: P + "event__list__ing.html", alt: "최대 100만원 현금지원" };
+  function banners() {   // 메인 중간 배너와 같은 것: 관리자 '메인 화면' 중간 배너가 있으면 그것, 없으면 기본 2장 (현금지원 · 비교견적)
+    var HM = window.CHAQ_HOME, MB = HM && HM.midBanners || [];
+    var fix = function (u) { u = String(u || ""); return inPages && /^(assets|pages)\//.test(u) ? "../" + u : u; };
+    if (MB.length) return MB.filter(function (b) { return b && b.img; }).map(function (b) { return { img: fix(b.img), href: b.href ? fix(b.href) : "", alt: b.alt || "" }; });
+    return [{ img: A + "img/banner-cash.jpg?v=261014", href: P + "event__list__ing.html", alt: "최대 100만원 현금지원" },
+            { img: A + "img/banner-compare.jpg", href: P + "special-price-car__list.html?from=estimate", alt: "금융사 다이렉트 비교견적" }];
   }
   var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
   var menu = null, pushed = false;
   function build() {
     if (menu) return menu;
-    var b = banner();
+    var BN = banners();
     menu = document.createElement("section");
     menu.className = "cgm"; menu.id = "chaqMenu"; menu.setAttribute("aria-hidden", "true"); menu.setAttribute("role", "dialog"); menu.setAttribute("aria-label", "차큐 전체 서비스");
     menu.innerHTML =
@@ -33,9 +35,16 @@
           '<a href="' + P + 'special-price-car__list.html?from=fast"><img src="' + A + 'icons/fast-delivery.svg" alt=""><span><strong>빠른인도</strong><small>1주 이내 인도 가능한 장기렌트 차량</small></span></a>' +
           '<a href="' + P + 'event__list__ing.html"><img src="' + A + 'icons/release-event.svg" alt=""><span><strong>이벤트</strong><small>출고 이벤트 · 후기 이벤트</small></span></a>' +
         '</nav>' +
-        '<a class="cgm_cash" href="' + esc(b.href) + '"><img src="' + esc(b.img) + '" alt="' + esc(b.alt) + '" loading="lazy"></a>' +
+        '<a class="cgm_cash" href="' + esc(BN[0] && BN[0].href || (P + 'event__list__ing.html')) + '" aria-label="현금지원 이벤트">' +
+          '<span class="cgm_track">' + BN.map(function (x, i) { return '<span class="cgm_slide' + (i === 0 ? ' is-active' : '') + '" data-href="' + esc(x.href) + '"><img src="' + esc(x.img) + '" alt="' + esc(x.alt) + '"></span>'; }).join('') + '</span>' +
+          (BN.length > 1 ? '<span class="cgm_dots" aria-hidden="true">' + BN.map(function (_, i) { return '<i' + (i === 0 ? ' class="is-on"' : '') + '></i>'; }).join('') + '</span>' : '') +
+        '</a>' +
       '</div>';
     document.body.appendChild(menu);
+    // 배너: 메인과 같은 방식 — 3.5초마다 넘김, 누르면 지금 보이는 배너의 링크로
+    var cash = menu.querySelector('.cgm_cash'), sl = [].slice.call(cash.querySelectorAll('.cgm_slide')), dt = [].slice.call(cash.querySelectorAll('.cgm_dots i')), ci = 0;
+    if (sl.length > 1) setInterval(function () { sl[ci].classList.remove('is-active'); if (dt[ci]) dt[ci].classList.remove('is-on'); ci = (ci + 1) % sl.length; sl[ci].classList.add('is-active'); if (dt[ci]) dt[ci].classList.add('is-on'); }, 3500);
+    cash.addEventListener('click', function (e) { var h = sl[ci] && sl[ci].getAttribute('data-href'); e.preventDefault(); if (h) location.href = h; });
     menu.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-cgm-close]")) close(); });
     return menu;
   }
