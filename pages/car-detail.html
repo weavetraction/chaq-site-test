@@ -18,7 +18,8 @@
     <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
     <script src="data/api-config.js"></script>
     <script src="data/site-util.js"></script>
-    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function specFuel(id){ var vm=window.CHAQ_VM, t=id&&vm&&vm.getTrim&&vm.getTrim(id), l=t&&vm.getLineup&&vm.getLineup(t.lineupId); return l&&l.fuelType||null; } function specTags(t,ft){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x,g){ return '<span class="dy_tag" data-g="'+g+'">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; p=p.map(function(x){ return /하이브리드/.test(x) ? (/플러그인/.test(x) ? '플러그인 하이브리드' : '하이브리드') : x; });
+    <script>/* 요약 카드 연식·연료·구동: ' · ' 로 나눠 흰 둥근 태그로 — 첫 줄 연식·유종, 둘째 줄 구동(그 밖의 항목 포함) (#59) */ function cardName(n){ var o=String(n||''), x=o.replace(/^일렉트리파이드\s+/,'').replace(/\s+(?:플러그인\s+)?하이브리드$/,'').replace(/\s+(?:일렉트릭|EV)$/,'').trim(); return x||o; }   // 요약 카드 차량명: 연료 수식어(하이브리드·플러그인 하이브리드·일렉트릭·EV·일렉트리파이드) 제외 — 연료는 태그로 표시
+ function specFuel(id){ var vm=window.CHAQ_VM, t=id&&vm&&vm.getTrim&&vm.getTrim(id), l=t&&vm.getLineup&&vm.getLineup(t.lineupId); return l&&l.fuelType||null; } function specTags(t,ft){ var p=String(t||'').split(/\s*·\s*/).filter(Boolean), tag=function(x,g){ return '<span class="dy_tag" data-g="'+g+'">'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>'; }; p=p.map(function(x){ return /하이브리드/.test(x) ? (/플러그인/.test(x) ? '플러그인 하이브리드' : '하이브리드') : x; });
  var hx=''; if((ft==='HEV'||ft==='PHEV') && !p.slice(1).some(function(x){ return /하이브리드/.test(x); })){ var hl = ft==='PHEV' ? '플러그인 하이브리드' : '하이브리드', hm=/^(?:가솔린|디젤|LPG|터보|\S*\d\.\d)/.test(p[1]||'') && /^.*?\d\.\d\s*(.*)$/.exec(p[1]); if(hm){ p[1]=hl; hx=hm[1]||''; } else p.splice(1,0,hl); }   // #60 보완: 라인업 이름이 엔진만('가솔린 2.0')인 하이브리드 라인업도 연료 유형으로 '하이브리드' 표기   // #60 하이브리드 유종은 엔진 표기 없이 '하이브리드'·'플러그인 하이브리드'만
  var r1=p.slice(0,2), r2=p.slice(2);
  if(r1[1]){ var mx=/^(.*?\d\.\d)\s+(\S.*)$/.exec(r1[1]); if(mx) r1=[r1[0], mx[1], mx[2]]; } if(hx) r1.push(hx);   // #61 유종에 배기량 뒤 수식어가 붙으면(예: 가솔린 터보 3.5 / 48V 일렉트릭 슈퍼차저) 배기량 뒤로 태그 분리
@@ -400,7 +401,7 @@
             var name = d.fullName;
             document.querySelector('.detail_header h1').textContent = name;
             document.title = name+' · 차큐 셀프견적';
-            var h2=document.querySelector('.detail_card h2'); if(h2) h2.textContent=(d.model && d.model.nameKo) || name;   // 요약 카드: 차량명만 (브랜드 제외, 상단 제목은 브랜드+차량명 그대로)
+            var h2=document.querySelector('.detail_card h2'); if(h2) h2.textContent=cardName((d.model && d.model.nameKo) || name);   // 요약 카드: 차량명만 (브랜드 제외, 상단 제목은 브랜드+차량명 그대로)
             var TGd = window.CHAQ_TRIM_GROUPS, spec = TGd ? TGd.specLine(trimId, pk ? pk.rec : null, false) : null;   // 카탈로그 표기: 연식 · 라인업 · 인승 · 구동 (세부 등급은 아래 '세부 등급' 줄)
             var yr=document.querySelector('.detail_year'); if(yr) yr.innerHTML = specTags(spec || (qv ? ([qv.yearLabel, qv.trimLabel].filter(Boolean).join(' · ')) : (d.lineupName+' · '+d.trimName)), specFuel(trimId));
             // 색상: 외장(제조사 코드 data-color-code) + 내장
@@ -498,7 +499,7 @@
             if (!VMQ) {
             document.querySelector('.detail_header h1').textContent = name;
             document.title = name+' · 차큐 셀프견적';
-            var h2=document.querySelector('.detail_card h2'); if(h2) { var dsc = (window.CHAQ_VM && rec.trimId && window.CHAQ_VM.describe) ? window.CHAQ_VM.describe(rec.trimId) : null; h2.textContent = (dsc && dsc.model && dsc.model.nameKo) || rec.model || name; }   // 요약 카드: 차량명만
+            var h2=document.querySelector('.detail_card h2'); if(h2) { var dsc = (window.CHAQ_VM && rec.trimId && window.CHAQ_VM.describe) ? window.CHAQ_VM.describe(rec.trimId) : null; h2.textContent = cardName((dsc && dsc.model && dsc.model.nameKo) || rec.model || name); }   // 요약 카드: 차량명만
             var spec = (window.CHAQ_TRIM_GROUPS && rec.trimId) ? window.CHAQ_TRIM_GROUPS.specLine(rec.trimId, rec, false) : null;
             var yr=document.querySelector('.detail_year'); if(yr) yr.innerHTML = specTags(spec || (rec.year+(rec.trim?(' · '+rec.trim):'')), specFuel(rec.trimId));
             var PH = "../assets/icons/car-placeholder.svg";  // 차량 이미지 데이터 누락 시 표시할 플레이스홀더 아이콘
