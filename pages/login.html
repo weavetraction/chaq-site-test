@@ -63,7 +63,7 @@
     </div>
     <script src="data/auth.js"></script>
     <script>
-        /* 로그인·가입: 카카오 / 휴대폰 → 가입 시트(동의 포함) → 돌아갈 곳(?return=) 또는 마이페이지 */
+        /* 로그인·가입: 카카오(바로 카카오 동의 화면) / 휴대폰(가입 시트) → 돌아갈 곳(?return=) 또는 마이페이지 */
         (function () {
             var AU = window.CHAQ_AUTH, kb = document.getElementById('loginKakao'), ph = document.getElementById('joinPhone'), pb = document.getElementById('joinPhoneBtn'), box = document.querySelector('.login_phone'), or = document.querySelector('.login_or');
             var ret = (location.search.match(/[?&]return=([^&]+)/) || [])[1]; ret = ret ? decodeURIComponent(ret) : 'mypage.html';
@@ -77,7 +77,7 @@
                 if (!A.kakao) { kb.style.display = 'none'; if (or) or.style.display = 'none'; }
                 if (!A.sms) { box.style.display = 'none'; if (or) or.style.display = 'none'; }
             });
-            kb.addEventListener('click', open);
+            kb.addEventListener('click', function () { var A = (AU.state() || {}).auth || {}; if (A.kakao && !A.sms && AU.kakaoStart) AU.kakaoStart(); else open(); });   // 이 화면이 곧 가입 화면 — 시트 없이 바로 카카오 (약관 동의는 카카오 간편가입 화면, 대표 261015)
             ph.addEventListener('input', function () { var v = this.value.replace(/\D/g, '').slice(0, 11); this.value = v.length < 4 ? v : v.length < 8 ? v.slice(0, 3) + '-' + v.slice(3) : v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7); });
             pb.addEventListener('click', function () {
                 AU.open('mypage').then(goBack).catch(function () {});

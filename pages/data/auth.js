@@ -99,10 +99,12 @@
     bg.addEventListener("click", function (e) { if (e.target === bg) closeSheet(); });
     bg.querySelector(".au_x").addEventListener("click", closeSheet);
     bg.querySelector(".au_hbrowse").addEventListener("click", closeSheet);
-    bg.querySelector(".au_hk").addEventListener("click", function () {
-      if (pending) ss(SS_PEND, { action: pending.action, data: pending.data || null, url: location.href.split("#")[0], at: Date.now() });
-      location.href = BASE + "/api/auth/kakao/start?return=" + encodeURIComponent(location.href.split("#")[0]) + "&terms=0&privacy=0&marketing=0";   // 약관 동의는 카카오 동의 화면(카카오싱크 간편가입)에서 — 서버가 카카오 약관 동의 내역으로 가입 처리
-    });
+    bg.querySelector(".au_hk").addEventListener("click", function () { kakaoStart(pending); });
+  }
+  /** 카카오 로그인 시작 — 약관 동의는 카카오 동의 화면(카카오싱크 간편가입)에서, 서버가 카카오 약관 동의 내역으로 가입 처리 */
+  function kakaoStart(pending) {
+    if (pending) ss(SS_PEND, { action: pending.action, data: pending.data || null, url: location.href.split("#")[0], at: Date.now() });
+    location.href = BASE + "/api/auth/kakao/start?return=" + encodeURIComponent(location.href.split("#")[0]) + "&terms=0&privacy=0&marketing=0";
   }
   /** 가입·로그인 시트. mode: 'join' | 'phone'(카카오 회원 번호 확인) */
   function openSheet(reason, pending, mode) {
@@ -110,8 +112,8 @@
       closeSheet();
       if (!document.getElementById("auCss")) { var st = document.createElement("style"); st.id = "auCss"; st.textContent = CSS; document.head.appendChild(st); }
       var A = (state && state.auth) || {}, phoneOnly = mode === "phone", selfMode = phoneOnly && !A.sms, R = REASON[selfMode ? "phoneSelf" : phoneOnly ? "phone" : reason] || REASON.mypage;
-      // 카톡상담(견적 문의) 가입: 로그인 페이지와 같은 화면을 하단 시트로 — 동의는 카카오 연동 화면 + 아래 고지문으로 (대표 261015)
-      if (!phoneOnly && reason === "inquiry" && A.kakao && !A.sms) return heroSheet(pending, resolve, reject);
+      // 가입·로그인: 로그인 페이지와 같은 화면을 하단 시트로 — 체크박스 없음, 약관 동의는 카카오 동의 화면(카카오싱크 간편가입)에서 (대표 261015, 전 지점 통일)
+      if (!phoneOnly && A.kakao && !A.sms) return heroSheet(pending, resolve, reject);
       if (!A.alimtalk && R === REASON.inquiry) R = ["3초 가입하고 견적 상담받기", "가입하면 담당 매니저가 이 견적 그대로 카카오톡·전화로 상담을 도와드려요."];   // 알림톡 준비 전
       var bg = document.createElement("div"); bg.className = "au_bg";
       bg.innerHTML = '<div class="au" role="dialog" aria-modal="true" aria-labelledby="auTitle"><button type="button" class="au_x" aria-label="닫기">×</button>' +
@@ -297,7 +299,7 @@
     setTimeout(function () { var c = document.querySelectorAll(".cond_wrap .filter_chip")[p.data.idx]; if (c && !c.classList.contains("on")) { bypass = true; try { c.click(); } finally { bypass = false; } } }, 400);
   });
 
-  window.CHAQ_AUTH = { me: me, member: member, require: requireMember, requireLogin: requireLogin, open: function (r) { return me().then(function () { return openSheet(r || "mypage", null, "join"); }); }, logout: logout, api: api, withoutLimit: function (fn) { bypass = true; try { fn(); } finally { bypass = false; } }, get required() { return required(); }, state: function () { return state; } };
+  window.CHAQ_AUTH = { kakaoStart: function () { kakaoStart(null); }, me: me, member: member, require: requireMember, requireLogin: requireLogin, open: function (r) { return me().then(function () { return openSheet(r || "mypage", null, "join"); }); }, logout: logout, api: api, withoutLimit: function (fn) { bypass = true; try { fn(); } finally { bypass = false; } }, get required() { return required(); }, state: function () { return state; } };
   me(true);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", afterReturn); else afterReturn();
 })();
