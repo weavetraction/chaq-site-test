@@ -33,7 +33,7 @@ export async function sendQuoteAlimtalk(row: { id: number; report_token: string 
   if (!m.phone) return { ok: false, status: 0, text: "휴대폰 번호 없음" };
   const p = quoteParams(row.id, row.report_token, m, i);
   const url = reportUrl(row.report_token, i.pageUrl);
-  const lms = `[차큐] 견적서가 도착했어요\n\n- 차량: ${p.차량}\n- 상품구분: ${p.상품구분}\n- 이용기간: ${p.이용기간}\n- 초기비용: ${p.초기비용}\n- 연간주행거리: ${p.주행거리}\n- 월 납입금: ${p.월납입금}\n- 출고: ${p.출고}\n\n견적서 보기: ${url}\n문의 1533-5663 (접수번호 ${row.id})`;
+  const lms = `[차큐] 견적서가 도착했어요\n\n${p.고객명}님, 요청하신 견적서를 보내드려요.\n\n- 차량: ${p.차량}\n- 월 납입금: ${p.월납입금}\n- 상품: ${p.상품구분} · ${p.이용기간}\n- 조건: ${p.초기비용}\n- 주행: ${p.주행거리}\n- 출고: ${p.출고}\n\n견적서 보기: ${url}\n문의 1533-5663 (접수번호 ${row.id})\n※ 차큐에서 견적 상담을 신청하신 경우 신청 건마다 1회 발송됩니다.`;
   const r = await sendAlimtalk(m.phone, p, { title: "차큐 견적서", text: lms });
   if (r.ok) await q(`UPDATE inquiries SET kakao_sent_at = now() WHERE id = $1`, [row.id]);
   await q(`UPDATE inquiries SET conv_log = conv_log || $2::jsonb WHERE id = $1`, [row.id, JSON.stringify([{ to: "alimtalk", event: "quote", ok: r.ok, status: r.status, text: r.ok ? "" : r.text, at: new Date().toISOString() }])]);
