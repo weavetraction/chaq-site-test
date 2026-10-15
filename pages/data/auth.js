@@ -78,12 +78,42 @@
   function onKey(e) { if (e.key === "Escape") closeSheet(); }
   function fmtPhone(v) { var d = String(v || "").replace(/\D/g, "").slice(0, 11); if (d.length < 4) return d; if (d.length <= 7) return d.slice(0, 3) + "-" + d.slice(3); return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }
 
+  function heroSheet(pending, resolve, reject) {
+    var root = /\/pages\//.test(location.pathname) ? "../" : "";
+    if (!document.getElementById("auHeroCss")) { var st = document.createElement("style"); st.id = "auHeroCss";
+      st.textContent = ".au.au_hero{display:flex;flex-direction:column;align-items:center;padding:34px 24px calc(22px + env(safe-area-inset-bottom));text-align:center}" +
+        ".au_hero .au_x{position:absolute;top:12px;right:12px}.au_hero .au_logo{width:58px;margin:4px 0 22px}" +
+        ".au_hero h3{margin:0 0 8px;font-size:19.5px;font-weight:720;line-height:1.4;color:#1c1f23}.au_hero h3 em{color:#18a85c;font-style:normal}" +
+        ".au_hero .au_hsub{margin:0 0 28px;color:#5f6670;font-size:14px;line-height:1.5;word-break:keep-all}" +
+        ".au_hero .au_hk{display:flex;width:100%;max-width:340px;height:54px;align-items:center;justify-content:center;border:0;border-radius:10px;background:#fee500;color:#191600;font:inherit;font-size:17.5px;font-weight:700;cursor:pointer}" +
+        ".au_hero .au_hnote{max-width:340px;margin:12px 0 0;color:#80868b;font-size:12px;line-height:1.5;word-break:keep-all}.au_hero .au_hnote a{color:#5f6670;text-decoration:underline}" +
+        ".au_hero .au_hbrowse{margin-top:16px;padding:4px;border:0;background:none;color:#5f6670;font:inherit;font-size:15.5px;text-decoration:underline;cursor:pointer}";
+      document.head.appendChild(st); }
+    var bg = document.createElement("div"); bg.className = "au_bg";
+    bg.innerHTML = '<div class="au au_hero" role="dialog" aria-modal="true" aria-labelledby="auTitle"><button type="button" class="au_x" aria-label="닫기">×</button>' +
+      '<img class="au_logo" src="' + root + 'assets/icons/logo.svg" alt="chaQ">' +
+      '<h3 id="auTitle">장기렌트의 <em>모든 혜택</em><br>놓치지 말고 받아가세요</h3><p class="au_hsub">3초 만에 가입하고 최저가 견적서를 카카오톡으로 받아보세요!</p>' +
+      '<button type="button" class="au_hk">카카오로 시작하기</button>' +
+      '<p class="au_hnote">시작하면 만 14세 이상이며 <a href="' + agreementsHref() + '#terms" target="_blank" rel="noopener">이용약관</a>과 <a href="' + root + 'pages/privacy.html" target="_blank" rel="noopener">개인정보 수집·이용</a>에 동의한 것으로 봐요.</p>' +
+      '<button type="button" class="au_hbrowse">우선 둘러볼게요</button></div>';
+    document.body.appendChild(bg); document.body.style.overflow = "hidden"; document.addEventListener("keydown", onKey);
+    opened = { el: bg, reject: reject, timer: null };
+    bg.addEventListener("click", function (e) { if (e.target === bg) closeSheet(); });
+    bg.querySelector(".au_x").addEventListener("click", closeSheet);
+    bg.querySelector(".au_hbrowse").addEventListener("click", closeSheet);
+    bg.querySelector(".au_hk").addEventListener("click", function () {
+      if (pending) ss(SS_PEND, { action: pending.action, data: pending.data || null, url: location.href.split("#")[0], at: Date.now() });
+      location.href = BASE + "/api/auth/kakao/start?return=" + encodeURIComponent(location.href.split("#")[0]) + "&terms=1&privacy=1&marketing=0";   // 마케팅(선택)은 동의 안 함으로
+    });
+  }
   /** 가입·로그인 시트. mode: 'join' | 'phone'(카카오 회원 번호 확인) */
   function openSheet(reason, pending, mode) {
     return new Promise(function (resolve, reject) {
       closeSheet();
       if (!document.getElementById("auCss")) { var st = document.createElement("style"); st.id = "auCss"; st.textContent = CSS; document.head.appendChild(st); }
       var A = (state && state.auth) || {}, phoneOnly = mode === "phone", selfMode = phoneOnly && !A.sms, R = REASON[selfMode ? "phoneSelf" : phoneOnly ? "phone" : reason] || REASON.mypage;
+      // 카톡상담(견적 문의) 가입: 로그인 페이지와 같은 화면을 하단 시트로 — 동의는 카카오 연동 화면 + 아래 고지문으로 (대표 261015)
+      if (!phoneOnly && reason === "inquiry" && A.kakao && !A.sms) return heroSheet(pending, resolve, reject);
       if (!A.alimtalk && R === REASON.inquiry) R = ["3초 가입하고 견적 상담받기", "가입하면 담당 매니저가 이 견적 그대로 카카오톡·전화로 상담을 도와드려요."];   // 알림톡 준비 전
       var bg = document.createElement("div"); bg.className = "au_bg";
       bg.innerHTML = '<div class="au" role="dialog" aria-modal="true" aria-labelledby="auTitle"><button type="button" class="au_x" aria-label="닫기">×</button>' +
