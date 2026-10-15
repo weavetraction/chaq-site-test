@@ -141,9 +141,9 @@ export async function kakaoExchange(code: string, redirectUri: string) {
   return { kakaoId: String(uj.id), phone: phoneDigits(ka.phone_number), name: String(ka.name || "").slice(0, 30), nickname: String(ka.profile?.nickname || uj.properties?.nickname || "").slice(0, 30),
     birthYear: /^(19|20)\d{2}$/.test(by) ? by : "", ship: await kakaoShipAddress(tj.access_token), terms: await kakaoServiceTerms(tj.access_token) };
 }
-/** 카카오싱크 간편가입 서비스 약관 동의 내역 (대표 261015) — 콘솔 간편가입에 등록한 태그: terms(이용약관)·privacy(개인정보 수집·이용)·age14(만 14세)·marketing(선택)
+/** 카카오싱크 간편가입 서비스 약관 동의 내역 (대표 261015) — 콘솔 간편가입에 등록한 태그: terms(이용약관)·privacy(개인정보 수집·이용)·user_age_check(카카오 기본 '만 14세 이상')·marketing(선택)
  *  간편가입을 안 켰거나 조회 실패면 null → 사이트에서 받은 동의(기존 방식)로 처리 */
-export const KAKAO_TERM_TAGS = { terms: "terms", privacy: "privacy", age: "age14", marketing: "marketing" };
+export const KAKAO_TERM_TAGS = { terms: "terms", privacy: "privacy", age: "user_age_check", marketing: "marketing" };
 async function kakaoServiceTerms(token: string): Promise<Record<string, boolean> | null> {
   const get = async (url: string) => { try { const r = await fetch(url, { headers: { authorization: `Bearer ${token}` } }); return r.ok ? await r.json().catch(() => null) : null; } catch { return null; } };
   const v2: any = await get("https://kapi.kakao.com/v2/user/service_terms");
