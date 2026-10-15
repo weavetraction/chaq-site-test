@@ -403,3 +403,6 @@ main{background:#fff}
 :root{--gnb-w:480px}
 @media(min-width:700px){.chaq-gnb{bottom:22px;border-radius:0 0 18px 18px}}
 [hidden]{display:none!important}
+/* 메인 이용 후기: 사진 여러 장 겹쳐 보이기 (대표 261015) */
+.review-scroll .rm-photos.is-stack img{position:relative;margin-left:-22px;border:2px solid #fff;box-shadow:2px 0 6px rgba(0,0,0,.14)}
+.review-scroll .rm-photos.is-stack img:first-child{margin-left:0}

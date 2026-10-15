@@ -169,11 +169,12 @@
       '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
   }
   // 차량 상세 '이 조건 그대로 문의하기': 바로 접수하지 않고 상담 방법 선택 — 카톡상담(기존 접수 → 견적서) / 전화상담(견적번호 안내) (대표 261014)
+  var HR_KAKAO = "9:00 - 21:30", HR_TEL = "9:00 - 17:50";   // 상담 시간 (대표 261015)
   function chooseDetail() {
     var qid = quoteId();
     var bg = sheet('<h3>상담 방법을 선택해 주세요</h3><div class="iqf_pick">' +
-      '<button type="button" class="iqf_opt" data-pick="kakao"><b>카톡상담</b><span>견적서 자동 발송</span></button>' +
-      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><b>전화상담 <small>' + TEL + '</small></b><span>보고계신 견적번호를 말씀해주세요</span>' + (qid ? '<em>견적번호 ' + esc(qid) + '</em>' : '') + '</a>' +
+      '<button type="button" class="iqf_opt" data-pick="kakao"><span class="iqf_ol"><b>카톡상담</b><span>견적서 자동 발송</span></span><i class="iqf_hr">' + HR_KAKAO + '</i></button>' +
+      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><span class="iqf_ol"><b>전화상담</b><span>보고계신 견적번호를 말씀해주세요</span>' + (qid ? '<em>견적번호 ' + esc(qid) + '</em>' : '') + '</span><i class="iqf_hr">' + HR_TEL + '</i></a>' +
       '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
     bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () {
       var st = (window.CHAQ_AUTH && window.CHAQ_AUTH.state && window.CHAQ_AUTH.state()) || {};
@@ -205,8 +206,8 @@
   }, true);
   function chooseGuide() {
     var bg = sheet('<h3>문의 방법을 선택해 주세요</h3><div class="iqf_pick">' +
-      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><b>전화로 문의하기 <small>' + TEL + '</small></b><span>상담 매니저와 바로 통화해요</span></a>' +
-      '<button type="button" class="iqf_opt" data-pick="kakao"><b>카카오로 문의하기</b><span>차큐 카카오톡 채널 채팅방으로 연결돼요</span></button>' +
+      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><span class="iqf_ol"><b>전화로 문의하기</b><span>상담 매니저와 바로 통화해요</span></span><i class="iqf_hr">' + HR_TEL + '</i></a>' +
+      '<button type="button" class="iqf_opt" data-pick="kakao"><span class="iqf_ol"><b>카카오로 문의하기</b><span>차큐 카카오톡 채널 채팅방으로 연결돼요</span></span><i class="iqf_hr">' + HR_KAKAO + '</i></button>' +
       '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
     bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () {
       var AU = window.CHAQ_AUTH, go = function () {
@@ -237,7 +238,11 @@
     ".iqf .iqf_done p{margin:0 0 6px;color:#5f6368;font-size:14px;line-height:1.55}.iqf .iqf_done a{color:#18a85c;font-weight:700}.iqf .iqf_hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}" +
     ".iqf .iqf_pick{display:flex;flex-direction:column;gap:10px;margin:16px 0}.iqf .iqf_opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:16px;border:1px solid #e3e6ea;border-radius:12px;background:#fff;color:#16181b;text-align:left;text-decoration:none;font:inherit;cursor:pointer;box-sizing:border-box}" +
     ".iqf .iqf_opt:hover{background:#f5f5f5}.iqf .iqf_opt b{font-size:16px;font-weight:700}.iqf .iqf_opt b small{margin-left:4px;color:#5f6670;font-size:13px;font-weight:500}.iqf .iqf_opt span{color:#5f6670;font-size:13.5px;font-weight:400;line-height:1.45}" +
-    ".iqf .iqf_opt em{margin-top:4px;padding:2px 8px;border-radius:7px;background:#f2f3f5;color:var(--detail-green,#18a85c);font-size:12.5px;font-style:normal;font-weight:700}";
+    ".iqf .iqf_opt em{margin-top:4px;padding:2px 8px;border-radius:7px;background:#f2f3f5;color:var(--detail-green,#18a85c);font-size:12.5px;font-style:normal;font-weight:700}" +
+    /* 상담 방법 버튼: 연한 회색 · 오른쪽 상담 시간 (대표 261015) */
+    ".iqf .iqf_opt{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;border-color:#f2f3f5;background:#f2f3f5}.iqf .iqf_opt:hover{background:#eaecef}" +
+    ".iqf .iqf_ol{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}.iqf .iqf_opt .iqf_ol>span{color:#5f6670;font-size:13.5px;font-weight:400;line-height:1.45}" +
+    ".iqf .iqf_opt em{background:#fff}.iqf .iqf_hr{flex:none;color:#5f6670;font-size:13px;font-style:normal;font-weight:600;white-space:nowrap}";
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   function fmtPhone(v) { var d = String(v || "").replace(/\D/g, "").slice(0, 11); if (d.length < 4) return d; if (d.indexOf("02") === 0) return d.length <= 5 ? d.slice(0, 2) + "-" + d.slice(2) : d.length <= 9 ? d.slice(0, 2) + "-" + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.slice(0, 2) + "-" + d.slice(2, 6) + "-" + d.slice(6, 10); if (d.length <= 7) return d.slice(0, 3) + "-" + d.slice(3); return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }
   function condLine(c) { var k = c.conditions || {}; return [k.product, k.term ? k.term + "개월" : "", PLAN[k.plan] || "", k.dist ? "연 " + k.dist + "만 km" : "", c.monthly ? "월 " + Number(c.monthly).toLocaleString("ko-KR") + "원" : ""].filter(Boolean).join(" · "); }

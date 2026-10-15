@@ -17,7 +17,7 @@
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="preload" href="font/PretendardVariable-subset.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261014-2">
+  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261015-1">
   <link rel="stylesheet" href="stylesheets/gnb.css">
     <script src="pages/data/api-config.js"></script>
     <script src="pages/data/site-util.js"></script>
@@ -290,9 +290,9 @@
         var rvImg=function(u){ return String(u||'').replace(/^\.\.\//,''); };   // 후기 데이터 사진 경로는 pages/ 기준
         var rvList = (pickBy(RV, 'review', function(r){ return r.id; }) || RV).slice(0, SEC('review').count || 5);
         rvEl.innerHTML = rvList.map(function(r){
-          var st=Math.max(1,Math.min(5,+r.stars||5)), ph=(r.photos||[])[0];
+          var st=Math.max(1,Math.min(5,+r.stars||5)), phs=(r.photos||[]).slice(0,3);   // 사진 여러 장이면 겹쳐 보이게 (최대 3장, 대표 261015)
           return '<article data-review-id="'+esc(r.id)+'"><small>'+esc(r.name||'')+((window.CHAQ_UTIL&&window.CHAQ_UTIL.sampleBadge)?window.CHAQ_UTIL.sampleBadge(r):'')+'</small><div class="stars">'+'★★★★★'.slice(0,st)+'☆☆☆☆☆'.slice(0,5-st)+'</div><p>'+esc(r.text||'')+'</p>'+
-            '<div class="review-mini">'+(ph?'<span class="rm-photos"><img src="'+esc(rvImg(ph))+'" alt="" loading="lazy"></span>':'')+'<span class="rm-info"><strong>'+esc(r.car||'')+'</strong><em>'+esc(r.trim||'')+'</em></span></div></article>';
+            '<div class="review-mini">'+(phs.length?'<span class="rm-photos'+(phs.length>1?' is-stack':'')+'">'+phs.map(function(u,i){ return '<img src="'+esc(rvImg(u))+'" alt="" loading="lazy" style="z-index:'+(3-i)+'">'; }).join('')+'</span>':'')+'<span class="rm-info"><strong>'+esc(r.car||'')+'</strong><em>'+esc(r.trim||'')+'</em></span></div></article>';
         }).join('');
         var rvT=document.getElementById('reviewTitle'); if(rvT) rvT.textContent = rvList.length && rvList.every(function(r){return r.sample;}) ? '이용 후기 예시' : '차큐 이용 후기';   // #44
       }

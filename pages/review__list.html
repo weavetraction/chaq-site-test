@@ -68,9 +68,6 @@
         if (RV_MODEL && !window.CHAQ_VM) rvLoad(RV_API ? [RV_API] : [], function(){ rvLoad((window.CHAQ_VEHICLE_MASTER ? [] : ['data/vehicle-master.js']).concat(['data/vehicle-master-helper.js']), rvBoot); }); else rvBoot();
         function rvBoot(){
             var list = (window.CHAQ_REVIEWS || []);
-            (function(){ var hasS=list.some(function(r){return r&&r.sample;}), allS=list.length&&list.every(function(r){return r&&r.sample;}), h=document.querySelector('.rv_intro h2'), p=document.querySelector('.rv_intro p');   // 예시 후기 안내(#44)
-                if(allS){ if(h) h.textContent='이용 후기 예시'; if(p) p.textContent='아래는 이용 후기 화면을 보여드리기 위한 예시예요. 실제 출고 고객 후기가 등록되면 이곳에 보여드려요.'; }
-                else if(hasS && p){ p.textContent='실제 차큐로 출고하신 고객님들의 후기예요. \'예시\' 표시가 있는 글은 화면 이해를 돕기 위한 예시예요.'; } })();
             var wrap = document.getElementById('reviewList');
             if (RV_MODEL && window.CHAQ_REVIEW_LINK) {
                 var fam = decodeURIComponent(RV_MODEL), VMm = window.CHAQ_VM && window.CHAQ_VM.getModel(fam);
@@ -91,7 +88,6 @@
                 }).join('');
                 return '<article class="rv_card" id="rv-'+r.id+'">'+
                     '<div class="rv_top">'+
-                        '<span class="rv_avatar">'+esc(r.name.charAt(0))+'</span>'+
                         '<span class="rv_meta"><strong class="rv_name">'+esc(r.name)+'</strong>'+((window.CHAQ_UTIL&&window.CHAQ_UTIL.sampleBadge)?window.CHAQ_UTIL.sampleBadge(r):'')+
                         '<span class="rv_stars">'+stars(r.stars)+'</span></span>'+
                     '</div>'+

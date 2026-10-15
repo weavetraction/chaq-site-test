@@ -2770,3 +2770,5 @@ html.chaq-detail-loading .local-car-detail::after{
 .mypage .mp_ev_row small{ color:#5f6670; font-size:12.5px; }
 .mypage .mp_ev_row em{ flex:none; padding:3px 8px; border-radius:999px; background:#e8f7ef; color:#18a85c; font-size:12px; font-style:normal; font-weight:700; }
 .mypage .mp_ev_row em.is-end{ background:#eef0f2; color:#6b7178; }
+/* 이용 후기 페이지 '후기 작성하기' 검정 버튼 (대표 261015) */
+.local-sub.review-page .rv_write{ border:0; background:#1c1f23; color:#fff; }

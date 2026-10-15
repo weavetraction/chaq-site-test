@@ -141,7 +141,7 @@
       var r = x.r, name = vmName(r) || ((r.brand || "") + " " + (r.model || ""));
       return '<a class="dp_card" role="listitem" href="car-detail.html?id=' + encodeURIComponent(r.id) + from + q + '">' +
         '<span class="dp_cname">' + esc(name) + '</span><img src="' + esc(carImg(r)) + '" alt="' + esc(name) + '" loading="lazy">' +
-        '<span class="dp_ccond">' + esc(ct) + '</span><span class="dp_cprice">월 ' + Math.round(x.m / 10000) + "만원</span></a>";
+        '<span class="dp_cprice">월 ' + Math.round(x.m / 10000) + "만원</span></a>";
     }).join("");
     sec.querySelectorAll(".dp_card img").forEach(function (im) { im.onerror = function () { if (this.dataset.ph) return; this.dataset.ph = "1"; this.src = PH; }; });
     var tr = sec.querySelector(".dp_ctrack"); tr.scrollLeft = 0;
