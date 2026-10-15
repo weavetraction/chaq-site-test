@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>/* 폰 화면 자동 크기 (대표 261015): 폭 430px보다 좁은 폰(세로)은 430px 기준 화면을 폰 폭에 맞춰 통째로 줄여 보여줌 — 어느 폰에서나 같은 배치. 가로·태블릿·PC는 그대로 */(function(){var W=430,m=document.querySelector('meta[name="viewport"]');if(!m)return;try{document.documentElement.style.webkitTextSizeAdjust='100%';document.documentElement.style.textSizeAdjust='100%';}catch(e){}function set(){var s=Math.min(screen.width||0,screen.height||0),p=!window.matchMedia||matchMedia('(orientation: portrait)').matches,c=(s&&s<W&&p)?'width='+W:'width=device-width, initial-scale=1.0';if(m.getAttribute('content')!==c)m.setAttribute('content',c);}set();window.addEventListener('orientationchange',function(){setTimeout(set,60);});if(window.matchMedia){var q=matchMedia('(orientation: portrait)');if(q.addEventListener)q.addEventListener('change',set);else if(q.addListener)q.addListener(set);}})();</script>
     <title>개인정보처리방침 | 차큐</title>
   <meta name="description" content="장기렌트·리스 금융사·렌탈사 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 월 납입금으로 바로 확인하세요.">
   <meta property="og:type" content="website">
