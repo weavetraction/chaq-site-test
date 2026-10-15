@@ -71,7 +71,32 @@
                 '</div>'+
                 '<p class="dv_lead">'+esc(e.lead)+'</p>'+
                 sections+
+                (!ended && (window.CHAQ_API||{}).base ? '<button type="button" class="dv_join" id="evJoin" data-id="'+esc(e.id)+'">이벤트 참여하기</button>' : '')+   // 로그인 회원 참여 (마이페이지·관리자에서 확인)
                 '<a class="dv_cta'+(ended?' is-ghost':'')+'" href="'+ctaHref+'">'+esc(e.cta)+'</a>';
+        })();
+    </script>
+    <script src="data/auth.js"></script>   <!-- 회원: 이벤트 참여는 로그인 후 -->
+    <script>
+        /* 이벤트 참여: 로그인 회원 1회 → 마이페이지 '참여한 이벤트' · 관리자 콘텐츠 › 이벤트 '참여자' */
+        (function(){
+            var b = document.getElementById('evJoin'), AU = window.CHAQ_AUTH, U = window.CHAQ_UTIL; if (!b || !AU) return;
+            var id = b.getAttribute('data-id');
+            function done(){ b.disabled = true; b.classList.add('is-done'); b.textContent = '참여 완료 · 마이페이지에서 확인할 수 있어요'; }
+            function join(){
+                b.disabled = true;
+                AU.api('/api/me/events/'+encodeURIComponent(id)+'/join', { method:'POST' }).then(function(j){ done(); U.toast(j.already ? '이미 참여한 이벤트예요' : '이벤트에 참여했어요'); })
+                    .catch(function(e){ b.disabled = false; U.toast(e.message); });
+            }
+            AU.me().then(function(m){ if (!m) return; AU.api('/api/me/events').then(function(j){ if ((j.rows||[]).some(function(r){ return r.id === id; })) done(); }).catch(function(){}); });
+            b.addEventListener('click', function(){
+                AU.me().then(function(m){
+                    if (m) return join();
+                    var A = (AU.state()||{}).auth || {};
+                    if (!(A.kakao || A.sms)) { U.toast('로그인 준비 중이에요. 잠시 후 다시 시도해 주세요'); return; }
+                    AU.requireLogin({ reason:'event', pending:{ action:'event', data:{ id:id } } }).then(function(mm){ if (mm) join(); }).catch(function(){});
+                });
+            });
+            document.addEventListener('chaq:login', function(e){ var p = e.detail && e.detail.pending; if (p && p.action === 'event' && p.data && p.data.id === id) setTimeout(join, 300); });
         })();
     </script>
     <script src="data/gnb.js"></script>

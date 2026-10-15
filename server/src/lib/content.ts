@@ -160,6 +160,50 @@ export async function removeCat(kind: CatKind, id: string) {
 }
 export async function reorderCats(kind: CatKind, ids: string[]) { await tx(async (c) => { for (let i = 0; i < ids.length; i++) await c.query(`UPDATE content_cats SET sort = $3 WHERE kind = $1 AND id = $2`, [kind, ids[i], i]); await bump(c); }); }
 
+// ---------------------------------------------------------------- 회원 후기 · 이벤트 참여 (대표 261015)
+/** 회원 후기: 계약완료 건 1개당 1개, 숨김(visible=false)으로 등록 → 관리자가 확인 후 노출을 켬 */
+export const maskName = (n: string) => { const t = String(n || "").trim(); if (!t) return "고객님"; return t.charAt(0) + "*".repeat(Math.max(1, Math.min(t.length - 1, 3))) + "님"; };
+export async function createMemberReview(p: { memberId: number; memberName: string; inquiry: { id: number; car_name: string; trim_name: string; trim_id: string | null; delivered_on: string | null }; text: string; photos: string[]; modelId: string | null }) {
+  const text = S(p.text, 3000); if (text.length < 10) throw new ContentError("후기 내용을 10자 이상 적어 주세요");
+  const i = p.inquiry;
+  const data = { name: maskName(p.memberName), stars: 5, car: S(i.car_name, 60), trim: S(i.trim_name, 60), modelId: p.modelId, trimId: i.trim_id || null, text, photos: p.photos.slice(0, 5), date: today(), sample: false,
+    member: true, memberId: String(p.memberId), inquiryId: String(i.id), deliveredOn: i.delivered_on || null };
+  return tx(async (c) => {
+    const dup = await c.query(`SELECT 1 FROM content_items WHERE kind = 'review' AND data->>'inquiryId' = $1`, [String(i.id)]);
+    if (dup.rowCount) throw new ContentError("이 계약은 이미 후기를 작성했어요");
+    const nid = await nextId(c, "review");
+    const so = (await c.query(`SELECT COALESCE(MIN(sort), 1) - 1 AS s FROM content_items WHERE kind = 'review'`)).rows[0].s;
+    const row = (await c.query(`INSERT INTO content_items (kind, id, visible, sort, data) VALUES ('review',$1,false,$2,$3) RETURNING id, visible, data, created_at`, [nid, so, data])).rows[0];
+    await bump(c);
+    return row;
+  });
+}
+export async function memberReviews(memberId: number) {
+  const { rows } = await q(`SELECT id, visible, data, created_at FROM content_items WHERE kind = 'review' AND data->>'memberId' = $1 ORDER BY created_at DESC`, [String(memberId)]);
+  return rows.map((r) => ({ id: r.id, visible: r.visible, car: r.data.car, trim: r.data.trim, text: r.data.text, photos: r.data.photos || [], date: r.data.date, deliveredOn: r.data.deliveredOn || null, inquiryId: Number(r.data.inquiryId) || null }));
+}
+/** 이벤트 참여: 사이트에 노출 중이고 진행 중인 이벤트만 */
+export async function joinEvent(eventId: string, memberId: number) {
+  const ev = (await q(`SELECT id, data FROM content_items WHERE kind = 'event' AND id = $1 AND visible`, [eventId])).rows[0];
+  if (!ev) throw new ContentError("이벤트를 찾을 수 없어요", 404);
+  if (eventStatus(ev.data) === "end") throw new ContentError("종료된 이벤트예요");
+  const r = await q(`INSERT INTO event_entries (event_id, member_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING created_at`, [eventId, memberId]);
+  return { joined: true, already: !r.rowCount };
+}
+export async function memberEvents(memberId: number) {
+  const { rows } = await q(`SELECT e.event_id, e.created_at, c.data, c.visible FROM event_entries e LEFT JOIN content_items c ON c.kind = 'event' AND c.id = e.event_id WHERE e.member_id = $1 ORDER BY e.created_at DESC`, [memberId]);
+  return rows.map((r) => { const s = r.data ? toSite("event", { id: r.event_id, data: r.data }) as any : null; return { id: r.event_id, joinedAt: r.created_at, title: s?.title || "종료된 이벤트", period: s?.period || "", img: s?.img || "", status: s ? s.status : "end", visible: !!r.visible }; });
+}
+export async function eventEntryCounts() {
+  const { rows } = await q(`SELECT event_id, COUNT(*)::int AS n FROM event_entries GROUP BY event_id`);
+  return Object.fromEntries(rows.map((r) => [r.event_id, r.n]));
+}
+export async function eventEntries(eventId: string) {
+  const { rows } = await q(`SELECT e.created_at, m.id AS member_id, m.name, m.nickname, m.phone, m.phone_unverified, m.status, m.kakao_id IS NOT NULL AS kakao, m.marketing_agreed_at IS NOT NULL AS marketing
+    FROM event_entries e JOIN members m ON m.id = e.member_id WHERE e.event_id = $1 ORDER BY e.created_at`, [eventId]);
+  return rows.map((r) => ({ memberId: r.member_id, name: r.name || r.nickname || "", phone: String(r.phone || r.phone_unverified || "").replace(/^(\d{3})(\d{3,4})(\d{4})$/, "$1-$2-$3"), withdrawn: r.status === "WITHDRAWN", kakao: r.kakao, marketing: r.marketing, joinedAt: r.created_at }));
+}
+
 // ---------------------------------------------------------------- 공개 데이터 (캐시: content_version 10초마다 확인)
 let pub: { version: string; day: string; faq: string; reviews: string; content: string; etag: string } | null = null;
 let pubCheckedAt = 0;

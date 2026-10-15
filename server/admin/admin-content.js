@@ -19,15 +19,17 @@
     load();
   });
   function load() {
-    return api("/api/admin/content/" + S.kind).then(function (r) { S.items = r.items; S.cats = r.cats; render(); }).catch(fail);
+    return api("/api/admin/content/" + S.kind).then(function (r) { S.items = r.items; S.cats = r.cats; S.entries = r.entries || {}; render(); }).catch(fail);
   }
   function summary(it) {
     var d = it.data;
     if (S.kind === "faq") { var c = S.cats.filter(function (x) { return x.id === d.cat; })[0]; return '<span class="pill">' + esc(c ? c.name : "분류 없음") + '</span> <b>' + esc(d.q) + '</b><br><small class="hint">' + esc(strip(d.a).slice(0, 90)) + '</small>'; }
-    if (S.kind === "review") return (d.photos && d.photos[0] ? '<img class="ct_thumb" src="' + esc(imgSrc(d.photos[0])) + '" alt="">' : '') + (d.sample ? '<span class="pill">예시</span> ' : '') + '<b>' + esc(d.name) + '</b> ' + "★★★★★".slice(0, d.stars) + ' · ' + esc(d.car || "") + ' ' + esc(d.trim || "") + (d.trimId || d.modelId ? ' <span class="pill live">차량 연결</span>' : '') + '<br><small class="hint">' + esc(String(d.text || "").slice(0, 90)) + '</small>';
+    if (S.kind === "review") return (d.photos && d.photos[0] ? '<img class="ct_thumb" src="' + esc(imgSrc(d.photos[0])) + '" alt="">' : '') + (d.sample ? '<span class="pill">예시</span> ' : '') +
+      (d.member ? '<span class="pill ' + (it.visible ? "live" : "draft") + '" title="계약완료 고객이 직접 작성 — 확인 후 노출을 켜면 사이트에 보입니다">회원 작성 · 문의 #' + esc(d.inquiryId) + (d.deliveredOn ? ' · 출고 ' + esc(d.deliveredOn) : '') + (it.visible ? '' : ' · 확인 대기') + '</span> ' : '') + '<b>' + esc(d.name) + '</b> ' + "★★★★★".slice(0, d.stars) + ' · ' + esc(d.car || "") + ' ' + esc(d.trim || "") + (d.trimId || d.modelId ? ' <span class="pill live">차량 연결</span>' : '') + '<br><small class="hint">' + esc(String(d.text || "").slice(0, 90)) + '</small>';
     if (S.kind === "event") {
       var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10), end = d.forceEnd || (d.end && d.end < today);
-      return (d.img ? '<img class="ct_thumb" src="' + esc(imgSrc(d.img)) + '" alt="">' : '') + '<span class="pill ' + (end ? "" : "live") + '">' + (end ? "종료" : "진행중") + '</span> <b>' + esc(d.title) + '</b><br><small class="hint">' + esc(d.periodText || ((d.start || "") + " ~ " + (d.end || ""))) + '</small>';
+      return (d.img ? '<img class="ct_thumb" src="' + esc(imgSrc(d.img)) + '" alt="">' : '') + '<span class="pill ' + (end ? "" : "live") + '">' + (end ? "종료" : "진행중") + '</span> <b>' + esc(d.title) + '</b><br><small class="hint">' + esc(d.periodText || ((d.start || "") + " ~ " + (d.end || ""))) + '</small>' +
+        ' <button type="button" class="btn sm" data-entries="' + esc(it.id) + '">참여자 ' + ((S.entries || {})[it.id] || 0) + '명</button>';
     }
     return (d.img ? '<img class="ct_thumb" src="' + esc(imgSrc(d.img)) + '" alt="">' : '') + '<span class="pill">' + esc(d.cat || "") + '</span> <b>' + esc(d.title) + '</b><br><small class="hint">' + esc(d.date || "") + ' · ' + esc(String(d.lead || "").slice(0, 70)) + '</small>';
   }
@@ -47,8 +49,21 @@
     var cm = $("#ctCatMng"); if (cm) cm.onclick = manageCats;
     var cb = $("#ctCats"); if (cb) cb.onclick = function (e) { var b = e.target.closest("button[data-c]"); if (!b) return; S.catFilter = b.getAttribute("data-c"); render(); };
   }
+  // 이벤트 참여자 (회원) 보기
+  function showEntries(id) {
+    var it = S.items.filter(function (x) { return x.id === id; })[0], m = $("#ctModal");
+    $("#ctModalTitle").textContent = "이벤트 참여자 · " + (it ? it.data.title : id);
+    $("#ctModalBody").innerHTML = '<p class="hint">불러오는 중…</p>'; $("#ctModalBody").onclick = null; $("#ctModalBody").onchange = null;
+    $("#ctModalSave").textContent = "닫기"; $("#ctModalSave").onclick = function () { m.hidden = true; $("#ctModalSave").textContent = "저장"; };
+    m.hidden = false;
+    api("/api/admin/content/event/" + encodeURIComponent(id) + "/entries").then(function (r) {
+      $("#ctModalBody").innerHTML = '<p class="hint">총 ' + r.rows.length + '명 · 참여 순서</p><table class="tbl"><tr><th>#</th><th>참여일시</th><th>회원</th><th>이름</th><th>연락처</th><th>혜택 수신</th></tr>' +
+        (r.rows.length ? r.rows.map(function (x, i) { return '<tr><td>' + (i + 1) + '</td><td>' + dt(x.joinedAt) + '</td><td>#' + x.memberId + (x.kakao ? ' <small class="pill">카카오</small>' : '') + '</td><td>' + (x.withdrawn ? '<span class="hint">탈퇴 회원</span>' : esc(x.name || "-")) + '</td><td>' + (x.phone ? '<a href="tel:' + esc(x.phone.replace(/\D/g, "")) + '">' + esc(x.phone) + '</a>' : '<span class="hint">-</span>') + '</td><td>' + (x.marketing ? "동의" : '<span class="hint">미동의</span>') + '</td></tr>'; }).join("") : '<tr><td colspan="6" class="hint">아직 참여자가 없습니다</td></tr>') + '</table>';
+    }).catch(fail);
+  }
   $("#ctBody").addEventListener("click", function (e) {
     var t = e.target, id;
+    if ((id = t.getAttribute("data-entries"))) return showEntries(id);
     if ((id = t.getAttribute("data-edit"))) edit(id);
     if ((id = t.getAttribute("data-del")) && confirm("삭제할까요? 사이트에서도 바로 사라집니다.")) api("/api/admin/content/" + S.kind + "/" + encodeURIComponent(id), { method: "DELETE" }).then(function () { toast("삭제됨"); load(); }).catch(fail);
     var up = t.getAttribute("data-up"), dn = t.getAttribute("data-down");

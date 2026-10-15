@@ -8,7 +8,7 @@ import { q } from "../db.js";
 import { wrap, intParam } from "../lib/http.js";
 import { limiter } from "../lib/limits.js";
 import { issue, adminOf } from "../middleware/auth.js";
-import { normPerms, pwProblem, TABS, TAB_KO } from "../lib/admin-perms.js";
+import { normPerms, pwProblem, TABS, TAB_KO, EXTRA_PERMS } from "../lib/admin-perms.js";
 
 const INVITE_HOURS = 72;
 const sha = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
@@ -71,7 +71,7 @@ const COLS = `id, email, name, role, perms, active, created_at, last_login_at, p
 
 adminAccountsRouter.get("/api/admin/admins", ownerOnly, wrap(async (_req, res) => {
   const { rows } = await q(`SELECT ${COLS} FROM admins ORDER BY (role = 'owner') DESC, active DESC, id`);
-  res.json({ rows: rows.map(view), tabs: TABS, tabLabels: TAB_KO, inviteHours: INVITE_HOURS });
+  res.json({ rows: rows.map(view), tabs: TABS, extraPerms: EXTRA_PERMS, tabLabels: TAB_KO, inviteHours: INVITE_HOURS });
 }));
 
 const PermsIn = z.record(z.string(), z.enum(["none", "view", "edit"]));

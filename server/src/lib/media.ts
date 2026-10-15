@@ -11,11 +11,12 @@ export class MediaError extends Error { status = 400; }
 
 export const mediaUrl = (id: string, mime: string, thumb = false) => `/api/pub/media/${id}${thumb ? ".thumb" : ""}.${EXT[mime] || "bin"}`;
 
-export async function saveMedia(buf: Buffer, fileName: string, purpose: string, adminId: number | null, opts: { maxSide?: number } = {}) {
+export async function saveMedia(buf: Buffer, fileName: string, purpose: string, adminId: number | null, opts: { maxSide?: number; noSvg?: boolean } = {}) {
   const p = (MEDIA_PURPOSES as readonly string[]).includes(purpose) ? purpose : "etc";
   const head = buf.subarray(0, 512).toString("utf8");
   let mime: string, out: Buffer, thumb: Buffer | null = null, width: number | null = null, height: number | null = null;
   if (/<svg[\s>]/i.test(head) || /\.svg$/i.test(fileName)) {
+    if (opts.noSvg) throw new MediaError("사진 파일(jpg·png·webp)만 올릴 수 있어요");   // 회원 업로드(후기 사진)는 SVG 불가
     const s = buf.toString("utf8");
     if (/<script|on\w+\s*=|javascript:|<!ENTITY|<!DOCTYPE|<foreignObject/i.test(s)) throw new MediaError("SVG 안에 스크립트·외부 정의가 있어 올릴 수 없습니다");
     mime = "image/svg+xml"; out = buf;

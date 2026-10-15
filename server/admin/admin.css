@@ -76,6 +76,9 @@ main { max-width: 1200px; margin: 0 auto; padding: 20px; }
 .iq textarea { width: 100%; min-height: 34px; font-size: 12.5px; }
 .iq select { height: 30px; font-size: 12.5px; }
 .st-NEW { color: var(--red); font-weight: 700; }
+.st-CUSTOMER_STOP { color: #b45309; font-weight: 700; }
+.iq_deliv { display: grid; gap: 2px; margin-top: 6px; }
+.iq_deliv input { height: 28px; font-size: 12.5px; }
 @media (max-width: 760px) { .kinds { grid-template-columns: 1fr; } .ul_row { grid-template-columns: 1fr; } .top { gap: 8px; padding: 0 10px; } .who #whoName { display: none; } }
 
 /* ---- 차량 데이터 · 견적 화면 수정 ---- */

@@ -1,6 +1,7 @@
 import pg from "pg";
 import { config } from "./config.js";
 
+pg.types.setTypeParser(1082, (v: string) => v);   // DATE(출고일 등)는 'YYYY-MM-DD' 그대로 (시간대 밀림 방지)
 export const pool = new pg.Pool({
   connectionString: config.databaseUrl,
   ssl: config.databaseSsl ? { rejectUnauthorized: false } : undefined,

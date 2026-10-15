@@ -30,6 +30,7 @@
             <div class="rv_intro">
                 <h2>차큐 이용 후기</h2>
                 <p>실제 차큐로 출고하신 고객님들의 생생한 후기예요.</p>
+                <button type="button" class="rv_write" id="rvWrite">후기 작성하기</button>   <!-- 계약완료 회원만 작성 (관리자 확인 후 게시) -->
             </div>
             <div class="rv_list" id="reviewList"></div>
         </main>
@@ -130,6 +131,9 @@
             }
         }
     </script>
+    <script src="data/auth.js"></script>   <!-- 회원: 후기 작성은 로그인 + 계약완료 고객만 -->
+    <script src="data/review-write.js"></script>
+    <script>document.getElementById('rvWrite').addEventListener('click', function(){ if (window.CHAQ_REVIEW_WRITE) window.CHAQ_REVIEW_WRITE.open(); });</script>
     <script src="data/gnb.js"></script>
 </body>
 </html>

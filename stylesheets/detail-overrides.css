@@ -2742,3 +2742,31 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .dts_pop .ss_row .ss_meta .ss_sub.ss_tag { margin: 0; }
 .local-car-detail .dts_pop .ss_row .ss_meta small:not(.ss_sub) { margin-left: 0; }
 /* 261014 대표: 차량명 아래 태그 10px 더 위(56→46px) — 트림 바 위치는 그대로(JS GAP 26→36) */
+
+/* 회원 후기 작성 · 이벤트 참여 · 마이페이지 상담 중지/내 후기/참여한 이벤트 (대표 261015) */
+.local-sub.review-page .rv_write{ display:block; width:100%; margin:14px 0 4px; padding:13px; border:1px solid #18a85c; border-radius:12px; background:#fff; color:#18a85c; font:inherit; font-size:14.5px; font-weight:700; cursor:pointer; }
+.local-sub .detail_view .dv_join{ display:block; width:calc(100% - 36px); margin:26px 18px 0; padding:15px; border:0; border-radius:12px; background:#1c1f23; color:#fff; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.local-sub .detail_view .dv_join + .dv_cta{ margin-top:10px; }
+.local-sub .detail_view .dv_join.is-done{ background:#e8f7ef; color:#18a85c; cursor:default; }
+.mypage .mp_stop{ margin-top:2px; padding:4px 9px; border:1px solid #dadce0; border-radius:8px; background:#fff; color:#5f6670; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.mypage .mp_inq_s em.is-stop{ background:#fff4e5; color:#b45309; }
+.mypage .mp_inq_s em.is-end{ background:#eef0f2; color:#6b7178; }
+.mypage .mp_sec_head .mp_write{ margin-left:auto; padding:6px 11px; border:1px solid #18a85c; border-radius:9px; background:#fff; color:#18a85c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+.mypage .mp_rv{ display:flex; flex-direction:column; gap:8px; }
+.mypage .mp_rv_row{ padding:14px 16px; border-radius:14px; background:#f5f6f7; }
+.mypage .mp_rv_row .mp_rv_h{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.mypage .mp_rv_row strong{ font-size:15px; }
+.mypage .mp_rv_row em{ flex:none; padding:3px 8px; border-radius:999px; background:#eef0f2; color:#6b7178; font-size:12px; font-style:normal; font-weight:700; }
+.mypage .mp_rv_row em.on{ background:#e8f7ef; color:#18a85c; }
+.mypage .mp_rv_row small{ display:block; margin-top:3px; color:#5f6670; font-size:12.5px; }
+.mypage .mp_rv_row p{ margin:8px 0 0; color:#3c4043; font-size:13.5px; line-height:1.55; white-space:pre-line; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.mypage .mp_rv_ph{ display:flex; gap:6px; margin-top:8px; }
+.mypage .mp_rv_ph img{ width:52px; height:52px; border-radius:8px; object-fit:cover; }
+.mypage .mp_ev{ display:flex; flex-direction:column; gap:8px; }
+.mypage .mp_ev_row{ display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:#f5f6f7; color:inherit; text-decoration:none; }
+.mypage .mp_ev_row img{ flex:none; width:64px; height:44px; border-radius:8px; object-fit:cover; background:#e8eaed; }
+.mypage .mp_ev_row span{ display:flex; min-width:0; flex:1; flex-direction:column; gap:3px; }
+.mypage .mp_ev_row strong{ overflow:hidden; font-size:14.5px; text-overflow:ellipsis; white-space:nowrap; }
+.mypage .mp_ev_row small{ color:#5f6670; font-size:12.5px; }
+.mypage .mp_ev_row em{ flex:none; padding:3px 8px; border-radius:999px; background:#e8f7ef; color:#18a85c; font-size:12px; font-style:normal; font-weight:700; }
+.mypage .mp_ev_row em.is-end{ background:#eef0f2; color:#6b7178; }

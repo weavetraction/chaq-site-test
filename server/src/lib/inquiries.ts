@@ -52,8 +52,9 @@ export type InquiryInputT = z.infer<typeof InquiryInput>;
 /** 010-1234-5678 형태 */
 export const fmtPhone = (d: string) => (d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : d.length === 10 ? (d.startsWith("02") ? `02-${d.slice(2, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`) : d.length === 9 ? `02-${d.slice(2, 5)}-${d.slice(5)}` : d);
 
-export const STATUS = ["NEW", "IN_PROGRESS", "CONTRACTED", "CLOSED", "SPAM"] as const;
-export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "상담 중", CONTRACTED: "계약", CLOSED: "종료", SPAM: "스팸" };
+export const STATUS = ["NEW", "IN_PROGRESS", "CONTRACTED", "CLOSED", "CUSTOMER_STOP", "SPAM"] as const;
+// 계약완료 = 후기 작성 가능 · 종료 = 계약 못 하고 상담 종료 · 고객중지 = 고객이 마이페이지에서 상담 중지 (대표 261015)
+export const STATUS_KO: Record<string, string> = { NEW: "신규", IN_PROGRESS: "상담 중", CONTRACTED: "계약완료", CLOSED: "종료", CUSTOMER_STOP: "고객중지", SPAM: "스팸" };
 
 const ipHash = (ip: string) => crypto.createHmac("sha256", config.jwtSecret).update(ip || "").digest("hex").slice(0, 16);
 
@@ -89,8 +90,8 @@ export async function reportView(token: string) {
   };
 }
 
-export async function listInquiries(f: { status?: string; q?: string; page?: number; size?: number }) {
-  const where: string[] = [], params: unknown[] = [];
+export async function listInquiries(f: { status?: string; q?: string; page?: number; size?: number; trash?: boolean }) {
+  const where: string[] = [f.trash ? "deleted_at IS NOT NULL" : "deleted_at IS NULL"], params: unknown[] = [];   // 휴지통(삭제한 문의)은 따로
   if (f.status && STATUS.includes(f.status as any)) { params.push(f.status); where.push(`status = $${params.length}`); }
   if (f.q) {
     params.push(`%${f.q}%`); const like = params.length;
@@ -99,18 +100,20 @@ export async function listInquiries(f: { status?: string; q?: string; page?: num
     where.push(`(car_name ILIKE $${like} OR spec ILIKE $${like} OR memo ILIKE $${like} OR rec_id ILIKE $${like} OR customer_name ILIKE $${like} OR message ILIKE $${like} OR regexp_replace(phone, '\\D', '', 'g') LIKE $${ph} OR CAST(id AS TEXT) = $${idq})`);
   }
   const size = Math.min(100, Math.max(1, f.size || 30)), page = Math.max(1, f.page || 1);
-  const w = where.length ? "WHERE " + where.join(" AND ") : "";
+  const w = "WHERE " + where.join(" AND ");
   const total = (await q(`SELECT COUNT(*)::int AS n FROM inquiries ${w}`, params)).rows[0].n;
   params.push(size, (page - 1) * size);
   // #45: 문의 당시 그 견적 번호의 금융사(관리자 전용) — 문의 시각 이전 마지막 업로드 행, 없으면 가장 최근 행
   const { rows } = await q(`SELECT i.*, (SELECT r.data->>'fin' FROM quote_rows r JOIN quote_batches b ON b.id = r.batch_id WHERE i.rec_id IS NOT NULL AND r.rec_id = i.rec_id
       ORDER BY (b.created_at <= i.created_at) DESC, r.batch_id DESC LIMIT 1) AS quote_fin
     FROM inquiries i ${w} ORDER BY i.created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`, params);
-  const counts = (await q(`SELECT status, COUNT(*)::int AS n FROM inquiries GROUP BY status`)).rows;
-  return { total, page, size, rows, counts: Object.fromEntries(counts.map((r) => [r.status, r.n])) };
+  const counts = (await q(`SELECT status, COUNT(*)::int AS n FROM inquiries WHERE deleted_at IS NULL GROUP BY status`)).rows;
+  const trash = (await q(`SELECT COUNT(*)::int AS n FROM inquiries WHERE deleted_at IS NOT NULL`)).rows[0].n;
+  return { total, page, size, rows, counts: Object.fromEntries(counts.map((r) => [r.status, r.n])), trash };
 }
 
-export const InquiryPatch = z.object({ status: z.enum(STATUS).optional(), memo: z.string().max(4000).optional(), assignee: z.string().max(50).optional() });
+export const InquiryPatch = z.object({ status: z.enum(STATUS).optional(), memo: z.string().max(4000).optional(), assignee: z.string().max(50).optional(),
+  delivered_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((v) => !isNaN(Date.parse(v)), "날짜").nullable().optional() });   // 출고일 (계약완료 건)
 export async function updateInquiry(id: number, p: z.infer<typeof InquiryPatch>) {
   const sets: string[] = [], params: unknown[] = [id];
   for (const [k, v] of Object.entries(p)) { if (v === undefined) continue; params.push(v); sets.push(`${k} = $${params.length}`); }
@@ -122,6 +125,24 @@ export async function updateInquiry(id: number, p: z.infer<typeof InquiryPatch>)
   const prev = row.prev_status; delete row.prev_status;
   if (p.status && prev) onLeadStatus(row, prev);
   return row;
+}
+
+/** 휴지통으로 (숨김) · 복원 — 관리자 권한 '상담 문의 삭제' */
+export async function trashInquiry(id: number, adminId: number, restore = false) {
+  const r = restore
+    ? await q(`UPDATE inquiries SET deleted_at = NULL, deleted_by = NULL, updated_at = now() WHERE id = $1 AND deleted_at IS NOT NULL RETURNING id`, [id])
+    : await q(`UPDATE inquiries SET deleted_at = now(), deleted_by = $2, updated_at = now() WHERE id = $1 AND deleted_at IS NULL RETURNING id`, [id, adminId]);
+  return !!r.rowCount;
+}
+/** 고객이 마이페이지에서 상담 중지 → 상태 '고객중지' (신규·상담 중일 때만) */
+export async function customerStop(id: number, memberId: number) {
+  const cur = (await q(`SELECT status FROM inquiries WHERE id = $1 AND member_id = $2 AND deleted_at IS NULL`, [id, memberId])).rows[0];
+  if (!cur) return { error: "상담 내역을 찾을 수 없어요", status: 404 };
+  if (cur.status === "CUSTOMER_STOP") return { ok: true };
+  if (!["NEW", "IN_PROGRESS"].includes(cur.status)) return { error: "이미 끝난 상담이에요", status: 400 };
+  await q(`UPDATE inquiries SET stopped_at = now() WHERE id = $1`, [id]);
+  await updateInquiry(id, { status: "CUSTOMER_STOP" });
+  return { ok: true };
 }
 
 /** 채널톡 첫 메시지 (고객이 보내는 문장으로 미리 채움) */

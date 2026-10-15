@@ -36,6 +36,18 @@
                 <div class="mp_inq" id="mpInq"></div>
             </section>
 
+            <!-- 내 후기 (회원 · 계약완료 고객 작성, 관리자 확인 후 게시) -->
+            <section class="mp_sec" id="mpRvSec" hidden>
+                <div class="mp_sec_head"><h2>내 후기</h2><span class="mp_count" id="mpRvCount"></span><button type="button" class="mp_write" id="mpRvWrite">후기 작성</button></div>
+                <div class="mp_rv" id="mpRv"></div>
+            </section>
+
+            <!-- 참여한 이벤트 (회원) -->
+            <section class="mp_sec" id="mpEvSec" hidden>
+                <div class="mp_sec_head"><h2>참여한 이벤트</h2><span class="mp_count" id="mpEvCount"></span></div>
+                <div class="mp_ev" id="mpEv"></div>
+            </section>
+
             <!-- 내가 저장한 견적 -->
             <section class="mp_sec">
                 <div class="mp_sec_head"><h2>내가 저장한 견적</h2><span class="mp_count" id="mpSavedCount"></span></div>
@@ -148,13 +160,14 @@
         })();
     </script>
     <script src="data/auth.js"></script>   <!-- 회원: 카카오·휴대폰 가입 시트 · 비회원 조건 변경 제한 -->
+    <script src="data/review-write.js"></script>   <!-- 후기 작성 시트 (계약완료 회원) -->
     <script src="data/inquiry.js"></script>   <!-- 상담 문의: 회원 → 카카오톡 견적서·상담 / 로그인 수단 없으면 채널톡·상담 신청 양식 -->
     <script>
         /* 회원: 로그인 상태 · 서버의 상담 신청 내역(견적서 보기) · 로그아웃 · 마케팅 수신 · 탈퇴 */
         (function(){
             var AU = window.CHAQ_AUTH, U = window.CHAQ_UTIL; if (!AU) return;
             var esc = U.esc, won = U.won, prof = document.getElementById('mpProfile');
-            var ST = { NEW:'접수 완료', IN_PROGRESS:'상담 중', CONTRACTED:'계약 완료', CLOSED:'상담 종료' };
+            var ST = { NEW:'접수 완료', IN_PROGRESS:'상담 중', CONTRACTED:'계약 완료', CLOSED:'상담 종료', CUSTOMER_STOP:'상담 중지' };
             var PLAN = { '0':'초기비용 0원', b:'보증금 30%', s:'선납금 30%' };
             function d8(iso){ var d=new Date(iso); return isNaN(d)?'':(d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')); }
             function render(){
@@ -167,13 +180,50 @@
                         document.getElementById('mpInqCount').textContent = rows.length ? rows.length+'건' : '';
                         document.getElementById('mpInq').innerHTML = rows.map(function(r){
                             var c = r.conditions||{}, cond = [c.product, c.term?c.term+'개월':'', PLAN[c.plan]||'', c.dist?'연 '+c.dist+'만 km':'', r.monthly?'월 '+won(r.monthly)+'원':''].filter(Boolean).join(' · ');
-                            return '<div class="mp_inq_row"><span class="mp_inq_t"><strong>'+esc(((r.car_name||'')+' '+(r.trim_name||'')).trim() || '일반 상담')+'</strong>'+(cond?'<small>'+esc(cond)+'</small>':'')+(r.report_token?'<a class="mp_inq_rep" href="quote-report.html?t='+encodeURIComponent(r.report_token)+'">견적서 보기 ›</a>':'')+'</span><span class="mp_inq_s"><em>'+(ST[r.status]||'접수 완료')+'</em><small>'+d8(r.created_at)+' · #'+r.id+'</small></span></div>';
+                            var stopable = r.status === 'NEW' || r.status === 'IN_PROGRESS';   // 상담 중지 → 관리자 화면 '고객중지'
+                            return '<div class="mp_inq_row"><span class="mp_inq_t"><strong>'+esc(((r.car_name||'')+' '+(r.trim_name||'')).trim() || '일반 상담')+'</strong>'+(cond?'<small>'+esc(cond)+'</small>':'')+(r.report_token?'<a class="mp_inq_rep" href="quote-report.html?t='+encodeURIComponent(r.report_token)+'">견적서 보기 ›</a>':'')+'</span><span class="mp_inq_s"><em class="'+(r.status==='CUSTOMER_STOP'?'is-stop':r.status==='CLOSED'?'is-end':'')+'">'+(ST[r.status]||'접수 완료')+'</em><small>'+d8(r.created_at)+' · #'+r.id+'</small>'+(stopable?'<button type="button" class="mp_stop" data-stop="'+r.id+'">상담 중지</button>':'')+'</span></div>';
                         }).join('') || '<p class="mp_empty">아직 신청한 상담이 없어요.<br>차량 상세의 \'이 조건 그대로 문의하기\'를 누르면<br>견적서를 카카오톡으로 받아볼 수 있어요.</p>';
                     }).catch(function(){});
+                    loadReviews(); loadEvents();
                 } else if (A.kakao || A.sms) {
                     prof.innerHTML = '<span class="mp_pinfo"><strong>내 견적함</strong><small class="mp_pnote">가입하면 상담 내역과 견적서를<br>어디서든 볼 수 있어요</small></span><span class="mp_pact"><button type="button" class="mp_pbtn on" data-act="login">로그인 · 가입</button></span>';
                 }
                 var wd = document.getElementById('mpWithdraw'); if (wd) wd.hidden = !m;
+            }
+            // 상담 중지 (고객) → 관리자 화면 '고객중지'
+            document.getElementById('mpInq').addEventListener('click', function(e){
+                var b = e.target.closest ? e.target.closest('[data-stop]') : null; if (!b) return;
+                if (!window.confirm('이 상담을 중지할까요? 담당 매니저가 더 이상 연락드리지 않아요. 다시 상담이 필요하면 언제든 새로 신청해 주세요.')) return;
+                b.disabled = true;
+                AU.api('/api/me/inquiries/'+b.getAttribute('data-stop')+'/stop', { method:'POST' }).then(function(){ U.toast('상담을 중지했어요'); render(); }).catch(function(er){ b.disabled = false; U.toast(er.message); });
+            });
+            // 내 후기 (작성은 이용 후기 페이지와 같은 시트)
+            function loadReviews(){
+                document.getElementById('mpRvSec').hidden = false;
+                AU.api('/api/me/reviews').then(function(j){
+                    var rows = j.rows || [];
+                    document.getElementById('mpRvCount').textContent = rows.length ? rows.length+'건' : '';
+                    document.getElementById('mpRv').innerHTML = rows.map(function(r){
+                        return '<div class="mp_rv_row"><div class="mp_rv_h"><strong>'+esc(((r.car||'')+' '+(r.trim||'')).trim() || '계약 차량')+'</strong><em class="'+(r.visible?'on':'')+'">'+(r.visible?'게시됨':'확인 중')+'</em></div>'+
+                            '<small>'+(r.deliveredOn?'출고 '+esc(String(r.deliveredOn).replace(/-/g,'.'))+' · ':'')+'작성 '+esc(String(r.date||'').replace(/-/g,'.'))+'</small><p>'+esc(r.text)+'</p>'+
+                            ((r.photos||[]).length ? '<div class="mp_rv_ph">'+r.photos.slice(0,5).map(function(u){ return '<img src="'+esc(/^\/api\//.test(u) ? String((window.CHAQ_API||{}).base||'').replace(/\/$/,'')+u : u)+'" alt="" loading="lazy">'; }).join('')+'</div>' : '')+'</div>';
+                    }).join('') || '<p class="mp_empty">아직 작성한 후기가 없어요.<br>차큐로 계약을 마치셨다면 출고 후기를 남겨 주세요.</p>';
+                }).catch(function(){});
+            }
+            document.getElementById('mpRvWrite').addEventListener('click', function(){ if (window.CHAQ_REVIEW_WRITE) window.CHAQ_REVIEW_WRITE.open(); });
+            document.addEventListener('chaq:review', loadReviews);
+            // 참여한 이벤트
+            function loadEvents(){
+                document.getElementById('mpEvSec').hidden = false;
+                AU.api('/api/me/events').then(function(j){
+                    var rows = j.rows || [], base = String((window.CHAQ_API||{}).base||'').replace(/\/$/,'');
+                    document.getElementById('mpEvCount').textContent = rows.length ? rows.length+'건' : '';
+                    document.getElementById('mpEv').innerHTML = rows.map(function(r){
+                        var img = r.img ? (/^\/api\//.test(r.img) ? base + r.img : r.img) : '';
+                        return '<a class="mp_ev_row"'+(r.visible?' href="event__detail.html?id='+encodeURIComponent(r.id)+'"':'')+'>'+(img?'<img src="'+esc(img)+'" alt="" loading="lazy">':'')+
+                            '<span><strong>'+esc(r.title)+'</strong><small>'+(r.period?esc(r.period)+' · ':'')+'참여 '+d8(r.joinedAt)+'</small></span><em class="'+(r.status==='end'?'is-end':'')+'">'+(r.status==='end'?'종료':'참여 완료')+'</em></a>';
+                    }).join('') || '<p class="mp_empty">아직 참여한 이벤트가 없어요.<br>진행 중인 이벤트에서 \'이벤트 참여하기\'를 눌러 보세요.</p>';
+                }).catch(function(){});
             }
             prof.addEventListener('click', function(e){
                 var b = e.target.closest('[data-act]'); if (!b) return;

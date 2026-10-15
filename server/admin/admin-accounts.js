@@ -2,13 +2,15 @@
 (function () {
   "use strict";
   var A = window.CHAQ_ADMIN, $ = A.$, esc = A.esc, dt = A.dt, api = A.api;
-  var TABS = [], LBL = {}, HOURS = 72;
+  var TABS = [], EXTRA = [], LBL = {}, HOURS = 72;   // EXTRA = 탭이 아닌 권한(상담 문의 삭제) — 없음/허용
   var LV = [["none", "없음"], ["view", "보기"], ["edit", "수정"]];
   var STATE = { active: ["사용 중", "live"], invited: ["초대 대기", "invited"], expired: ["초대 만료", "draft"], stopped: ["중지", "stopped"] };
 
   function sel(name, v, dis) { return '<select name="' + name + '"' + (dis ? " disabled" : "") + '>' + LV.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select>'; }
-  function permInputs(perms, dis) { return TABS.map(function (t) { return '<label class="ad_perm">' + esc(LBL[t]) + sel("p_" + t, (perms || {})[t] || "none", dis) + '</label>'; }).join(""); }
-  function readPerms(root) { var o = {}; TABS.forEach(function (t) { var s = root.querySelector('[name="p_' + t + '"]'); o[t] = s ? s.value : "none"; }); return o; }
+  function selX(name, v, dis) { return '<select name="' + name + '"' + (dis ? " disabled" : "") + '><option value="none">없음</option><option value="edit"' + (v === "edit" ? " selected" : "") + '>허용</option></select>'; }
+  function permInputs(perms, dis) { return TABS.map(function (t) { return '<label class="ad_perm">' + esc(LBL[t]) + sel("p_" + t, (perms || {})[t] || "none", dis) + '</label>'; }).join("") +
+    EXTRA.map(function (t) { return '<label class="ad_perm" title="휴지통으로 삭제·복원 (상담 문의 탭 권한도 있어야 화면이 보여요)">' + esc(LBL[t]) + selX("p_" + t, (perms || {})[t] || "none", dis) + '</label>'; }).join(""); }
+  function readPerms(root) { var o = {}; TABS.concat(EXTRA).forEach(function (t) { var s = root.querySelector('[name="p_' + t + '"]'); o[t] = s ? s.value : "none"; }); return o; }
   function toast(m) { var t = document.getElementById("vmToast"); if (!t) return; t.textContent = m; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2200); }
 
   function showLink(who, token) {
@@ -27,13 +29,13 @@
 
   function load() {
     api("/api/admin/admins").then(function (r) {
-      TABS = r.tabs; LBL = r.tabLabels; HOURS = r.inviteHours || 72;
+      TABS = r.tabs; EXTRA = r.extraPerms || []; LBL = r.tabLabels; HOURS = r.inviteHours || 72;
       if (!$("#adAddPerms").innerHTML) $("#adAddPerms").innerHTML = permInputs({}, false);
       $("#adTable").innerHTML = '<tr><th>이름</th><th>이메일</th><th>상태</th><th>탭별 권한</th><th>최근 로그인</th><th></th></tr>' + r.rows.map(function (a) {
         var st = STATE[a.state] || [a.state, ""], owner = a.role === "owner";
         return '<tr data-id="' + a.id + '"><td>' + (owner ? esc(a.name) : '<input name="name" value="' + esc(a.name) + '" maxlength="50" style="width:110px">') + '</td><td>' + esc(a.email) + '</td>' +
           '<td><span class="pill ' + st[1] + '">' + st[0] + '</span>' + (a.state === "invited" && a.inviteExpiresAt ? '<br><small class="hint">~' + dt(a.inviteExpiresAt) + '</small>' : '') + '</td>' +
-          '<td>' + (owner ? '<span class="hint">대표 — 모든 탭 수정 + 관리자 계정·외부 연동</span>' : '<div class="perm_cell">' + permInputs(a.perms, !a.active) + '</div>') + '</td>' +
+          '<td>' + (owner ? '<span class="hint">대표 — 모든 탭 수정 + 상담 문의 삭제 + 관리자 계정·외부 연동</span>' : '<div class="perm_cell">' + permInputs(a.perms, !a.active) + '</div>') + '</td>' +
           '<td>' + (a.lastLoginAt ? dt(a.lastLoginAt) : '<span class="hint">-</span>') + '</td>' +
           '<td>' + (owner ? '' : '<div class="row gap ad_acts">' + (a.active ? '<button class="btn sm primary" data-act="save">저장</button><button class="btn sm" data-act="invite">' + (a.state === "active" ? "비밀번호 재설정 링크" : "초대 링크") + '</button><button class="btn sm danger" data-act="stop">중지</button>' : '<button class="btn sm" data-act="resume">사용 재개</button>') + '</div>') + '</td></tr>';
       }).join("");

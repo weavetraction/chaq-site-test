@@ -6,7 +6,11 @@ import { config } from "../config.js";
 import { q } from "../db.js";
 import { integrations, kakaoLoginOn, smsOn, alimtalkOn, loginAvailable } from "../lib/integrations.js";
 import { Agree, currentMember, publicMember, setSelfPhone, issueMember, clearMember, sendCode, verifyPhone, kakaoState, readKakaoState, kakaoExchange, kakaoLogin, withdraw, setMarketing } from "../lib/members.js";
-import { reportView } from "../lib/inquiries.js";
+import multer from "multer";
+import { reportView, customerStop } from "../lib/inquiries.js";
+import { saveMedia, MediaError } from "../lib/media.js";
+import { createMemberReview, memberReviews, joinEvent, memberEvents, ContentError } from "../lib/content.js";
+import { vm } from "../lib/vm.js";
 
 export const memberRouter = Router();
 const codeLimit = limiter("smscode", { windowMs: 10 * 60_000, limit: 8, message: { error: "인증번호 요청이 너무 많아요. 잠시 후 다시 시도해 주세요" } });
@@ -42,8 +46,57 @@ memberRouter.get("/api/me", wrap(async (req, res) => {
 }));
 memberRouter.get("/api/me/inquiries", wrap(async (req, res) => {
   const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
-  const { rows } = await q(`SELECT id, created_at, status, car_name, trim_name, spec, conditions, monthly, report_token, source FROM inquiries WHERE member_id = $1 ORDER BY created_at DESC LIMIT 50`, [m.id]);
+  const { rows } = await q(`SELECT id, created_at, status, car_name, trim_name, spec, conditions, monthly, report_token, source, delivered_on FROM inquiries WHERE member_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 50`, [m.id]);
   res.json({ rows });
+}));
+// 상담 중지 (신규·상담 중 → 관리자 화면 '고객중지')
+memberRouter.post("/api/me/inquiries/:id/stop", wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  const id = Number(req.params.id); if (!Number.isInteger(id) || id <= 0) throw new HttpError("잘못된 요청이에요", 400);
+  const r = await customerStop(id, m.id);
+  if (r.error) throw new HttpError(r.error, r.status);
+  res.json({ ok: true });
+}));
+
+// ---------------------------------------------------------------- 후기 (계약완료 고객만 · 관리자 확인 후 노출) · 이벤트 참여
+const contractsOf = async (memberId: number) => (await q(`SELECT i.id, i.car_name, i.trim_name, i.trim_id, to_char(i.delivered_on, 'YYYY-MM-DD') AS delivered_on, i.created_at,
+    EXISTS (SELECT 1 FROM content_items c WHERE c.kind = 'review' AND c.data->>'inquiryId' = i.id::text) AS reviewed
+  FROM inquiries i WHERE i.member_id = $1 AND i.status = 'CONTRACTED' AND i.deleted_at IS NULL ORDER BY i.created_at DESC`, [memberId])).rows;
+memberRouter.get("/api/me/contracts", wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  res.json({ rows: (await contractsOf(m.id)).map((r) => ({ id: r.id, car: ((r.car_name || "") + " " + (r.trim_name || "")).trim(), deliveredOn: r.delivered_on, reviewed: r.reviewed })) });
+}));
+memberRouter.get("/api/me/reviews", wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  res.json({ rows: await memberReviews(m.id) });
+}));
+const reviewLimit = limiter("member-review", { windowMs: 60 * 60_000, limit: 10, message: { error: "잠시 후 다시 시도해 주세요" } });
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 5, fields: 10 } });
+memberRouter.post("/api/me/reviews", reviewLimit, photoUpload.array("photos", 5), wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  const cid = Number(req.body?.contractId);
+  const c = (await contractsOf(m.id)).find((r) => r.id === cid);
+  if (!c) throw new HttpError("계약 완료된 차량을 선택해 주세요", 400);
+  if (c.reviewed) throw new HttpError("이 계약은 이미 후기를 작성했어요", 400);
+  const text = String(req.body?.text || "").trim();
+  if (text.length < 10) throw new HttpError("후기 내용을 10자 이상 적어 주세요", 400);
+  const files = ((req.files as Express.Multer.File[]) || []);
+  const photos: string[] = [];
+  try { for (const f of files) photos.push((await saveMedia(f.buffer, Buffer.from(f.originalname, "latin1").toString("utf8"), "review", null, { noSvg: true })).url); }
+  catch (e) { throw new HttpError(e instanceof MediaError ? e.message : "사진을 읽을 수 없어요. 다른 사진으로 올려 주세요 (jpg·png·webp)", 400); }
+  try {
+    const row = await createMemberReview({ memberId: m.id, memberName: m.name || m.nickname || "", inquiry: c, text, photos, modelId: vm.get(c.trim_id)?.modelId || null });
+    res.status(201).json({ ok: true, id: row.id });
+  } catch (e) { if (e instanceof ContentError) throw new HttpError(e.message, e.status); if ((e as any)?.code === "23505") throw new HttpError("이 계약은 이미 후기를 작성했어요", 400); throw e; }
+}));
+memberRouter.get("/api/me/events", wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  res.json({ rows: await memberEvents(m.id) });
+}));
+memberRouter.post("/api/me/events/:id/join", wrap(async (req, res) => {
+  const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);
+  const id = String(req.params.id || ""); if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) throw new HttpError("잘못된 요청이에요", 400);
+  try { res.json(await joinEvent(id, m.id)); } catch (e) { if (e instanceof ContentError) throw new HttpError(e.message, e.status); throw e; }
 }));
 memberRouter.post("/api/me/marketing", wrap(async (req, res) => {
   const m = await currentMember(req); if (!m) throw new HttpError("로그인이 필요합니다", 401);

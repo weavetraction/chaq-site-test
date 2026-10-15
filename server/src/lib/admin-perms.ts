@@ -2,17 +2,22 @@
 // 판정: GET/HEAD = 보기, 그 외 = 수정. 경로가 표에 없으면 owner 만 (기본 거부)
 export const TABS = ["vm", "quotes", "content", "home", "inquiries", "members"] as const;
 export type Tab = (typeof TABS)[number];
+// 탭이 아닌 별도 권한 (없음/허용 — 허용 = "edit") : 상담 문의 삭제(휴지통·복원, 대표 261015)
+export const EXTRA_PERMS = ["inquiryDelete"] as const;
+export type Extra = (typeof EXTRA_PERMS)[number];
+export type PermKey = Tab | Extra;
 export type Level = "none" | "view" | "edit";
-export type Perms = Partial<Record<Tab, Level>>;
-export const TAB_KO: Record<Tab, string> = { vm: "차량 데이터", quotes: "견적 데이터", content: "콘텐츠", home: "메인 화면", inquiries: "상담 문의", members: "회원" };
+export type Perms = Partial<Record<PermKey, Level>>;
+export const TAB_KO: Record<PermKey, string> = { vm: "차량 데이터", quotes: "견적 데이터", content: "콘텐츠", home: "메인 화면", inquiries: "상담 문의", members: "회원", inquiryDelete: "상담 문의 삭제" };
 
 export function normPerms(x: unknown): Perms {
   const o: Perms = {}; const src = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
   for (const t of TABS) { const v = src[t]; o[t] = v === "edit" || v === "view" ? v : "none"; }
+  for (const t of EXTRA_PERMS) o[t] = src[t] === "edit" ? "edit" : "none";
   return o;
 }
 
-type Rule = { re: RegExp; view: Tab[] | "any" | "owner"; edit: Tab[] | "any" | "owner" };
+type Rule = { re: RegExp; view: PermKey[] | "any" | "owner"; edit: PermKey[] | "any" | "owner" };
 const RULES: Rule[] = [
   { re: /^\/api\/admin\/(me|logout)(\/|$)/, view: "any", edit: "any" },
   { re: /^\/api\/admin\/(admins|integrations)(\/|$)/, view: "owner", edit: "owner" },
@@ -23,6 +28,8 @@ const RULES: Rule[] = [
   { re: /^\/api\/admin\/(quotes|batches|trims)(\/|$)/, view: ["quotes"], edit: ["quotes"] },
   { re: /^\/api\/admin\/content(-cats)?(\/|$)/, view: ["content"], edit: ["content"] },
   { re: /^\/api\/admin\/home(\/|$)/, view: ["home"], edit: ["home"] },
+  // 휴지통 목록·삭제·복원: '상담 문의 삭제' 권한 (허용 = edit) — 일반 문의 규칙보다 먼저
+  { re: /^\/api\/admin\/inquiries\/(trash|\d+\/(trash|restore))$/, view: ["inquiryDelete"], edit: ["inquiryDelete"] },
   { re: /^\/api\/admin\/inquiries(\/|$)/, view: ["inquiries"], edit: ["inquiries"] },
   { re: /^\/api\/admin\/members(\/|$)/, view: ["members"], edit: ["members"] },
 ];
@@ -36,9 +43,10 @@ export function denyReason(role: string, perms: Perms, method: string, path: str
   const need = write ? rule.edit : rule.view;
   if (need === "any") return null;
   if (need === "owner") return "이 기능은 대표 계정만 쓸 수 있어요";
-  const ok = need.some((t) => (write ? perms[t] === "edit" : perms[t] === "view" || perms[t] === "edit"));
+  const ok = need.some((t) => (write || (EXTRA_PERMS as readonly string[]).includes(t) ? perms[t] === "edit" : perms[t] === "view" || perms[t] === "edit"));
   if (ok) return null;
   const tabs = need.map((t) => TAB_KO[t]).join("·");
+  if (need.some((t) => (EXTRA_PERMS as readonly string[]).includes(t))) return `권한이 없어요 (${tabs}) — 대표에게 권한을 요청하세요`;
   return write ? `수정 권한이 없어요 (${tabs}) — 대표에게 권한을 요청하세요` : `접근 권한이 없어요 (${tabs})`;
 }
 

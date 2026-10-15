@@ -14,7 +14,7 @@ import { adminHomeRouter } from "./admin-home.js";
 import { adminInviteRouter, adminAccountsRouter } from "./admin-accounts.js";
 import { KINDS, Kind } from "../lib/quotes-format.js";
 import { vm } from "../lib/vm.js";
-import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO } from "../lib/inquiries.js";
+import { listInquiries, updateInquiry, InquiryPatch, STATUS_KO, trashInquiry } from "../lib/inquiries.js";
 import { integrationsForAdmin, saveIntegrations, IntegrationsInput } from "../lib/integrations.js";
 import { maskPhone } from "../lib/members.js";
 
@@ -123,6 +123,12 @@ adminRouter.get("/api/admin/trims", wrap(async (req, res) => res.json(vm.search(
 adminRouter.get("/api/admin/inquiries", wrap(async (req, res) => {
   res.json({ ...(await listInquiries({ status: req.query.status ? String(req.query.status) : undefined, q: req.query.q ? String(req.query.q) : undefined, page: Number(req.query.page) || 1 })), statusLabels: STATUS_KO });
 }));
+// 휴지통 (권한: 상담 문의 삭제) — 숨김만, 복원 가능
+adminRouter.get("/api/admin/inquiries/trash", wrap(async (req, res) => {
+  res.json({ ...(await listInquiries({ trash: true, q: req.query.q ? String(req.query.q) : undefined, page: Number(req.query.page) || 1 })), statusLabels: STATUS_KO });
+}));
+adminRouter.post("/api/admin/inquiries/:id/trash", wrap(async (req, res) => { if (!(await trashInquiry(intParam(req.params.id), adminOf(req).id))) return res.status(404).json({ error: "없거나 이미 삭제됨" }); res.json({ ok: true }); }));
+adminRouter.post("/api/admin/inquiries/:id/restore", wrap(async (req, res) => { if (!(await trashInquiry(intParam(req.params.id), adminOf(req).id, true))) return res.status(404).json({ error: "휴지통에 없음" }); res.json({ ok: true }); }));
 adminRouter.patch("/api/admin/inquiries/:id", wrap(async (req, res) => {
   const p = InquiryPatch.safeParse(req.body || {});
   if (!p.success) return res.status(400).json({ error: "입력 형식 오류" });
@@ -148,7 +154,7 @@ adminRouter.put("/api/admin/integrations", wrap(async (req, res) => {
   res.json(await saveIntegrations(p.data));
 }));
 adminRouter.get("/api/admin/inquiries/export.csv", wrap(async (_req, res) => {
-  const { rows } = await q(`SELECT i.id, i.created_at, i.status, i.source, i.kind, i.rec_id, i.customer_name, i.phone, i.contact_time, i.message, i.car_name, i.trim_name, i.spec, i.conditions, i.monthly, i.options, i.color, i.memo, i.assignee, i.page_url, i.first_touch, i.last_touch, (SELECT r.data->>'fin' FROM quote_rows r JOIN quote_batches b ON b.id = r.batch_id WHERE i.rec_id IS NOT NULL AND r.rec_id = i.rec_id ORDER BY (b.created_at <= i.created_at) DESC, r.batch_id DESC LIMIT 1) AS quote_fin FROM inquiries i ORDER BY i.id DESC LIMIT 10000`);
+  const { rows } = await q(`SELECT i.id, i.created_at, i.status, i.source, i.kind, i.rec_id, i.customer_name, i.phone, i.contact_time, i.message, i.car_name, i.trim_name, i.spec, i.conditions, i.monthly, i.options, i.color, i.memo, i.assignee, i.page_url, i.first_touch, i.last_touch, (SELECT r.data->>'fin' FROM quote_rows r JOIN quote_batches b ON b.id = r.batch_id WHERE i.rec_id IS NOT NULL AND r.rec_id = i.rec_id ORDER BY (b.created_at <= i.created_at) DESC, r.batch_id DESC LIMIT 1) AS quote_fin FROM inquiries i WHERE i.deleted_at IS NULL ORDER BY i.id DESC LIMIT 10000`);
   const esc = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };   // 엑셀 수식 실행 방지(= + - @ 로 시작하면 ' 붙임)
   const head = ["번호", "접수일시", "상태", "유입", "구분", "견적ID", "금융사", "이름", "연락처", "연락 희망", "문의 내용", "차량", "등급", "사양", "조건", "월납입금", "옵션", "색상", "메모", "담당", "페이지",
     "유입_source", "유입_medium", "유입_campaign", "유입_term", "유입_content", "처음유입_source", "처음유입_medium", "처음유입_campaign", "광고클릭ID", "랜딩"];
