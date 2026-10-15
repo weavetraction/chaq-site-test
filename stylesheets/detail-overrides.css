@@ -2770,4 +2770,3 @@ html.chaq-detail-loading .local-car-detail::after{
 .mypage .mp_ev_row small{ color:#5f6670; font-size:12.5px; }
 .mypage .mp_ev_row em{ flex:none; padding:3px 8px; border-radius:999px; background:#e8f7ef; color:#18a85c; font-size:12px; font-style:normal; font-weight:700; }
 .mypage .mp_ev_row em.is-end{ background:#eef0f2; color:#6b7178; }
-.mypage .mp_inq_rep.is-btn{ margin-top:2px; padding:4px 9px; border:1px solid #18a85c; border-radius:8px; background:#fff; color:#18a85c; font-size:12px; font-weight:700; line-height:1.4; }   /* 상담 신청 내역 '견적서 보기' 버튼 (대표 261015) */
