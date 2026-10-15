@@ -232,6 +232,23 @@
     if (n + 1 === LIMIT[kind]) setTimeout(function () { toast(kind === "detail" ? "이 차량은 여기까지 조건을 바꿀 수 있어요. 계속 비교하려면 3초 가입해 주세요" : "오늘은 여기까지 조건을 바꿀 수 있어요. 계속 비교하려면 3초 가입해 주세요"); }, 300);
   }, true);
 
+  // ---------------------------------------------------------------- 카카오 로그인 완료 확인 화면 (대표 261015)
+  function loginDone() {
+    return new Promise(function (ok) {
+      if (!document.getElementById("auDoneCss")) { var st = document.createElement("style"); st.id = "auDoneCss";
+        st.textContent = ".au_done{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;background:#fff;font-family:inherit;color:#202124}" +
+          ".au_done .au_dd{flex:1;display:flex;flex-direction:column;align-items:center;padding:96px 24px 0;text-align:center}" +
+          ".au_done .au_dd i{display:flex;width:64px;height:64px;margin-bottom:26px;border-radius:50%;background:#FEE500;align-items:center;justify-content:center}" +
+          ".au_done h3{margin:0 0 12px;font-size:21px;font-weight:800;letter-spacing:-.3px}.au_done p{margin:0;color:#5f6670;font-size:14.5px;line-height:1.55;word-break:keep-all}" +
+          ".au_done button{margin:0 16px calc(16px + env(safe-area-inset-bottom));padding:16px;border:0;border-radius:12px;background:#f1f2f4;color:#202124;font:inherit;font-size:16px;font-weight:700;cursor:pointer}";
+        document.head.appendChild(st); }
+      var el = document.createElement("div"); el.className = "au_done"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+      el.innerHTML = '<div class="au_dd"><i aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1c1f23" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>' +
+        '<h3>카카오 로그인 완료</h3><p>로그인이 완료됐어요.<br>확인을 누르면 보시던 화면에서 이어서 진행돼요.</p></div><button type="button">확인</button>';
+      document.body.appendChild(el); document.body.style.overflow = "hidden";
+      el.querySelector("button").addEventListener("click", function () { el.remove(); document.body.style.overflow = ""; ok(); });
+    });
+  }
   // ---------------------------------------------------------------- 카카오 로그인 후 돌아왔을 때
   function afterReturn() {
     var h = location.hash, mm = h.match(/chaq_login=([a-z]+)/); if (!mm) return;
@@ -243,7 +260,7 @@
       if (mm[1] === "error") { toast(msg ? decodeURIComponent(msg) : "로그인에 실패했어요"); return; }
       var go = function (mem) { if (mem) document.dispatchEvent(new CustomEvent("chaq:login", { detail: { member: mem, pending: pend } })); };
       if (mm[1] === "needphone" || (m && !m.hasPhone)) { openSheet(pend && pend.action === "inquiry" ? "inquiry" : "mypage", null, "phone").then(go).catch(function () {}); return; }
-      toast("로그인됐어요"); go(m);
+      loginDone().then(function () { go(m); });   // 카카오 로그인 완료 확인 화면 → 확인 누르면 이어서 진행 (대표 261015)
     });
   }
   // 이어서 하기: 조건 칩 (상세·목록 공통) — 문의는 inquiry.js 가 받음

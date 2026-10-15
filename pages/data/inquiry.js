@@ -78,7 +78,7 @@
     var AU = window.CHAQ_AUTH;
     if (AU && BASE) return AU.me().then(function () {
       if (!AU.required) return legacy(c);
-      return AU.require({ reason: "inquiry", pending: { action: "inquiry", data: pendingData(c) } }).then(function (m) { if (m) submitMember(c); else legacy(c); }).catch(function () {});
+      return AU.require({ reason: "inquiry", pending: { action: "inquiry", data: pendingData(c) } }).then(function (m) { if (m) { if (goKakao && c.source === "DETAIL") kakaoConfirm(c); else submitMember(c); } else legacy(c); }).catch(function () {});
     });
     legacy(c);
   }
@@ -177,9 +177,18 @@
       '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><span class="iqf_ol"><b>전화상담</b><span>보고계신 견적번호를 말씀해주세요</span>' + (qid ? '<em>견적번호 ' + esc(qid) + '</em>' : '') + '</span><i class="iqf_hr">' + HR_TEL + '</i></a>' +
       '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
     bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () {
-      var st = (window.CHAQ_AUTH && window.CHAQ_AUTH.state && window.CHAQ_AUTH.state()) || {};
-      if (!(st.auth && st.auth.alimtalk)) copyText("차큐 견적서 요청" + (qid ? " (견적번호 " + qid + ")" : ""));   // 알림톡 전: 채팅방에 붙여넣을 요청 메시지 (누른 순간 복사 — 로그인 후 자동 진행 땐 복사가 막힐 수 있어서)
-      goKakao = true; close(); openChat(detailContext());
+      goKakao = true; close(); openChat(detailContext());   // 로그인 전: 가입·로그인 시트(지금 그대로) → 로그인 후: 견적서 발송 확인 창
+    });
+  }
+  // 카톡상담 — 로그인 후 확인 창: 지금 보던 견적 그대로 접수 → 카카오톡 견적서 (대표 261015)
+  function kakaoConfirm(c) {
+    goKakao = true;
+    var bg = sheet('<div class="iqf_kc"><h3>지금 보고 계신 견적 그대로<br>상담을 도와드려요</h3><p class="iqf_sub">추가 영업전화는 없어요.</p></div>' +
+      '<div class="iqf_btns"><button type="button" class="iqf_send" data-kc-go>카카오로 견적서 발송하기</button></div>');
+    bg.querySelector("[data-kc-go]").addEventListener("click", function () {
+      var st = (window.CHAQ_AUTH && window.CHAQ_AUTH.state && window.CHAQ_AUTH.state()) || {}, qid = quoteId();
+      if (!(st.auth && st.auth.alimtalk)) copyText("차큐 견적서 요청" + (qid ? " (견적번호 " + qid + ")" : ""));   // 알림톡 전: 채팅방에 붙여넣을 요청 메시지 (버튼 누른 순간 복사)
+      close(); submitMember(c);
     });
   }
   function showError(msg) {
@@ -193,7 +202,7 @@
       if (d.source === "DETAIL") {
         var chips = document.querySelectorAll(".cond_wrap .filter_chip");
         AU.withoutLimit(function () { (d.chips || []).forEach(function (i) { var b = chips[i]; if (b && !b.classList.contains("on")) b.click(); }); });
-        setTimeout(function () { goKakao = d.go === "kakao"; submitMember(detailContext()); }, 250);
+        setTimeout(function () { goKakao = d.go === "kakao"; if (goKakao) kakaoConfirm(detailContext()); else submitMember(detailContext()); }, 250);
       } else submitMember(guideContext(d.topic, d.car));
     }, 300);
   });
@@ -242,6 +251,7 @@
     /* 상담 방법 버튼: 연한 회색 · 오른쪽 상담 시간 (대표 261015) */
     ".iqf .iqf_opt{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;border-color:#f2f3f5;background:#f2f3f5}.iqf .iqf_opt:hover{background:#eaecef}" +
     ".iqf .iqf_ol{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}.iqf .iqf_opt .iqf_ol>span{color:#5f6670;font-size:13.5px;font-weight:400;line-height:1.45}" +
+    ".iqf .iqf_kc{padding:6px 0 18px}.iqf .iqf_kc h3{font-size:20px;line-height:1.4}.iqf .iqf_kc .iqf_sub{margin:8px 0 0}" +
     ".iqf .iqf_opt em{background:#fff}.iqf .iqf_hr{flex:none;color:#5f6670;font-size:13px;font-style:normal;font-weight:600;white-space:nowrap}";
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
   function fmtPhone(v) { var d = String(v || "").replace(/\D/g, "").slice(0, 11); if (d.length < 4) return d; if (d.indexOf("02") === 0) return d.length <= 5 ? d.slice(0, 2) + "-" + d.slice(2) : d.length <= 9 ? d.slice(0, 2) + "-" + d.slice(2, d.length - 4) + "-" + d.slice(-4) : d.slice(0, 2) + "-" + d.slice(2, 6) + "-" + d.slice(6, 10); if (d.length <= 7) return d.slice(0, 3) + "-" + d.slice(3); return d.slice(0, 3) + "-" + d.slice(3, d.length - 4) + "-" + d.slice(-4); }
