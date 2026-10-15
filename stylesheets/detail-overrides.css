@@ -2751,7 +2751,7 @@ html.chaq-detail-loading .local-car-detail::after{
 .mypage .mp_stop{ margin-top:2px; padding:4px 9px; border:1px solid #dadce0; border-radius:8px; background:#fff; color:#5f6670; font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
 .mypage .mp_inq_s em.is-stop{ background:#fff4e5; color:#b45309; }
 .mypage .mp_inq_s em.is-end{ background:#eef0f2; color:#6b7178; }
-.mypage .mp_sec_head .mp_write{ margin-left:auto; padding:6px 11px; border:1px solid #18a85c; border-radius:9px; background:#fff; color:#18a85c; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+.mypage .mp_sec_head .mp_write{ margin-left:auto; padding:7px 12px; border:0; border-radius:9px; background:#1c1f23; color:#fff; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
 .mypage .mp_rv{ display:flex; flex-direction:column; gap:8px; }
 .mypage .mp_rv_row{ padding:14px 16px; border-radius:14px; background:#f5f6f7; }
 .mypage .mp_rv_row .mp_rv_h{ display:flex; align-items:center; justify-content:space-between; gap:10px; }

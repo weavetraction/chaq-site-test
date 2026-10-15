@@ -201,8 +201,23 @@
     var b = e.target.closest ? e.target.closest('[data-pending-link][data-action="inquiry"]') : null; if (!b) return;
     e.preventDefault(); e.stopImmediatePropagation();
     if (b.classList.contains("detail_inquiry")) chooseDetail();
-    else { var tp = b.getAttribute("data-topic") || (b.querySelector("strong") ? b.querySelector("strong").textContent.trim() : ""); openChat(guideContext(tp, b.getAttribute("data-car") || "")); }
+    else chooseGuide();   // '이미 이용 중이신가요?'·'계약 고민 중이신가요?' 카드: 전화·카카오 선택만 (관리자 상담 문의로 접수하지 않음, 대표 261015)
   }, true);
+  function chooseGuide() {
+    var bg = sheet('<h3>문의 방법을 선택해 주세요</h3><div class="iqf_pick">' +
+      '<a class="iqf_opt" data-pick="tel" href="tel:' + TEL.replace(/-/g, "") + '"><b>전화로 문의하기 <small>' + TEL + '</small></b><span>상담 매니저와 바로 통화해요</span></a>' +
+      '<button type="button" class="iqf_opt" data-pick="kakao"><b>카카오로 문의하기</b><span>차큐 카카오톡 채널 채팅방으로 연결돼요</span></button>' +
+      '</div><div class="iqf_btns"><button type="button" class="iqf_close" data-close style="flex:1">닫기</button></div>');
+    bg.querySelector('[data-pick="kakao"]').addEventListener("click", function () {
+      var AU = window.CHAQ_AUTH, go = function () {
+        var ch = AU && AU.state && (AU.state() || {}).kakaoChannel;
+        if (ch && (ch.chat || ch.home)) { close(); location.href = ch.chat || ch.home; }
+        else toastMsg("카카오톡 상담 준비 중이에요. 전화로 문의해 주세요");
+      };
+      if (AU && AU.me) AU.me().then(go, go); else go();
+    });
+  }
+  function toastMsg(m) { var U = window.CHAQ_UTIL; if (U && U.toast) U.toast(m); }
 
   // ---------------------------------------------------------------- 사이트 상담 신청 양식 (채널톡 키가 없을 때)
   var CSS = ".iqf_bg{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(17,20,24,.55)}" +
