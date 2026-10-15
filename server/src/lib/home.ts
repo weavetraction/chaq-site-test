@@ -11,12 +11,14 @@ export const SECTION_KO: Record<Section, string> = { stock: "장기렌트 재고
 const MAX_COUNT: Record<Section, number> = { stock: 30, fast: 30, review: 10, faq: 10 };
 
 export type Banner = { id: string; img: string; alt: string; href: string; start: string | null; end: string | null; visible: boolean };
+export type TopBar = { text: string; href: string; visible: boolean };   // 메인 최상단 띠 문구·링크 (대표 261015) — text 비우면 사이트 기본 문구
 export type HomeConfig = {
   sections: Record<Section, { mode: "auto" | "pick"; ids: string[]; count: number | null }>;
   heroBanners: Banner[];
   midBanners: Banner[];
+  topBar: TopBar;
 };
-const empty = (): HomeConfig => ({ sections: Object.fromEntries(SECTIONS.map((s) => [s, { mode: "auto", ids: [], count: null }])) as any, heroBanners: [], midBanners: [] });
+const empty = (): HomeConfig => ({ sections: Object.fromEntries(SECTIONS.map((s) => [s, { mode: "auto", ids: [], count: null }])) as any, heroBanners: [], midBanners: [], topBar: { text: "", href: "", visible: true } });
 
 const SAFE_URL = /^(https?:\/\/|\/|\.\.\/|#|pages\/|[a-z0-9_\-]+\.html)/i;   // 사이트 페이지(pages/…) 링크 허용
 const S = (v: unknown, max = 200) => String(v ?? "").trim().slice(0, max);
@@ -46,6 +48,9 @@ export function cleanConfig(inp: any): HomeConfig {
   }
   out.heroBanners = cleanBanners(inp?.heroBanners, "상단 배너");
   out.midBanners = cleanBanners(inp?.midBanners, "중간 띠배너");
+  const tb = inp?.topBar || {}, tbHref = S(tb.href, 300);
+  if (tbHref && !SAFE_URL.test(tbHref)) throw new HomeError("상단 띠 링크 형식 오류 (https://… 또는 사이트 페이지 예: pages/event__list__ing.html)");
+  out.topBar = { text: S(tb.text, 80), href: tbHref, visible: tb.visible !== false };
   return out;
 }
 
@@ -77,6 +82,7 @@ export async function publicHome() {
     sections: cfg.sections,
     heroBanners: cfg.heroBanners.filter(live).map(({ img, alt, href }) => ({ img, alt, href })),
     midBanners: cfg.midBanners.filter(live).map(({ img, alt, href }) => ({ img, alt, href })),
+    topBar: cfg.topBar || empty().topBar,
     configured: version !== "0",
   };
   const fix = String.raw`(function(w){var s=document.currentScript&&document.currentScript.src,o=s?s.replace(/\/api\/pub\/.*$/,""):"";if(!o||!w.CHAQ_HOME)return;[w.CHAQ_HOME.heroBanners,w.CHAQ_HOME.midBanners].forEach(function(a){(a||[]).forEach(function(b){if(/^\/api\//.test(b.img))b.img=o+b.img;});});})(window);` + "\n";

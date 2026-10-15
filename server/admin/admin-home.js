@@ -52,8 +52,18 @@
         '<div class="picker"><input type="search" data-pq="' + key + '" placeholder="추가할 항목 검색 (' + cand.length + '개 중)"><div class="res" hidden data-pres="' + key + '"></div></div>' : '') + '</div>';
   }
 
+  // ---------------------------------------------------------------- 메인 최상단 띠 (문구·링크)
+  function topBarBlock() {
+    var t = S.cfg.topBar || (S.cfg.topBar = { text: "", href: "", visible: true });
+    return '<div class="card"><div class="row between wrap"><h2>상단 띠 문구 <small class="hint">메인 맨 위 검정 띠 · 비우면 기본 문구(장기렌트·리스 계약부터 신차출고 최대 100만원 추가 혜택)</small></h2>' +
+      '<label class="chk"><input type="checkbox" data-tb="visible"' + (t.visible !== false ? " checked" : "") + '> 노출</label></div>' +
+      '<div class="fgrid"><label class="wide"><span>문구 (80자까지)</span><input data-tb="text" maxlength="80" value="' + esc(t.text || "") + '" placeholder="장기렌트·리스 계약부터 신차출고 최대 100만원 추가 혜택"></label>' +
+      '<label class="wide"><span>링크 (비우면 이동 없음)</span><input data-tb="href" maxlength="300" value="' + esc(t.href || "") + '" placeholder="pages/event__list__ing.html 또는 https://…"></label></div></div>';
+  }
+
   function render() {
     $("#hmBody").innerHTML =
+      topBarBlock() +
       bannerBlock("heroBanners", "상단 배너", "권장 1200×684 (10:5.7) · 여러 장이면 3.5초마다 넘어감") +
       bannerBlock("midBanners", "중간 띠배너", "메인 중간 + 전체메뉴 화면 배너 공통 · 권장 1080×300") +
       SEC.map(sectionBlock).join("");
@@ -95,6 +105,7 @@
       }).catch(fail);
       return;
     }
+    if ((a = t.getAttribute("data-tb"))) { S.cfg.topBar[a] = t.type === "checkbox" ? t.checked : t.value.trim(); dirty(); return; }
     if ((a = t.getAttribute("data-bf"))) { a = a.split(":"); S.cfg[a[0]][+a[1]][a[2]] = t.type === "checkbox" ? t.checked : (t.value.trim() || (a[2] === "start" || a[2] === "end" ? null : "")); dirty(); if (t.type === "checkbox" || a[2] === "start" || a[2] === "end") render(); return; }
     if ((a = t.getAttribute("data-mode"))) { S.cfg.sections[a].mode = t.value; dirty(); render(); return; }
     if ((a = t.getAttribute("data-cnt"))) { S.cfg.sections[a].count = t.value ? +t.value : null; dirty(); }

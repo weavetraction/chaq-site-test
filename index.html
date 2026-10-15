@@ -17,7 +17,7 @@
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
   <link rel="preload" href="font/PretendardVariable-subset.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261015-1">
+  <link rel="stylesheet" href="stylesheets/redesign.css?v=20261015-2">
   <link rel="stylesheet" href="stylesheets/gnb.css">
     <script src="pages/data/api-config.js"></script>
     <script src="pages/data/site-util.js"></script>
@@ -211,6 +211,13 @@
       var inclTags = function(r){ var i = r.incl || {}; return (i.tint===false?'':'<span class="opt-tag">선팅</span>')+(i.blackbox===false?'':'<span class="opt-tag">블박</span>'); };   // 견적의 포함 사항(선팅·블박)대로
       // 배너: 관리자에서 등록한 상단 배너·중간 띠배너(메뉴 페이지 배너 공통). 없으면 페이지 기본 배너
       var bEsc=function(x){ return String(x||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+      // 최상단 띠: 관리자 '메인 화면 > 상단 띠 문구'의 문구·링크·노출 (설정 없으면 기본 문구 그대로, 대표 261015)
+      var TB = HM && HM.topBar, tpEl = document.getElementById('topPromo');
+      if(tpEl && TB){
+        if(TB.visible===false) tpEl.hidden = true;
+        var tpSpan = tpEl.querySelector('span'); if(tpSpan && TB.text) tpSpan.textContent = TB.text;
+        if(tpSpan && TB.href){ var tpA = document.createElement('a'); tpA.className = 'top-promo-link'; tpA.href = TB.href; tpA.textContent = tpSpan.textContent; tpSpan.replaceWith(tpA); }
+      }
       var HB = HM && HM.heroBanners || [], heroTrack = document.querySelector('.hero-track');
       if(heroTrack && HB.length){
         heroTrack.innerHTML = HB.map(function(b,i){ return '<a class="hero-slide'+(i===0?' is-active':'')+'"'+(b.href?' href="'+bEsc(b.href)+'"':'')+'><img src="'+bEsc(b.img)+'" alt="'+bEsc(b.alt)+'"></a>'; }).join('');
