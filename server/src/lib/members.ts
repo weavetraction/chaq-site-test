@@ -139,7 +139,27 @@ export async function kakaoExchange(code: string, redirectUri: string) {
   const ka = uj.kakao_account || {};
   const by = String(ka.birthyear || "").replace(/\D/g, "");
   return { kakaoId: String(uj.id), phone: phoneDigits(ka.phone_number), name: String(ka.name || "").slice(0, 30), nickname: String(ka.profile?.nickname || uj.properties?.nickname || "").slice(0, 30),
-    birthYear: /^(19|20)\d{2}$/.test(by) ? by : "", ship: await kakaoShipAddress(tj.access_token) };
+    birthYear: /^(19|20)\d{2}$/.test(by) ? by : "", ship: await kakaoShipAddress(tj.access_token), terms: await kakaoServiceTerms(tj.access_token) };
+}
+/** 카카오싱크 간편가입 서비스 약관 동의 내역 (대표 261015) — 콘솔 간편가입에 등록한 태그: terms(이용약관)·privacy(개인정보 수집·이용)·age14(만 14세)·marketing(선택)
+ *  간편가입을 안 켰거나 조회 실패면 null → 사이트에서 받은 동의(기존 방식)로 처리 */
+export const KAKAO_TERM_TAGS = { terms: "terms", privacy: "privacy", age: "age14", marketing: "marketing" };
+async function kakaoServiceTerms(token: string): Promise<Record<string, boolean> | null> {
+  const get = async (url: string) => { try { const r = await fetch(url, { headers: { authorization: `Bearer ${token}` } }); return r.ok ? await r.json().catch(() => null) : null; } catch { return null; } };
+  const v2: any = await get("https://kapi.kakao.com/v2/user/service_terms");
+  let out: Record<string, boolean> | null = null;
+  if (v2 && Array.isArray(v2.service_terms) && v2.service_terms.length) { out = {}; for (const t of v2.service_terms) if (t && t.tag) out[String(t.tag)] = t.agreed === true; }
+  else {
+    const v1: any = await get("https://kapi.kakao.com/v1/user/service/terms");   // 구 API: 동의한 약관만 내려옴
+    if (v1 && Array.isArray(v1.allowed_service_terms) && v1.allowed_service_terms.length) { out = {}; for (const t of v1.allowed_service_terms) if (t && t.tag) out[String(t.tag)] = true; }
+  }
+  return out;
+}
+/** 가입 동의: 카카오 간편가입 약관 동의가 있으면 그 기준, 없으면 사이트에서 받은 동의 */
+export function kakaoAgree(terms: Record<string, boolean> | null, site: AgreeT): AgreeT {
+  if (!terms) return site;
+  const T = KAKAO_TERM_TAGS, has = (k: string) => Object.prototype.hasOwnProperty.call(terms, k);
+  return { terms: !!terms[T.terms] && (!has(T.age) || !!terms[T.age]), privacy: !!terms[T.privacy], marketing: has(T.marketing) ? !!terms[T.marketing] : site.marketing };
 }
 /** 카카오 배송지(선택 동의) — 기본 배송지 1개. 동의 안 했거나 없으면 null (가입은 그대로 진행) */
 async function kakaoShipAddress(token: string): Promise<ShipAddress | null> {
@@ -155,7 +175,8 @@ async function kakaoShipAddress(token: string): Promise<ShipAddress | null> {
   } catch { return null; }
 }
 /** 카카오 회원 → 우리 회원 (없으면 가입: 동의 필요) */
-export async function kakaoLogin(k: { kakaoId: string; phone: string; name: string; nickname: string; birthYear?: string; ship?: ShipAddress | null }, agree: AgreeT) {
+export async function kakaoLogin(k: { kakaoId: string; phone: string; name: string; nickname: string; birthYear?: string; ship?: ShipAddress | null; terms?: Record<string, boolean> | null }, siteAgree: AgreeT) {
+  const agree = kakaoAgree(k.terms || null, siteAgree);
   const id = await tx(async (c) => {
     const byKakao = (await c.query(`SELECT * FROM members WHERE kakao_id = $1 FOR UPDATE`, [k.kakaoId])).rows[0] as Member | undefined;
     if (byKakao) {
