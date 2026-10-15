@@ -351,6 +351,35 @@
   </script>
   <script src="scripts/redesign.js?v=20261005-1"></script>
   <script>
+    /* 특가·빠른인도 카드 월 금액: 칸이 모자랄 때만(아이폰 글자 폭·좁은 폰·7자리 금액) 금액 글자를 '상세견적' 버튼에 안 닿게 줄임 — 같은 목록 안 카드는 같은 크기 (대표 261015) */
+    (function () {
+      var GAP = 8, MIN = 15;
+      function need(copy) {   // 이 카드가 버튼에 안 닿는 최대 글자 크기 (보이지 않는 카드는 null)
+        var s = copy.querySelector('strong'), cta = copy.parentNode.querySelector('.stock-cta'); if (!s || !cta) return null;
+        var rg = document.createRange(); rg.selectNodeContents(s);
+        var t = rg.getBoundingClientRect(), c = cta.getBoundingClientRect(); if (!t.width || !c.width) return null;
+        var fs = parseFloat(getComputedStyle(s).fontSize), avail = c.left - t.left - GAP;
+        return t.width > avail ? Math.max(MIN, Math.floor(fs * avail / t.width * 2) / 2) : fs;
+      }
+      function fitList(id) {
+        var list = document.getElementById(id); if (!list) return;
+        var ss = [].slice.call(list.querySelectorAll('.stock-copy strong')); ss.forEach(function (s) { s.style.fontSize = ''; });
+        var min = null; [].forEach.call(list.querySelectorAll('.stock-copy'), function (cp) { var n = need(cp); if (n != null && (min == null || n < min)) min = n; });
+        if (min != null && min < parseFloat(getComputedStyle(ss[0]).fontSize)) ss.forEach(function (s) { s.style.fontSize = min + 'px'; });
+      }
+      function all() { fitList('stockList'); fitList('fastList'); }
+      var tm; function later() { clearTimeout(tm); tm = setTimeout(all, 80); }
+      if (window.ResizeObserver) {   // 탭 전환으로 카드가 보이거나 폭이 바뀔 때
+        var last = new WeakMap(), ro = new ResizeObserver(function (es) { es.forEach(function (e) { var w = Math.round(e.contentRect.width); if (last.get(e.target) !== w) { last.set(e.target, w); later(); } }); });
+        [].forEach.call(document.querySelectorAll('#stockList .stock-copy, #fastList .stock-copy'), function (el) { ro.observe(el); });
+      }
+      all(); window.addEventListener('load', all);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(all);   // 글꼴이 늦게 적용되면 폭이 바뀜
+      window.addEventListener('resize', later);
+      document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-price-filter],[data-cartype-filter],#fastMore')) later(); });
+    })();
+  </script>
+  <script>
     // 후기 본문: 고정 높이 카드에서 넘치면 '..'로 마무리
     (function () {
       function clampReviews() {
