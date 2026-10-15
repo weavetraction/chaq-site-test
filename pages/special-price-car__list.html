@@ -510,7 +510,7 @@
                 // 견적조회: 브랜드 → 모델 → 등급을 이어서 고르도록 다음 선택창 자동으로 (등급까지 골라야 견적이 나옴)
                 if (isEstimate && (currentFilter === 'brand' || currentFilter === 'model')) { var nx = currentFilter === 'brand' ? 'model' : 'trim'; setTimeout(function(){ openPop(nx); }, 180); return; }
                 // 등급 선택 완료 시 자동 스크롤
-                if(pickedTrim && F.trim){
+                if(pickedTrim && F.trim && !isEstimate){   // 견적조회는 등급 선택 후 자동 스크롤 안 함 (대표 261015)
                     setTimeout(function(){
                         var vh = window.innerHeight;
                         // '차량 모델' 섹션 높이만큼만 내려와 그 섹션이 화면 밖으로 넘어가고 '계약 조건'이 상단에 오게 (견적조회·재고특가·빠른인도 동일)

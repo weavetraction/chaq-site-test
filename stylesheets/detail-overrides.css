@@ -2772,3 +2772,8 @@ html.chaq-detail-loading .local-car-detail::after{
 .mypage .mp_ev_row em.is-end{ background:#eef0f2; color:#6b7178; }
 /* 이용 후기 페이지 '후기 작성하기' 검정 버튼 (대표 261015) */
 .local-sub.review-page .rv_write{ border:0; background:#1c1f23; color:#fff; }
+/* 같은 차량 다른 재고 팝업 색상: 상단 '색상' 위젯과 같은 표현(라벨·칩·이름), 왼쪽 정렬 (대표 261015) */
+.local-car-detail .dts_pop .ss_row .ss_colors { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 6px 10px; }
+.local-car-detail .dts_pop .ss_row .ss_colors .color-tag { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0; background: transparent; color: #5f6670; font-size: 11px; font-weight: 400; white-space: nowrap; }
+.local-car-detail .dts_pop .ss_row .ss_colors .color-chip { width: 12px; height: 12px; margin: 0; border: 1px solid rgba(0,0,0,.15); border-radius: 50%; }
+.local-car-detail .dts_pop .ss_row .ss_colors .ct_kind { display: inline; flex: none; margin-right: 5px; color: #5f6670; font-size: 12px; font-style: normal; font-weight: 600; }

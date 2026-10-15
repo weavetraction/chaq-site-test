@@ -857,11 +857,17 @@
                     box.parentNode.insertBefore(w, box.nextSibling);
                     if (others.length) {
                         var ssPop = sheet('dtsStockPop', '같은 차량 다른 재고');
+                        // 색상: 상단 차량 카드 '색상' 위젯과 같은 표현(외장/내장 라벨 · 색상칩 · 색상명), 왼쪽 정렬 (대표 261015)
+                        var ssColors = function (r) {
+                            var hx = window.CHAQ_UTIL.hex, cs = [[r.ext,'외장','EXTERIOR',r.extId],[r['int'],'내장','INTERIOR',r.intId]].filter(function(x){ return x[0]; });
+                            if (!cs.length) return '<span class="ss_colors"><span class="color-tag">색상 정보 없음</span></span>';
+                            return '<span class="ss_colors">'+cs.map(function(x){ return '<span class="color-tag"><em class="ct_kind">'+x[1]+'</em><i class="color-chip" style="background:'+hx(x[0], r.trimId, x[2], x[3])+'"></i>'+esc(x[0])+'</span>'; }).join('')+'</span>';
+                        };
                         w.addEventListener('click', function () {
                             var c = cond();
                             ssPop.body.innerHTML = '<p class="opt_sec">'+esc(VM.carName(rec)+' · '+name)+' · '+list.length+'대</p>' + list.map(function (r) {
                                 var on = r.id === rec.id, m = monthly(r, c), oc = window.CHAQ_UTIL.splitOpts(r).opts.length;   // 할인 항목은 옵션 수에서 제외
-                                return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+esc([r.ext, r['int']].filter(Boolean).join(' / ') || '색상 정보 없음')+
+                                return '<button type="button" class="opt_row dts_opt ss_row'+(on?' on':'')+'" data-id="'+esc(r.id)+'"><span>'+ssColors(r)+
                                     '<span class="ss_meta"><small class="ss_sub ss_tag">옵션 '+oc+'개</small>'+(on?'<small>현재</small>':'')+'</span></span><em>'+(m!=null?'월 '+won(m)+'원':'해당 조건 미제공')+'</em></button>';
                             }).join('');
                             ssPop.open();
