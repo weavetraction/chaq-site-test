@@ -27,10 +27,32 @@ export async function sendSms(to: string, text: string) {
 }
 
 /** 알림톡 (NHN Cloud KakaoTalk Bizmessage · 템플릿 치환 발송). 카카오톡이 없거나 실패하면 LMS 로 대체 발송(문자 발신번호 필요) */
+// 템플릿에 실제로 있는 변수만 보내기 — 관리자에서 템플릿 코드를 바꿔도(예: 금융사 칸 있는 안 ↔ 없는 안) 그대로 동작 (대표 261016)
+//  · NHN 템플릿 조회로 #{…} 목록을 10분간 기억. 조회 실패 시엔 선택 변수(OPTIONAL_VARS)만 빼고 보냄 (기존 템플릿과 같은 변수)
+const OPTIONAL_VARS = ["금융사"];
+const tplVars = new Map<string, { at: number; vars: Set<string> | null }>();
+async function templateVars(i: Awaited<ReturnType<typeof integrations>>) {
+  const key = i.alimtalkSenderKey + "|" + i.alimtalkTemplateCode, hit = tplVars.get(key);
+  if (hit && Date.now() - hit.at < 10 * 60_000) return hit.vars;
+  const base = `https://kakaotalk-bizmessage.api.nhncloudservice.com/alimtalk/v2.3/appkeys/${encodeURIComponent(i.alimtalkAppKey)}`, code = encodeURIComponent(i.alimtalkTemplateCode);
+  let vars: Set<string> | null = null;
+  for (const url of [`${base}/senders/${encodeURIComponent(i.alimtalkSenderKey)}/templates?templateCode=${code}`, `${base}/templates?senderKey=${encodeURIComponent(i.alimtalkSenderKey)}&templateCode=${code}`]) {
+    const r = await call(url, { method: "GET", headers: { "X-Secret-Key": i.alimtalkSecretKey } });
+    try {
+      const list: any[] = JSON.parse(r.text)?.templateListResponse?.templates || [];
+      const t = list.find((x) => x?.templateCode === i.alimtalkTemplateCode);
+      if (t) { const txt = JSON.stringify([t.templateContent, t.templateTitle, t.templateSubtitle, t.templateExtra, t.buttons]); vars = new Set([...txt.matchAll(/#\{([^}]+)\}/g)].map((x) => x[1])); break; }
+    } catch { /* 다음 경로 */ }
+  }
+  tplVars.set(key, { at: vars ? Date.now() : Date.now() - 9 * 60_000, vars });   // 실패는 1분 뒤 다시 조회
+  return vars;
+}
 export async function sendAlimtalk(to: string, params: Record<string, string>, fallback?: { title: string; text: string }) {
   const i = await integrations();
   if (!alimtalkOn(i)) return { ok: false, status: 0, text: "알림톡 연동 전" };
-  const rcpt: any = { recipientNo: to, templateParameter: params };
+  const vars = await templateVars(i), sendParams: Record<string, string> = {};
+  for (const [k, v] of Object.entries(params)) if (vars ? vars.has(k) : !OPTIONAL_VARS.includes(k)) sendParams[k] = v;
+  const rcpt: any = { recipientNo: to, templateParameter: sendParams };
   if (fallback && i.smsSender) rcpt.resendParameter = { isResend: true, resendType: "LMS", resendTitle: fallback.title.slice(0, 20), resendContent: fallback.text.slice(0, 1000), resendSendNo: i.smsSender };
   const r = await call(`https://kakaotalk-bizmessage.api.nhncloudservice.com/alimtalk/v2.3/appkeys/${encodeURIComponent(i.alimtalkAppKey)}/messages`, {
     method: "POST",
