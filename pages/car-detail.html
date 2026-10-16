@@ -118,6 +118,28 @@
             </div>
         </section>
 
+        <!-- 상세 공통 안내(대표 261016): 이용 3단계 + 계약 전 확인 — 가격 영역 바로 아래, 모든 상세 공통 -->
+        <div class="detail_guide" id="detailGuide">
+            <div class="dg_steps">
+                <p class="dg_title">차큐 이용 3단계</p>
+                <ol>
+                    <li><b>1</b><span><strong>조건 고르기</strong>기간·주행거리·초기비용을 고르면 월 납입금이 바로 바뀌어요</span></li>
+                    <li><b>2</b><span><strong>카톡으로 견적서</strong>보고 있는 견적 그대로 카카오톡으로 보내드려요</span></li>
+                    <li><b>3</b><span><strong>심사 후 출고</strong>재고 차량은 계약 후 바로 출고 준비를 시작해요</span></li>
+                </ol>
+            </div>
+            <div class="dg_check">
+                <p class="dg_title">계약 전 꼭 확인하세요</p>
+                <ul>
+                    <li>보증금은 만기 때 돌려받는 돈, 선납금은 미리 내는 월 납입금이에요(돌려받지 않아요)</li>
+                    <li>약정 주행거리를 넘기면 반납할 때 초과 거리만큼 추가 요금이 있어요</li>
+                    <li>계약 기간 중 해지하면 중도해지 수수료가 생겨요</li>
+                    <li>재고 차량은 먼저 계약하시는 분께 출고돼요</li>
+                </ul>
+                <a class="dg_link" href="posting__detail.html?id=a5">견적 볼 때 꼭 확인할 5가지 ›</a>
+            </div>
+        </div>
+
         <footer class="chaq-biz-footer">
             <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
             <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
@@ -896,7 +918,7 @@
     <script>window.CHAQ_REVIEWS || document.write('<script src="data/reviews.js"><\/script>');</script>
     <script src="data/review-link.js"></script>
     <script>
-        (function(){ try { if (window.CHAQ_REVIEW_LINK) window.CHAQ_REVIEW_LINK.mountDetailWidget(); } catch (e) { if (window.console) console.warn('review widget', e); } })();
+        (function(){ try { if (window.CHAQ_REVIEW_LINK) window.CHAQ_REVIEW_LINK.mountDetailWidget({ after: document.getElementById('detailGuide') || undefined }); /* 후기는 공통 안내 블록 아래(대표 261016) */ } catch (e) { if (window.console) console.warn('review widget', e); } })();
     </script>
     <!-- 하단 안내 블록 (후기 위젯 아래): 배너 · 장기렌트 3타일 · 문의부터 인도까지 5단계 · 같은 조건 다른 차량(현재 조건·월납입금대 연동) -->
     <script>/* 관리자에서 등록한 최신 데이터(API) 우선, 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/faq.js"><\/script>');})();</script>

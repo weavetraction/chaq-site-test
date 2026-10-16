@@ -2777,3 +2777,19 @@ html.chaq-detail-loading .local-car-detail::after{
 .local-car-detail .dts_pop .ss_row .ss_colors .color-tag { display: inline-flex; flex: none; align-items: center; gap: 6px; padding: 0; background: transparent; color: #5f6670; font-size: 11px; font-weight: 400; white-space: nowrap; }
 .local-car-detail .dts_pop .ss_row .ss_colors .color-chip { width: 12px; height: 12px; margin: 0; border: 1px solid rgba(0,0,0,.15); border-radius: 50%; }
 .local-car-detail .dts_pop .ss_row .ss_colors .ct_kind { display: inline; flex: none; margin-right: 5px; color: #5f6670; font-size: 12px; font-style: normal; font-weight: 600; }
+
+/* 상세 공통 안내 블록(대표 261016, 시안 S1_상세공통블록): 이용 3단계(회색 카드) + 계약 전 확인(흰 카드·테두리) */
+.local-car-detail .detail_guide { margin: 0 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+.local-car-detail .detail_guide .dg_steps { padding: 22px 18px 24px; border-radius: 16px; background: #f4f4f4; }
+.local-car-detail .detail_guide .dg_check { padding: 22px 18px 22px; border: 1px solid #e3e6ea; border-radius: 16px; background: #fff; }
+.local-car-detail .detail_guide .dg_title { margin: 0 0 16px; color: #16181b; font-size: 18px; font-weight: 800; letter-spacing: -.4px; }
+.local-car-detail .detail_guide ol, .local-car-detail .detail_guide ul { margin: 0; padding: 0; list-style: none; }
+.local-car-detail .detail_guide ol li { display: flex; align-items: flex-start; gap: 12px; }
+.local-car-detail .detail_guide ol li + li { margin-top: 18px; }
+.local-car-detail .detail_guide ol li > b { flex: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-top: 1px; border-radius: 50%; background: var(--detail-green); color: #fff; font-size: 13px; font-weight: 800; }
+.local-car-detail .detail_guide ol li > span { word-break: keep-all; display: flex; flex-direction: column; gap: 3px; color: #5f6670; font-size: 13px; line-height: 1.45; letter-spacing: -.2px; }
+.local-car-detail .detail_guide ol li strong { color: #16181b; font-size: 15px; font-weight: 700; }
+.local-car-detail .detail_guide ul li { position: relative; padding-left: 13px; word-break: keep-all; color: #3c4047; font-size: 13px; line-height: 1.5; letter-spacing: -.2px; }
+.local-car-detail .detail_guide ul li + li { margin-top: 10px; }
+.local-car-detail .detail_guide ul li::before { content: ""; position: absolute; left: 1px; top: .62em; width: 4px; height: 4px; border-radius: 50%; background: var(--detail-green); }
+.local-car-detail .detail_guide .dg_link { display: inline-block; margin-top: 16px; color: var(--detail-green); font-size: 14px; font-weight: 700; text-decoration: none; }

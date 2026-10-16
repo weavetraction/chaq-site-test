@@ -104,7 +104,7 @@
           <p>초기비용 0 · 주행거리 1만km · 60개월</p>
         </div>
         <div class="price-filters" role="group" aria-label="월 납입금 필터">
-          <span class="pf-label">월 이용료</span>
+          <span class="pf-label">월 납입금</span>
           <div class="pf-options">
             <button class="is-active" type="button" data-price-filter="30">~50만원</button>
             <button type="button" data-price-filter="50">~80만원</button>
@@ -237,7 +237,7 @@
       // A) '기다림 없는 신차 장기렌트' — 각 차량데이터 기반 수량 합산
       function sumQty(arr){ return (arr||[]).reduce(function(s,r){ return s + (typeof r.rem==='number'? r.rem : 1); }, 0); }
       function setCount(id, n){ var el=document.getElementById(id); if(el) el.textContent = Number(n).toLocaleString('ko-KR')+' 대'; }
-      setCount('stockCount', (C.stock||[]).length);          // 재고특가: 실제 재고특가 차량 수(레코드 수, 재고특가 페이지 검색결과와 동일)
+      setCount('stockCount', sumQty(C.stock));               // 재고특가: 재고수량(rem) 합산 — 빠른인도와 같은 기준(대표 261016)
       setCount('fastCount', sumQty(C.fast));                 // 빠른인도: fast 재고수량(rem) 합산
 
       // B) '재고특가' — 전체 stock 데이터 중 일부 선택 렌더링(가격그룹별 최대 6)

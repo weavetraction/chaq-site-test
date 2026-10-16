@@ -163,7 +163,7 @@
 
   function mount() {
     if (document.getElementById("detailPromo")) return null;
-    var anchor = document.getElementById("detailReviews") || [].slice.call(document.querySelectorAll(".detail_shell > section.detail_card")).pop();
+    var anchor = document.getElementById("detailReviews") || document.getElementById("detailGuide") || [].slice.call(document.querySelectorAll(".detail_shell > section.detail_card")).pop();
     if (!anchor) return null;
     var box = document.createElement("div");      // section 아님: 기존 section:last-of-type(차량 가격 카드) 스타일 유지
     box.className = "detail_promo"; box.id = "detailPromo";
