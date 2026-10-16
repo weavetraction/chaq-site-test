@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
 const OUT = path.join(ROOT, "dist-site");
-const INCLUDE = ["index.html", "robots.txt", "favicon.ico", "pages", "assets", "font", "scripts", "stylesheets"];
+const INCLUDE = ["index.html", "robots.txt", "sitemap.xml", "favicon.ico", "pages", "assets", "font", "scripts", "stylesheets"];
 const SKIP = /(\.bak[^/]*|\.tmp|\.md|\.csv|\.DS_Store)$/i;
 
 fs.rmSync(OUT, { recursive: true, force: true });

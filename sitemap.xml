@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 차큐 베타 오픈 (대표 261016): 메인·재고특가·빠른인도·견적조회·이벤트·후기·아티클·FAQ·약관·개인정보처리방침 -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://chaq.co.kr/</loc><lastmod>2026-10-16</lastmod><priority>1.0</priority></url>
+  <url><loc>https://chaq.co.kr/pages/special-price-car__list.html</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/special-price-car__list.html?from=fast</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/special-price-car__list.html?from=estimate</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/event__list__ing.html</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/review__list.html</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/posting__list.html</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/faq__list.html</loc><lastmod>2026-10-16</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chaq.co.kr/pages/agreement.html</loc><lastmod>2026-10-16</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chaq.co.kr/pages/privacy.html</loc><lastmod>2026-10-16</lastmod><priority>0.5</priority></url>
+</urlset>

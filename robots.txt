@@ -1,3 +1,7 @@
-# 검수용 사이트 — 검색엔진 수집 막음 (정식 오픈 시 삭제)
+# 차큐 베타 오픈 (대표 261016) — 검색엔진 수집 허용, 관리자·API만 차단
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://chaq.co.kr/sitemap.xml
