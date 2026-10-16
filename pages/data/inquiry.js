@@ -110,7 +110,8 @@
     if (!ch || !ch.chat) return false;
     if (!sent) copyText("차큐 견적서 요청 (접수번호 #" + (j.id || "") + (qid ? " · 견적번호 " + qid : "") + ")");
     if (U && U.toast) U.toast(sent ? "카카오톡으로 견적서를 보냈어요. 채팅방으로 연결할게요" : "채팅방으로 연결할게요. 복사된 요청 메시지를 붙여넣어 보내 주세요");
-    setTimeout(function () { location.href = ch.chat; }, 900);
+    // 견적서(알림톡) 발송 건은 이전 페이지 주소 없이 채팅방 열기 — 카카오가 웹 유입 시 붙이는 '안녕하세요. 무엇을 도와드릴까요? / 이전 페이지' 안내를 없애려고 (대표 261016)
+    setTimeout(function () { if (!sent) { location.href = ch.chat; return; } var a = document.createElement("a"); a.href = ch.chat; a.rel = "noreferrer"; a.style.display = "none"; document.body.appendChild(a); a.click(); }, 900);
     return true;
   }
   function submitMember(c) {
@@ -163,7 +164,7 @@
       (j.id ? '<p style="font-size:12.5px;color:#5f6670">접수번호 #' + j.id + '</p>' : '') + '</div>' + car +
       '<div class="iqf_btns" style="flex-direction:column">' +
       // 알림톡 연동 전: 채팅방을 열고 고객이 먼저 말을 걸게 (카카오 채널은 고객이 먼저 보내야 답장 가능) — 접수번호 메시지를 복사해 두어 붙여넣기만 하면 되게
-      (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener"' + (sent ? '' : ' data-copy="' + esc("차큐 견적서 요청 (접수번호 #" + (j.id || "") + ")") + '"') + ' style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">' + (sent ? "카카오톡에서 상담 이어가기" : "카카오톡에서 견적서 받기") + '</a>' +
+      (ch ? '<a class="iqf_send iqf_kakao" href="' + esc(ch.chat) + '" target="_blank" rel="noopener' + (sent ? ' noreferrer"' : '"') + (sent ? '' : ' data-copy="' + esc("차큐 견적서 요청 (접수번호 #" + (j.id || "") + ")") + '"') + ' style="display:block;text-align:center;text-decoration:none;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700">' + (sent ? "카카오톡에서 상담 이어가기" : "카카오톡에서 견적서 받기") + '</a>' +
         (sent ? '' : '<p style="margin:-2px 0 2px;color:#5f6670;font-size:12.5px;text-align:center">요청 메시지가 복사돼요. 채팅방에 붙여넣어 보내 주세요.</p>') : '') +
       (j.report ? '<a class="iqf_close" href="' + reportHref(j.report) + '" style="display:block;flex:none;text-align:center;text-decoration:none;border-radius:12px;padding:14px;font-weight:700">견적서 보기</a>' : '') +
       '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
