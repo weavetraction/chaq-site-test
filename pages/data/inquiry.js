@@ -170,7 +170,7 @@
       '<button type="button" class="iqf_close" data-close style="flex:none">확인</button></div>');
   }
   // 차량 상세 '이 조건 그대로 문의하기': 바로 접수하지 않고 상담 방법 선택 — 카톡상담(기존 접수 → 견적서) / 전화상담(견적번호 안내) (대표 261014)
-  var HR_KAKAO = "9:00 - 21:30", HR_TEL = "9:00 - 17:50";   // 상담 시간 (대표 261015)
+  var HR_KAKAO = "월~토 9:00 - 21:30", HR_TEL = "9:00 - 17:50";   // 상담 시간 (대표 261015 · 카톡 요일 월~토 261016 — 카카오 채널 채팅 시간과 같게)
   function chooseDetail() {
     var qid = quoteId();
     var bg = sheet('<h3>상담 방법을 선택해 주세요</h3><div class="iqf_pick">' +
