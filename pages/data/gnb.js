@@ -12,7 +12,7 @@
     var HM = window.CHAQ_HOME, MB = HM && HM.midBanners || [];
     var fix = function (u) { u = String(u || ""); return inPages && /^(assets|pages)\//.test(u) ? "../" + u : u; };
     if (MB.length) return MB.filter(function (b) { return b && b.img; }).map(function (b) { return { img: fix(b.img), href: b.href ? fix(b.href) : "", alt: b.alt || "" }; });
-    return [{ img: A + "img/banner-cash.jpg?v=261014", href: P + "event__list__ing.html", alt: "최대 100만원 현금지원" },
+    return [{ img: A + "img/banner-cash.jpg?v=261014", href: P + "cash-support.html", alt: "최대 100만원 현금지원" },   // 현금지원 상시 페이지(대표 261018)
             { img: A + "img/banner-compare.jpg", href: P + "special-price-car__list.html?from=estimate", alt: "금융사 다이렉트 비교견적" }];
   }
   var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
@@ -35,7 +35,7 @@
           '<a href="' + P + 'special-price-car__list.html?from=fast"><img src="' + A + 'icons/fast-delivery.svg" alt=""><span><strong>빠른인도</strong><small>1주 이내 인도 가능한 장기렌트 차량</small></span></a>' +
           '<a href="' + P + 'event__list__ing.html"><img src="' + A + 'icons/release-event.svg" alt=""><span><strong>이벤트</strong><small>출고 이벤트 · 후기 이벤트</small></span></a>' +
         '</nav>' +
-        '<a class="cgm_cash" href="' + esc(BN[0] && BN[0].href || (P + 'event__list__ing.html')) + '" aria-label="현금지원 이벤트">' +
+        '<a class="cgm_cash" href="' + esc(BN[0] && BN[0].href || (P + 'cash-support.html')) + '" aria-label="현금지원">' +
           '<span class="cgm_track">' + BN.map(function (x, i) { return '<span class="cgm_slide' + (i === 0 ? ' is-active' : '') + '" data-href="' + esc(x.href) + '"><img src="' + esc(x.img) + '" alt="' + esc(x.alt) + '"></span>'; }).join('') + '</span>' +
           (BN.length > 1 ? '<span class="cgm_dots" aria-hidden="true">' + BN.map(function (_, i) { return '<i' + (i === 0 ? ' class="is-on"' : '') + '></i>'; }).join('') + '</span>' : '') +
         '</a>' +
