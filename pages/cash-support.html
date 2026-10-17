@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>/* 폰 화면 자동 크기 (대표 261015): 폭 430px보다 좁은 폰(세로)은 430px 기준 화면을 폰 폭에 맞춰 통째로 줄여 보여줌 — 어느 폰에서나 같은 배치. 가로·태블릿·PC는 그대로 */(function(){var W=430,m=document.querySelector('meta[name="viewport"]');if(!m)return;try{document.documentElement.style.webkitTextSizeAdjust='100%';document.documentElement.style.textSizeAdjust='100%';}catch(e){}function set(){var s=Math.min(screen.width||0,screen.height||0),p=!window.matchMedia||matchMedia('(orientation: portrait)').matches,c=(s&&s<W&&p)?'width='+W:'width=device-width, initial-scale=1.0';if(m.getAttribute('content')!==c)m.setAttribute('content',c);}set();window.addEventListener('orientationchange',function(){setTimeout(set,60);});if(window.matchMedia){var q=matchMedia('(orientation: portrait)');if(q.addEventListener)q.addEventListener('change',set);else if(q.addListener)q.addListener(set);}})();</script>
+    <title>현금지원 · 차큐</title>
+  <meta name="description" content="차큐 현금지원 — 재고특가 차량의 금융사 지원금과 차큐 출고 지원금을 월 납입금과 따로 받으세요. 지원금 차량과 지급 기준을 확인하세요.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="차큐">
+  <meta property="og:title" content="현금지원 · 차큐">
+  <meta property="og:description" content="신차 장기렌트 견적을 한 번에 비교하고 재고특가·빠른인도 차량을 바로 확인하세요.">
+  <meta property="og:image" content="https://chaq.co.kr/assets/img/og-image-v2.jpg">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="../stylesheets/detail-overrides.css">
+    <link rel="stylesheet" href="../stylesheets/gnb.css">
+    <style>
+    /* 현금지원 페이지 (대표 261018) — 시안 그대로: 회색 바탕 본문 · 흰 카드 · 초록 강조 */
+    .cs{--g:#1fa463;--g-soft:#eef6f1;--ink:#1c1c1c;--mute:#7a7f86;--line:#e6e8eb;--brown:#6e4526;background:#f7f7f7;color:var(--ink);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif;letter-spacing:-.3px;word-break:keep-all;overflow:hidden}
+    .cs strong{font-weight:800}
+    .cs-main{padding:44px 18px 48px;text-align:center}
+    .cs-pill{display:inline-flex;align-items:center;height:34px;padding:0 24px;border-radius:999px;background:#e9e9e9;color:#3a3a3a;font-size:13px;font-weight:700}
+    /* 날짜 타일(점수판) */
+    .cs-clock{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:40px 0 30px}
+    .cs-flip{display:flex;align-items:flex-end;gap:4px}
+    .cs-flip > em{margin:0 0 2px 4px;font-size:15px;font-weight:700;font-style:normal;color:#2a2a2a}
+    .cs-digit{position:relative;width:48px;height:58px;perspective:200px;border-radius:3px;overflow:hidden;box-shadow:0 6px 12px rgba(0,0,0,.18)}
+    .cs-digit .h{position:absolute;left:0;right:0;height:50%;overflow:hidden}
+    .cs-digit .h b{position:absolute;left:0;right:0;height:58px;line-height:58px;font-size:44px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;text-align:center}
+    .cs-digit .t{top:0;background:#3c3c3c}
+    .cs-digit .t b{top:0}
+    .cs-digit .bt{bottom:0;background:#202020}
+    .cs-digit .bt b{bottom:0}
+    .cs-digit::after{content:"";position:absolute;left:0;right:0;top:calc(50% - .5px);height:1px;background:rgba(255,255,255,.55);z-index:2}
+    .cs-digit.is-in .t{transform-origin:50% 100%;animation:csFlip .55s cubic-bezier(.3,.7,.4,1) both}
+    .cs-digit:nth-child(2).is-in .t{animation-delay:.08s}
+    .cs-flip + .cs-flip .cs-digit.is-in .t{animation-delay:.16s}
+    .cs-flip + .cs-flip .cs-digit:nth-child(2).is-in .t{animation-delay:.24s}
+    @keyframes csFlip{0%{transform:rotateX(90deg);filter:brightness(.6)}100%{transform:rotateX(0);filter:none}}
+    @media (prefers-reduced-motion:reduce){.cs-digit.is-in .t{animation:none}}
+    .cs-title{margin:0;font-size:28px;font-weight:700;line-height:1.38;letter-spacing:-.8px}
+    .cs-title strong{color:var(--g)}
+    .cs-deadline{margin:26px 0 0;font-size:16px;font-weight:700}
+    .cs-lead{margin:16px 0 0;color:#555b62;font-size:13.5px;line-height:1.75}
+    .cs-lead strong{color:var(--g);font-weight:700}
+    /* 지원금 차량 카드 */
+    .cs-cars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:40px 0 0;text-align:center}
+    .cs-card{display:flex;flex-direction:column;align-items:center;min-width:0;padding:18px 12px 12px;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.07);color:inherit;text-decoration:none}
+    .cs-card[hidden]{display:none}
+    .cs-badge{display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:#1c1c1c}
+    .cs-badge b{padding:3px 8px;border-radius:5px;background:var(--g-soft);color:var(--g);font-weight:800}
+    .cs-img{display:flex;align-items:center;justify-content:center;width:100%;height:84px;margin:10px 0 6px}
+    .cs-img img{max-width:92%;max-height:84px;object-fit:contain}
+    .cs-name{max-width:100%;font-size:15.5px;font-weight:800;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cs-detail{max-width:100%;margin-top:3px;color:var(--mute);font-size:11px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cs-monthly{align-self:stretch;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);color:var(--g);font-size:19px;font-weight:800;letter-spacing:-.5px}
+    .cs-monthly em{font-size:15px;font-style:normal}
+    .cs-meta{margin-top:5px;color:#9aa0a6;font-size:10px;white-space:nowrap}
+    .cs-meta i{display:inline-block;width:1px;height:8px;margin:0 5px;background:#c9cdd1;vertical-align:0}
+    .cs-stock{align-self:stretch;display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 10px;border-radius:4px;background:#ececec;font-size:11px;color:#9aa0a6}
+    .cs-stock b{color:var(--g);font-size:16px;font-weight:800}
+    .cs-more{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:46px;margin:14px 0 0;border:1px solid var(--line);border-radius:10px;background:#fff;color:#3a3a3a;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+    .cs-more span{color:var(--g)}
+    .cs-cars.is-empty{display:block}
+    .cs-empty{display:flex;flex-direction:column;gap:6px;padding:28px 16px;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+    .cs-empty strong{font-size:15px}
+    .cs-empty span{color:var(--mute);font-size:13px}
+    .cs-empty a{margin-top:8px;color:var(--g);font-size:14px;font-weight:700;text-decoration:none}
+    /* 자주 묻는 질문 */
+    .cs-faq-label{margin-top:64px}
+    .cs-q{margin:48px 0 0}
+    .cs-q h3{margin:0;font-size:19px;font-weight:800;line-height:1.4;letter-spacing:-.6px}
+    .cs-q h3 i{margin-right:6px;color:var(--g);font-style:normal}
+    .cs-q p{margin:18px 0 0;color:#5a5f66;font-size:13.5px;line-height:1.75}
+    .cs-q p strong{color:#1c1c1c;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+    /* 차큐 출고지원 */
+    .cs-plus{margin:56px 0 0;font-size:46px;font-weight:800;line-height:1;color:#1c1c1c}
+    .cs-box{margin-top:10px;padding:34px 22px 22px;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+    .cs-box .logo{height:22px}
+    .cs-box h3{margin:22px 0 0;font-size:21px;font-weight:800;line-height:1.42;letter-spacing:-.6px}
+    .cs-box h3 strong{color:var(--g)}
+    .cs-box p{margin:20px 0 0;color:#5a5f66;font-size:13px;line-height:1.7}
+    .cs-box p strong{color:var(--g);font-weight:800}
+    .cs-box .cs-pill{margin-top:26px;height:32px;font-size:12.5px}
+    .cs-rule{width:100%;margin-top:18px;border-collapse:collapse;font-size:13px}
+    .cs-rule th{padding:0 4px 10px;color:var(--mute);font-weight:500;text-align:left}
+    .cs-rule th + th,.cs-rule td + td{text-align:right}
+    .cs-rule td{padding:10px 4px;border-top:1px solid var(--line);color:#3a3a3a;text-align:left}
+    .cs-rule td + td{color:var(--g);font-weight:800}
+    .cs-rule tr:last-child td{border-bottom:1px solid var(--line)}
+    /* 상담 */
+    .cs-cta{padding:56px 16px 40px;background:#fff;text-align:center}
+    .cs-cta h2{margin:0;font-size:26px;font-weight:800;line-height:1.35;letter-spacing:-.8px}
+    .cs-cta h2 span{display:block;color:var(--g)}
+    .cs-kakao{position:relative;margin-top:34px;padding:22px 22px 24px;border:1px solid #d9dce0;border-radius:14px;background:linear-gradient(135deg,#f6f7f8 0%,#e9ebee 100%);text-align:left}
+    .cs-kakao .brand{display:flex;align-items:center;gap:8px;color:#a9aeb4;font-size:11.5px}
+    .cs-kakao .brand img{height:16px;opacity:.35;filter:grayscale(1)}
+    .cs-kakao h3{margin:20px 0 0;font-size:20px;font-weight:800;letter-spacing:-.6px}
+    .cs-kakao p{margin:10px 0 0;color:#4a4f55;font-size:13.5px;line-height:1.6}
+    .cs-kakao .btns{display:flex;gap:8px;margin-top:20px}
+    .cs-kakao .btns a{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 18px;border-radius:7px;color:#fff;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,.12)}
+    .cs-kakao .btns .chat{min-width:104px;background:linear-gradient(180deg,#22a865,#178a50)}
+    .cs-kakao .btns .add{background:linear-gradient(180deg,#7a4e2c,#5e3a1f)}
+    .cs-talk{position:absolute;right:20px;bottom:26px;width:52px;height:38px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12);color:#b5b9be;font-size:12px;font-weight:900;line-height:38px;text-align:center;letter-spacing:0}
+    .cs-talk::after{content:"";position:absolute;left:10px;bottom:-6px;border:6px solid transparent;border-top-color:#fff;border-left-width:2px;transform:skewX(-20deg)}
+    /* 유의사항 */
+    .cs-legal{margin-top:56px;color:#a3a8ae;font-size:11px;line-height:1.75;text-align:left}
+    .cs-legal h4{margin:0 0 14px;font-size:11.5px;font-weight:500}
+    .cs-legal dt{margin-top:14px}
+    .cs-legal dd{margin:0}
+    </style>
+    <script src="data/api-config.js"></script>
+    <script src="data/site-util.js"></script>
+    <script src="data/analytics.js"></script>
+</head>
+<body class="local-sub sub-white">
+    <div class="sub_shell">
+        <header class="sub_header">
+            <button type="button" class="sub_back" aria-label="뒤로 가기" onclick="if(document.referrer&&document.referrer.indexOf(location.host)>-1&&history.length>1)history.back();else location.href='../index.html'">뒤로</button>
+            <h1>현금지원</h1>
+        </header>
+
+        <main class="cs">
+            <section class="cs-main">
+                <span class="cs-pill">페이백 혜택</span>
+
+                <div class="cs-clock" aria-label="오늘 날짜">
+                    <div class="cs-flip"><span class="cs-digit"><span class="h t"><b></b></span><span class="h bt"><b></b></span></span><span class="cs-digit"><span class="h t"><b></b></span><span class="h bt"><b></b></span></span><em>월</em></div>
+                    <div class="cs-flip"><span class="cs-digit"><span class="h t"><b></b></span><span class="h bt"><b></b></span></span><span class="cs-digit"><span class="h t"><b></b></span><span class="h bt"><b></b></span></span><em>일</em></div>
+                </div>
+
+                <h2 class="cs-title">오늘 신청하면<br>최대 <strong id="csMax">100만원</strong> 현금지원</h2>
+                <p class="cs-deadline" id="csDeadline">재고 소진 시 종료</p>
+                <p class="cs-lead" id="csLead"></p>
+
+                <div class="cs-cars" id="csCars" aria-label="지원금 차량"></div>
+                <button type="button" class="cs-more" id="csMore" hidden>지원금 차량 더보기 <span></span></button>
+
+                <div class="cs-faq-label"><span class="cs-pill">자주 묻는 질문</span></div>
+                <div class="cs-q">
+                    <h3><i>Q</i>지원금은 어떻게 발생되나요?</h3>
+                    <p>금융사가 미리 확보해 둔 차량 중<br>출고 예정일이 지난 재고가 생기면,<br>빠른 판매를 위해 현금 지원금을 내놓습니다.<br>차큐는 이 금액을 그대로<br>고객님께 <strong>현금으로 돌려드립니다.</strong></p>
+                </div>
+                <div class="cs-q">
+                    <h3><i>Q</i>어떻게 지급되나요?</h3>
+                    <p>출고 후 10일 이내<br>출고 시 입력하신 계좌로 입금해드립니다.</p>
+                </div>
+                <div class="cs-q">
+                    <h3><i>Q</i>지원금 받으면 월 납입금이<br>비싸지는 거 아닌가요?</h3>
+                    <p>표시된 월 납입금 그대로이며<br>지원금은 별도 입금됩니다.</p>
+                </div>
+
+                <div class="cs-plus" aria-hidden="true">+</div>
+                <div class="cs-box">
+                    <img class="logo" src="../assets/icons/logo.svg" alt="chaQ">
+                    <h3>차큐 출고하면<br>최대 <strong id="csBoxMax">100만원 지급</strong></h3>
+                    <p>차큐에서 장기렌트를 출고하면<br>묻지도 따지지도 않고 100%<br><strong id="csRange">50~100만원</strong>의 현금 지원금을 드립니다!</p>
+                    <span class="cs-pill">지급 기준</span>
+                    <table class="cs-rule" aria-label="차큐 출고지원 지급 기준">
+                        <thead><tr><th>월 납입금</th><th>지원금</th></tr></thead>
+                        <tbody id="csRules"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="cs-cta">
+                <h2><span>내 차 지원금 확인하고</span>상담 신청</h2>
+                <div class="cs-kakao">
+                    <div class="brand"><img src="../assets/icons/logo.svg" alt="chaQ">지금 보는 조건 그대로, 자동차 구매 큐레이션</div>
+                    <h3>카카오 채널 톡 상담</h3>
+                    <p>할인·장기렌트, 뭐든 물어보세요 :)<br>카톡 상담 월~토 9:00 - 21:30</p>
+                    <div class="btns">
+                        <a class="chat" id="csChat" href="https://pf.kakao.com/_xhxmKFX/chat" target="_blank" rel="noopener">상담받기</a>
+                        <a class="add" id="csAdd" href="https://pf.kakao.com/_xhxmKFX/friend" target="_blank" rel="noopener">@차큐 채널추가</a>
+                    </div>
+                    <span class="cs-talk" aria-hidden="true">TALK</span>
+                </div>
+
+                <dl class="cs-legal">
+                    <h4>유의사항</h4>
+                    <dt>[지원금 관련]</dt>
+                    <dd>· 현금지원금은 금융사 및 차량별로 상이하며, 표기된 금액은 최대 금액 기준입니다.</dd>
+                    <dd>· 지원금은 재고 소진 시 사전 고지 없이 조기 종료되거나 금액이 변경될 수 있습니다.</dd>
+                    <dd>· 지원금은 상담 시점이 아닌 계약 및 출고 완료 시점의 기준으로 지급됩니다.</dd>
+                    <dd>· 금융사 지원금은 출고 후 10일 이내, 고객님이 지정한 계좌로 입금됩니다.</dd>
+                    <dd>· 차큐 출고 지원금은 월 납입금 구간에 따라 차등 지급되며, 계약 조건 변경 시 지급 구간이 달라질 수 있습니다.</dd>
+                    <dd>· 중도해지 시 기지급된 지원금의 전부 또는 일부가 위약금 정산에 포함될 수 있습니다.</dd>
+                    <dt>[월 납입금 관련]</dt>
+                    <dd>· 표기된 월 납입금은 카드에 적힌 조건(60개월 계약, 초기비용 0원, 연간 약정거리) 기준입니다.</dd>
+                    <dd>· 계약기간, 초기비용(보증금·선납금), 약정거리, 보험 연령 조건에 따라 실제 월 납입금은 달라질 수 있습니다.</dd>
+                    <dd>· 월 납입금에는 차량 대여료, 보험료, 자동차세가 포함되며, 유류비·통행료 등 운행 비용은 포함되지 않습니다.</dd>
+                    <dt>[차량 및 계약 관련]</dt>
+                    <dd>· 본 특가 차량은 생산 완료된 신차 재고로, 색상 및 옵션 변경이 불가합니다.</dd>
+                    <dd>· 재고 수량은 실시간 변동되며, 상담 시점에 해당 차량이 소진되었을 수 있습니다.</dd>
+                    <dd>· 계약은 금융사 심사 승인 후 진행되며, 심사 결과에 따라 계약이 제한될 수 있습니다.</dd>
+                    <dd>· 차량 이미지는 이해를 돕기 위한 것으로, 실제 차량의 색상·옵션과 다를 수 있습니다.</dd>
+                    <dt>[기타]</dt>
+                    <dd>· 본 혜택은 당사 사정에 따라 예고 없이 변경 또는 종료될 수 있습니다.</dd>
+                    <dd>· 상담 신청 시 수집된 개인정보는 상담 목적으로만 이용되며, 관련 법령에 따라 처리됩니다.</dd>
+                </dl>
+            </section>
+        </main>
+
+        <footer class="chaq-biz-footer">
+            <img class="cf-logo" src="../assets/icons/logo.svg" alt="chaQ">
+            <p class="cf-info">주식회사 위브트랙션 · 차큐<br>대표자 강병진 · 사업자등록번호 471-87-04214<br>서울특별시 강남구 역삼로 512, 5층 6<br>대표번호 1533-5663 · Contact@chaq.kr</p>
+            <p class="cf-links"><a href="agreement.html">이용약관</a><span>·</span><a href="privacy.html">개인정보처리방침</a></p>
+        </footer>
+
+        <nav class="chaq-gnb" aria-label="하단 메뉴">
+          <a href="../index.html" data-gnb="home"><i class="gnb-ic"><img class="d" src="../assets/icons/home.svg" alt=""><img class="c" src="../assets/icons/home-color.svg" alt=""></i><span>홈</span></a>
+          <a href="special-price-car__list.html" data-gnb="stock"><i class="gnb-ic"><img class="d" src="../assets/icons/special-gray.svg" alt=""><img class="c" src="../assets/icons/special-color.svg" alt=""></i><span>재고특가</span></a>
+          <a href="event__list__ing.html" data-gnb="event"><em class="gnb-badge">최대 100만원</em><i class="gnb-ic"><img class="d" src="../assets/icons/event.svg" alt=""><img class="c" src="../assets/icons/event-color.svg" alt=""></i><span>이벤트</span></a>
+          <a href="mypage.html" data-gnb="my"><i class="gnb-ic"><img class="d" src="../assets/icons/mypage.svg" alt=""><img class="c" src="../assets/icons/mypage-color.svg" alt=""></i><span>마이페이지</span></a>
+          <button type="button" data-gnb-menu aria-haspopup="dialog"><i class="gnb-more" aria-hidden="true"></i><span>전체메뉴</span></button>
+        </nav>
+    </div>
+
+    <script>/* 견적 데이터: 차큐 API(관리자에서 올린 최신 데이터) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/quotes.js"><\/script>');})();</script>
+    <script>window.CHAQ || document.write('<script src="data/quotes.js"><\/script>');</script>
+    <script>/* 차량 데이터: 차큐 API(관리자에서 '사이트 반영'한 최신본) 우선, API 를 못 읽으면 사이트 파일 */ (function(){var b=(window.CHAQ_API||{}).base; if(b) document.write('<script src="'+String(b).replace(/\/$/,"")+'/api/pub/vm/core.js"><\/script>');})();</script>
+    <script>window.CHAQ_VEHICLE_MASTER || document.write('<script src="data/vehicle-master.js"><\/script>');</script>
+    <script src="data/vehicle-master-helper.js"></script>
+    <script src="data/cash-support.js"></script>
+    <script src="data/auth.js"></script>   <!-- 카카오톡 채널 주소(서버 연동값) -->
+    <script src="data/gnb.js"></script>
+</body>
+</html>
